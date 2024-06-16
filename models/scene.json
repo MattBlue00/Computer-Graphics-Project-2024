@@ -1,0 +1,15 @@
+{
+	"models": [
+		{"id": "car",   "model": "models/Car.mgcg",       "format":"MGCG"}
+	],
+	"textures": [
+		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"}
+	],
+	"instances": [
+		{"id": "tb",   "model": "tb",   "texture": "t0",
+		 "transform": [1, 0, 0, 0,
+					   0, 1, 0, 0,
+					   0, 0, 1, 0,
+					   0, 0, 0, 1]}
+	]
+}
