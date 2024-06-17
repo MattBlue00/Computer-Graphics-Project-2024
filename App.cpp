@@ -223,10 +223,6 @@ class App : public BaseProject {
         
         // rotates car according to user input
         updateSteeringAngle(carMovementInput, deltaT);
-        
-        // car position in the world
-        static float carX = Pos.x;
-        static float carZ = Pos.z;
 
         // camera variables definition
         glm::mat4 M; // will be used as a return result when building view matrix
@@ -237,7 +233,7 @@ class App : public BaseProject {
         updateSpeed(carMovementInput, deltaT);
 
         // actually moves the car based on the updated parameters
-        moveCar(carMovementInput, deltaT, &Pos, &carX, &carZ, &Yaw);
+        moveCar(carMovementInput, deltaT, &Pos, &Yaw);
         
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
@@ -250,7 +246,7 @@ class App : public BaseProject {
         shouldQuit(window);
         
         // checks if v was pressed
-        shouldPrintDebugVariables(window, Pos, Yaw, cameraData, carX, carZ, SteeringAng, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
+        shouldPrintDebugVariables(window, Pos, Yaw, cameraData, SteeringAng, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
         
         // updates camera position
         if(currScene == THIRD_PERSON_SCENE) {

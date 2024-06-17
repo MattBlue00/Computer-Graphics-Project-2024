@@ -21,9 +21,8 @@ void updateSpeed(glm::vec3 carMovementInput, float deltaT){
     
 }
 
-void moveCar(glm::vec3 carMovementInput, float deltaT, glm::vec3* Pos, float* carX, float* carZ, float* Yaw){
+void moveCar(glm::vec3 carMovementInput, float deltaT, glm::vec3* Pos, float* Yaw){
     if(dampedVel != 0.0f) {
-        glm::vec3 carPos = glm::vec3(*carX, 0.0f, *carZ);
         glm::vec3 oldPos = *Pos;
         
         if(SteeringAng != 0.0f) {
@@ -48,16 +47,6 @@ void moveCar(glm::vec3 carMovementInput, float deltaT, glm::vec3* Pos, float* ca
                 SteeringAng = 0.0f;
             }
         }
-
-        glm::vec3 deltaPos = *Pos - oldPos;
-        glm::vec3 carDir = glm::normalize(*Pos - carPos);
-        glm::vec3 carMove = glm::dot(deltaPos, carDir) * carDir;
-
-        glm::vec3 preCarPos = carPos + carMove;
-        glm::vec3 newCarDir = glm::normalize(preCarPos - *Pos);
-        carPos = *Pos + newCarDir;
-        *carX = carPos.x;
-        *carZ = carPos.z;
     }
 }
 

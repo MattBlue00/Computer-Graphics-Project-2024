@@ -37,7 +37,7 @@ bool shouldChangeScene(GLFWwindow* window, CameraData* cameraData, int* currScen
     return false;
 }
 
-void shouldPrintDebugVariables(GLFWwindow* window, glm::vec3 Pos, float Yaw, CameraData cameraData, float carX, float carZ, float SteeringAng, bool* debounce, int* curDebounce, std::function<void(const char*, glm::vec3)> printVec3){
+void shouldPrintDebugVariables(GLFWwindow* window, glm::vec3 Pos, float Yaw, CameraData cameraData, float SteeringAng, bool* debounce, int* curDebounce, std::function<void(const char*, glm::vec3)> printVec3){
     if(glfwGetKey(window, GLFW_KEY_V)) {
         if(!*debounce) {
             *debounce = true;
@@ -50,8 +50,6 @@ void shouldPrintDebugVariables(GLFWwindow* window, glm::vec3 Pos, float Yaw, Cam
             std::cout << "CamRoll     = " << cameraData.CamRoll     << ";\n";
             std::cout << "CamDist     = " << cameraData.CamDist     << ";\n";
             std::cout << "SteeringAng = " << SteeringAng << ";\n";
-            std::cout << "Car X       = " << carX   << ";\n";
-            std::cout << "Car Z       = " << carZ   << ";\n\n";
         }
     } else {
         if((*curDebounce == GLFW_KEY_V) && *debounce) {
