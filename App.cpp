@@ -60,7 +60,7 @@ class App : public BaseProject {
     TextMaker txt;
     
     // Other application parameters
-    int currScene = 0;
+    int currScene = THIRD_PERSON_SCENE;
     float Ar;
     glm::vec3 Pos;
     float Yaw;
@@ -74,7 +74,7 @@ class App : public BaseProject {
         // window size, titile and initial background
         windowWidth = 800;
         windowHeight = 600;
-        windowTitle = "A04 - World View Projection";
+        windowTitle = "Racing Stadium";
         windowResizable = GLFW_TRUE;
         initialBackgroundColor = {0.0f, 0.85f, 1.0f, 1.0f};
         
@@ -206,10 +206,7 @@ class App : public BaseProject {
         getSixAxis(deltaT, m, r, fire);
         
         static CameraData cameraData = {};
-        cameraData.CamPitch = glm::radians(20.0f);
-        cameraData.CamYaw   = M_PI;
-        cameraData.CamDist  = 10.0f;
-        cameraData.CamRoll  = 0.0f;
+        switchToThirdPersonCamera(&cameraData);
         
         const glm::vec3 CamTargetDelta = glm::vec3(0,2,0);
         const glm::vec3 Cam1stPos = glm::vec3(0.49061f, 2.07f, 2.7445f);
@@ -233,6 +230,7 @@ class App : public BaseProject {
 
         glm::mat4 M;
         glm::vec3 CamPos = Pos;
+        // MUST stay here
         static glm::vec3 dampedCamPos = CamPos;
 
         double lambdaVel = 8.0f;
@@ -291,39 +289,12 @@ class App : public BaseProject {
         // checks if esc was pressed
         shouldQuit(window);
         
-        if(glfwGetKey(window, GLFW_KEY_V)) {
-            if(!debounce) {
-                debounce = true;
-                curDebounce = GLFW_KEY_V;
-
-                printVec3("Pos = ", Pos);
-                std::cout << "Yaw         = " << Yaw         << ";\n";
-                std::cout << "CamPitch    = " << cameraData.CamPitch    << ";\n";
-                std::cout << "CamYaw      = " << cameraData.CamYaw      << ";\n";
-                std::cout << "CamRoll     = " << cameraData.CamRoll     << ";\n";
-                std::cout << "CamDist     = " << cameraData.CamDist     << ";\n";
-                std::cout << "SteeringAng = " << SteeringAng << ";\n";
-                std::cout << "wheelRoll   = " << wheelRoll   << ";\n";
-                std::cout << "tx   = " << tx   << ";\n";
-                std::cout << "tz   = " << tz   << ";\n\n";
-            }
-        } else {
-            if((curDebounce == GLFW_KEY_V) && debounce) {
-                debounce = false;
-                curDebounce = 0;
-            }
-        }
+        // checks if v was pressed
+        shouldPrintDebugVariables(window, Pos, Yaw, cameraData, tx, tz, SteeringAng, wheelRoll, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
         
-        if(currScene == 0) {
-            cameraData.CamYaw += ROT_SPEED * deltaT * r.y;
-            cameraData.CamPitch -= ROT_SPEED * deltaT * r.x;
-            cameraData.CamRoll -= ROT_SPEED * deltaT * r.z;
-            cameraData.CamDist -= MOVE_SPEED * deltaT * m.y;
-        
-            cameraData.CamYaw = (cameraData.CamYaw < 0.0f ? 0.0f : (cameraData.CamYaw > 2*M_PI ? 2*M_PI : cameraData.CamYaw));
-            cameraData.CamPitch = (cameraData.CamPitch < 0.0f ? 0.0f : (cameraData.CamPitch > M_PI_2-0.01f ? M_PI_2-0.01f : cameraData.CamPitch));
-            cameraData.CamRoll = (cameraData.CamRoll < -M_PI ? -M_PI : (cameraData.CamRoll > M_PI ? M_PI : cameraData.CamRoll));
-            cameraData.CamDist = (cameraData.CamDist < 7.0f ? 7.0f : (cameraData.CamDist > 15.0f ? 15.0f : cameraData.CamDist));
+        if(currScene == THIRD_PERSON_SCENE) {
+            
+            updateThirdPersonCamera(&cameraData, ROT_SPEED, deltaT, r, m);
                 
             glm::vec3 CamTarget = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
                              glm::vec4(CamTargetDelta,1));
@@ -334,14 +305,10 @@ class App : public BaseProject {
             dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
                 dampedCamPos * exp(-lambdaCam * deltaT);
             M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, Y_AXIS, cameraData.CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
+            
         } else {
-            cameraData.CamYaw -= ROT_SPEED * deltaT * r.y;
-            cameraData.CamPitch -= ROT_SPEED * deltaT * r.x;
-            cameraData.CamRoll -= ROT_SPEED * deltaT * r.z;
-        
-            cameraData.CamYaw = (cameraData.CamYaw < M_PI_2 ? M_PI_2 : (cameraData.CamYaw > 1.5*M_PI ? 1.5*M_PI : cameraData.CamYaw));
-            cameraData.CamPitch = (cameraData.CamPitch < -0.25*M_PI ? -0.25*M_PI : (cameraData.CamPitch > 0.25*M_PI ? 0.25*M_PI : cameraData.CamPitch));
-            cameraData.CamRoll = (cameraData.CamRoll < -M_PI ? -M_PI : (cameraData.CamRoll > M_PI ? M_PI : cameraData.CamRoll));
+            
+            updateFirstPersonCamera(&cameraData, ROT_SPEED, deltaT, r, m);
                 
             glm::vec3 Cam1Pos = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
                              glm::vec4(Cam1stPos,1));
