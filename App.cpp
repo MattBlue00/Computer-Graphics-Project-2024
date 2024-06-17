@@ -222,7 +222,7 @@ class App : public BaseProject {
         switchToThirdPersonCamera(&cameraData);
         
         // rotates car according to user input
-        rotateCar(carMovementInput, deltaT);
+        updateSteeringAngle(carMovementInput, deltaT);
         
         // car position in the world
         static float carX = Pos.x;
@@ -234,45 +234,10 @@ class App : public BaseProject {
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
         
         // accelerates or decelerates car according to user input
-        updateCarSpeed(carMovementInput, deltaT);
+        updateSpeed(carMovementInput, deltaT);
 
-        if(dampedVel != 0.0f) {
-            glm::vec3 carPos = glm::vec3(carX, 0.0f, carZ);
-            glm::vec3 oldPos = Pos;
-            
-            if(SteeringAng != 0.0f) {
-                const float l = 2.78f;
-                float r = l / tan(SteeringAng);
-                float cx = Pos.x + r * cos(Yaw);
-                float cz = Pos.z - r * sin(Yaw);
-                float Dbeta = dampedVel / r;
-                Yaw = Yaw - Dbeta;
-                Pos.x = cx - r * cos(Yaw);
-                Pos.z = cz + r * sin(Yaw);
-            } else {
-                Pos.x = Pos.x - sin(Yaw) * dampedVel;
-                Pos.z = Pos.z - cos(Yaw) * dampedVel;
-            }
-            if(carMovementInput.x == 0) {
-                if(SteeringAng > STEERING_SPEED * deltaT) {
-                    SteeringAng -= STEERING_SPEED * deltaT;
-                } else if(SteeringAng < -STEERING_SPEED * deltaT) {
-                    SteeringAng += STEERING_SPEED * deltaT;
-                } else {
-                    SteeringAng = 0.0f;
-                }
-            }
-
-            glm::vec3 deltaPos = Pos - oldPos;
-            glm::vec3 carDir = glm::normalize(Pos - carPos);
-            glm::vec3 trailerMove = glm::dot(deltaPos, carDir) * carDir;
-
-            glm::vec3 preCarPos = carPos + trailerMove;
-            glm::vec3 newCarDir = glm::normalize(preCarPos - Pos);
-            carPos = Pos + newCarDir;
-            carX = carPos.x;
-            carZ = carPos.z;
-        }
+        // actually moves the car based on the updated parameters
+        moveCar(carMovementInput, deltaT, &Pos, &carX, &carZ, &Yaw);
         
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
