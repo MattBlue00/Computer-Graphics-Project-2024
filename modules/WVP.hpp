@@ -1,4 +1,7 @@
-#include "Constants.hpp"
+#ifndef WVP_HPP
+#define WVP_HPP
+
+#include "Utils.hpp"
 
 glm::mat4 MakeViewProjectionLookInDirection(glm::vec3 Pos, float Yaw, float Pitch, float Roll, float FOVy, float Ar, float nearPlane, float farPlane) {
     // Create a View Projection Matrix with the following characteristics:
@@ -18,9 +21,9 @@ glm::mat4 MakeViewProjectionLookInDirection(glm::vec3 Pos, float Yaw, float Pitc
     //    - Looking elevation defined in formal parameter >Pitch<
     //    - Looking rool defined in formal parameter >Roll<
     glm::mat4 Mv =
-    glm::rotate(glm::mat4(1.0), -Roll, z_axis) *
-    glm::rotate(glm::mat4(1.0), -Pitch, x_axis) *
-    glm::rotate(glm::mat4(1.0), -Yaw, y_axis) *
+    glm::rotate(glm::mat4(1.0), -Roll, Z_AXIS) *
+    glm::rotate(glm::mat4(1.0), -Pitch, X_AXIS) *
+    glm::rotate(glm::mat4(1.0), -Yaw, Y_AXIS) *
     glm::translate(glm::mat4(1.0), -Pos);
     
     return Mprj * Mv;
@@ -45,7 +48,7 @@ glm::mat4 MakeViewProjectionLookAt(glm::vec3 Pos, glm::vec3 Target, glm::vec3 Up
     //    - Up vector defined in formal parameter >Up<
     //    - Looking rool defined in formal parameter >Roll<
     glm::mat4 Mv =
-    glm::rotate(glm::mat4(1.0), -Roll, z_axis) *
+    glm::rotate(glm::mat4(1.0), -Roll, Z_AXIS) *
     glm::lookAt(Pos, Target, Up);
 
     return Mprj * Mv;
@@ -60,9 +63,11 @@ glm::mat4 MakeWorld(glm::vec3 Pos, float Yaw, float Pitch, float Roll) {
     //  - Scaling constant and equal to 1 (and not passed to the procedure)
     glm::mat4 M =
     glm::translate(glm::mat4(1.0f), Pos) *
-    glm::rotate(glm::mat4(1.0f), Yaw, y_axis) *
-    glm::rotate(glm::mat4(1.0f), Pitch, x_axis) *
-    glm::rotate(glm::mat4(1.0f), Roll, z_axis);
+    glm::rotate(glm::mat4(1.0f), Yaw, Y_AXIS) *
+    glm::rotate(glm::mat4(1.0f), Pitch, X_AXIS) *
+    glm::rotate(glm::mat4(1.0f), Roll, Z_AXIS);
 
     return M;
 }
+
+#endif

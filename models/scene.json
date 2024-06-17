@@ -1,15 +1,22 @@
 {
 	"models": [
-		{"id": "car",   "model": "models/Car.mgcg",       "format":"MGCG"}
+		{"id": "car",   "model": "models/Car.mgcg",     "format":"MGCG"},
+        {"id": "world", "model": "models/City.gltf",    "format":"GLTF"}
 	],
 	"textures": [
-		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"}
+		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"},
+        {"id": "t1", "texture": "textures/textures.png"}
 	],
 	"instances": [
-		{"id": "tb",   "model": "tb",   "texture": "t0",
+		{"id": "car",   "model": "car",   "texture": "t0",
 		 "transform": [1, 0, 0, 0,
 					   0, 1, 0, 0,
 					   0, 0, 1, 0,
-					   0, 0, 0, 1]}
+					   0, 0, 0, 1]},
+        {"id": "world", "model": "world", "texture": "t1",
+         "transform": [0.03, 0, 0,   200,
+                       0, 0,-0.03, 0.3,
+                       0, 0.03, 0,   120,
+                       0, 0, 0, 1]}
 	]
 }

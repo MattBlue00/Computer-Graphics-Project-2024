@@ -6,6 +6,8 @@
 
 // our headers
 #include "modules/WVP.hpp"              // world view projections
+#include "modules/Interaction.hpp"      // responses to input
+#include "modules/Camera.hpp"           // handles camera data and changes
 
 struct UniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
@@ -21,7 +23,7 @@ struct GlobalUniformBufferObject {
 };
 
 // imported here because it needs to see UBO and GUBO
-#include "modules/Scene.hpp"            // scene header
+#include "modules/Scene.hpp"            // scene header (from professor)
 
 struct Vertex {
     glm::vec3 pos;
@@ -34,8 +36,6 @@ struct Vertex {
 std::vector<SingleText> outText = {
     {1, {"Third Person", "Press SPACE to change view", "", ""}, 0, 0},
     {1, {"First Person", "Press SPACE to change view", "", ""}, 0, 0},
-    {1, {"Saving Screenshots. Please wait.","","",""}, 0, 0},
-    {2, {"Screenshot Saved!","Press ESC to quit","",""}, 0, 0}
 };
 
 // MAIN APP
@@ -66,7 +66,8 @@ class App : public BaseProject {
     float Yaw;
     glm::vec3 InitialPos;
     
-    std::vector<std::string> trkClEl = {"tb"};
+    std::vector<std::string> car = {"car"};
+    std::vector<std::string> world = {"world"};
 
     // Here you set the main application parameters
     void setWindowParameters() {
@@ -78,9 +79,9 @@ class App : public BaseProject {
         initialBackgroundColor = {0.0f, 0.85f, 1.0f, 1.0f};
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 19 * 2 + 2;
-        texturesInPool = 19 + 1;
-        setsInPool = 19 + 1;
+        uniformBlocksInPool = 19 * 2 + 2; // FIXME
+        texturesInPool = 19 + 1; // FIXME
+        setsInPool = 19 + 1; // FIXME
 
         Ar = 4.0f / 3.0f;
     }
@@ -125,7 +126,7 @@ class App : public BaseProject {
         txt.init(this, &outText);
 
         // Init local variables
-        Pos = glm::vec3(SC.I[SC.InstanceIds["tb"]].Wm[3]);
+        Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
         InitialPos = Pos;
         Yaw = 0;
         
@@ -204,14 +205,15 @@ class App : public BaseProject {
         bool fire = false;
         getSixAxis(deltaT, m, r, fire);
         
-        static float CamPitch = glm::radians(20.0f);
-        static float CamYaw   = M_PI;
-        static float CamDist  = 10.0f;
-        static float CamRoll  = 0.0f;
+        static CameraData cameraData = {};
+        cameraData.CamPitch = glm::radians(20.0f);
+        cameraData.CamYaw   = M_PI;
+        cameraData.CamDist  = 10.0f;
+        cameraData.CamRoll  = 0.0f;
+        
         const glm::vec3 CamTargetDelta = glm::vec3(0,2,0);
         const glm::vec3 Cam1stPos = glm::vec3(0.49061f, 2.07f, 2.7445f);
         
-        float TrailerAng = 0.0f;
         static float SteeringAng = 0.0f;
         static float wheelRoll = 0.0f;
         static float dampedVel = 0.0f;
@@ -226,12 +228,12 @@ class App : public BaseProject {
         
         
         const float trailerL = 4.5f;
-        static float tx = Pos.x - trailerL * sin(Yaw + TrailerAng);
-        static float tz = Pos.z - trailerL * cos(Yaw + TrailerAng);
+        static float tx = Pos.x - trailerL * sin(Yaw);
+        static float tz = Pos.z - trailerL * cos(Yaw);
 
         glm::mat4 M;
         glm::vec3 CamPos = Pos;
-        static glm::vec3 dampedCamPos = CamPos;
+        cameraData.dampedCamPos = CamPos;
 
         double lambdaVel = 8.0f;
         double dampedVelEpsilon = 0.001f;
@@ -279,40 +281,16 @@ class App : public BaseProject {
             tz = trailerPos.z;
         }
         
-        TrailerAng = atan2(Pos.x-tx, Pos.z-tz);
-
-        if(glfwGetKey(window, GLFW_KEY_SPACE)) {
-            if(!debounce) {
-                debounce = true;
-                curDebounce = GLFW_KEY_SPACE;
-                currScene = (currScene+1) % 2;
-                if(currScene == 0) {
-                    CamPitch = glm::radians(20.0f);
-                    CamYaw   = M_PI;
-                    CamRoll  = 0.0f;
-                    dampedCamPos = Pos;
-                } else if(currScene == 1) {
-                    CamPitch = glm::radians(0.0f);
-                    CamYaw   = M_PI;
-                    CamRoll  = 0.0f;
-                }
-
-                std::cout << "Scene : " << currScene << "\n";
-
-                RebuildPipeline();
-            }
-        } else {
-            if((curDebounce == GLFW_KEY_SPACE) && debounce) {
-                debounce = false;
-                curDebounce = 0;
-            }
+        // checks if space was pressed
+        bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, Pos);
+        // if so, rebuilds pipeline
+        if(shouldRebuildPipeline){
+            RebuildPipeline();
         }
 
-        // Standard procedure to quit when the ESC key is pressed
-        if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-            glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-
+        // checks if esc was pressed
+        shouldQuit(window);
+        
         if(glfwGetKey(window, GLFW_KEY_V)) {
             if(!debounce) {
                 debounce = true;
@@ -320,10 +298,10 @@ class App : public BaseProject {
 
                 printVec3("Pos = ", Pos);
                 std::cout << "Yaw         = " << Yaw         << ";\n";
-                std::cout << "CamPitch    = " << CamPitch    << ";\n";
-                std::cout << "CamYaw      = " << CamYaw      << ";\n";
-                std::cout << "CamRoll     = " << CamRoll     << ";\n";
-                std::cout << "CamDist     = " << CamDist     << ";\n";
+                std::cout << "CamPitch    = " << cameraData.CamPitch    << ";\n";
+                std::cout << "CamYaw      = " << cameraData.CamYaw      << ";\n";
+                std::cout << "CamRoll     = " << cameraData.CamRoll     << ";\n";
+                std::cout << "CamDist     = " << cameraData.CamDist     << ";\n";
                 std::cout << "SteeringAng = " << SteeringAng << ";\n";
                 std::cout << "wheelRoll   = " << wheelRoll   << ";\n";
                 std::cout << "tx   = " << tx   << ";\n";
@@ -337,37 +315,37 @@ class App : public BaseProject {
         }
         
         if(currScene == 0) {
-            CamYaw += ROT_SPEED * deltaT * r.y;
-            CamPitch -= ROT_SPEED * deltaT * r.x;
-            CamRoll -= ROT_SPEED * deltaT * r.z;
-            CamDist -= MOVE_SPEED * deltaT * m.y;
+            cameraData.CamYaw += ROT_SPEED * deltaT * r.y;
+            cameraData.CamPitch -= ROT_SPEED * deltaT * r.x;
+            cameraData.CamRoll -= ROT_SPEED * deltaT * r.z;
+            cameraData.CamDist -= MOVE_SPEED * deltaT * m.y;
         
-            CamYaw = (CamYaw < 0.0f ? 0.0f : (CamYaw > 2*M_PI ? 2*M_PI : CamYaw));
-            CamPitch = (CamPitch < 0.0f ? 0.0f : (CamPitch > M_PI_2-0.01f ? M_PI_2-0.01f : CamPitch));
-            CamRoll = (CamRoll < -M_PI ? -M_PI : (CamRoll > M_PI ? M_PI : CamRoll));
-            CamDist = (CamDist < 7.0f ? 7.0f : (CamDist > 15.0f ? 15.0f : CamDist));
+            cameraData.CamYaw = (cameraData.CamYaw < 0.0f ? 0.0f : (cameraData.CamYaw > 2*M_PI ? 2*M_PI : cameraData.CamYaw));
+            cameraData.CamPitch = (cameraData.CamPitch < 0.0f ? 0.0f : (cameraData.CamPitch > M_PI_2-0.01f ? M_PI_2-0.01f : cameraData.CamPitch));
+            cameraData.CamRoll = (cameraData.CamRoll < -M_PI ? -M_PI : (cameraData.CamRoll > M_PI ? M_PI : cameraData.CamRoll));
+            cameraData.CamDist = (cameraData.CamDist < 7.0f ? 7.0f : (cameraData.CamDist > 15.0f ? 15.0f : cameraData.CamDist));
                 
-            glm::vec3 CamTarget = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
+            glm::vec3 CamTarget = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
                              glm::vec4(CamTargetDelta,1));
-            CamPos = CamTarget + glm::vec3(glm::rotate(glm::mat4(1), Yaw + CamYaw, glm::vec3(0,1,0)) * glm::rotate(glm::mat4(1), -CamPitch, glm::vec3(1,0,0)) *
-                             glm::vec4(0,0,CamDist,1));
+            CamPos = CamTarget + glm::vec3(glm::rotate(glm::mat4(1), Yaw + cameraData.CamYaw, Y_AXIS) * glm::rotate(glm::mat4(1), -cameraData.CamPitch, X_AXIS) *
+                             glm::vec4(0,0,cameraData.CamDist,1));
 
             const float lambdaCam = 10.0f;
-            dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
-                         dampedCamPos * exp(-lambdaCam * deltaT);
-            M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, glm::vec3(0,1,0), CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
+            cameraData.dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
+                cameraData.dampedCamPos * exp(-lambdaCam * deltaT);
+            M = MakeViewProjectionLookAt(cameraData.dampedCamPos, CamTarget, Y_AXIS, cameraData.CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
         } else {
-            CamYaw -= ROT_SPEED * deltaT * r.y;
-            CamPitch -= ROT_SPEED * deltaT * r.x;
-            CamRoll -= ROT_SPEED * deltaT * r.z;
+            cameraData.CamYaw -= ROT_SPEED * deltaT * r.y;
+            cameraData.CamPitch -= ROT_SPEED * deltaT * r.x;
+            cameraData.CamRoll -= ROT_SPEED * deltaT * r.z;
         
-            CamYaw = (CamYaw < M_PI_2 ? M_PI_2 : (CamYaw > 1.5*M_PI ? 1.5*M_PI : CamYaw));
-            CamPitch = (CamPitch < -0.25*M_PI ? -0.25*M_PI : (CamPitch > 0.25*M_PI ? 0.25*M_PI : CamPitch));
-            CamRoll = (CamRoll < -M_PI ? -M_PI : (CamRoll > M_PI ? M_PI : CamRoll));
+            cameraData.CamYaw = (cameraData.CamYaw < M_PI_2 ? M_PI_2 : (cameraData.CamYaw > 1.5*M_PI ? 1.5*M_PI : cameraData.CamYaw));
+            cameraData.CamPitch = (cameraData.CamPitch < -0.25*M_PI ? -0.25*M_PI : (cameraData.CamPitch > 0.25*M_PI ? 0.25*M_PI : cameraData.CamPitch));
+            cameraData.CamRoll = (cameraData.CamRoll < -M_PI ? -M_PI : (cameraData.CamRoll > M_PI ? M_PI : cameraData.CamRoll));
                 
-            glm::vec3 Cam1Pos = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
+            glm::vec3 Cam1Pos = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
                              glm::vec4(Cam1stPos,1));
-            M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + CamYaw, CamPitch, CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
+            M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + cameraData.CamYaw, cameraData.CamPitch, cameraData.CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
         }
 
         glm::mat4 ViewPrj = M;
@@ -379,16 +357,28 @@ class App : public BaseProject {
         GlobalUniformBufferObject gubo{};
         gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
         gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        gubo.eyePos = dampedCamPos;
+        gubo.eyePos = cameraData.dampedCamPos;
         gubo.eyeDir = glm::vec4(0);
         gubo.eyeDir.w = 1.0;
 
         // Draw the car
-        for (std::vector<std::string>::iterator it = trkClEl.begin(); it != trkClEl.end(); it++) {
+        for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
             int i = SC.InstanceIds[it->c_str()];
             glm::vec3 dP = glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
                                      glm::vec4(*deltaP[i],1));
             ubo.mMat = MakeWorld(Pos + dP, Yaw + deltaA[i], usePitch[i] * wheelRoll, 0) * baseTr;
+            ubo.mvpMat = ViewPrj * ubo.mMat;
+            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+
+            SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
+            SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+        }
+        
+        // Draw the landscape
+        for (std::vector<std::string>::iterator it = world.begin(); it != world.end(); it++) {
+            int i = SC.InstanceIds[it->c_str()];
+            
+            ubo.mMat = SC.I[i].Wm * baseTr;
             ubo.mvpMat = ViewPrj * ubo.mMat;
             ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
 

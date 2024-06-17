@@ -15,7 +15,7 @@
 		7DA746B12C1DF2C000DFF9EB /* libvulkan.1.3.275.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DA746AF2C1DF2C000DFF9EB /* libvulkan.1.3.275.dylib */; };
 		7DA746B42C1DF2F300DFF9EB /* App.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7DA746B32C1DF2F300DFF9EB /* App.cpp */; };
 		7DA746BF2C1DFB3B00DFF9EB /* shaders in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DA746BE2C1DFB1C00DFF9EB /* shaders */; };
-		7DAD4F332C1F308800F79F48 /* Constants.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 7DAD4F322C1F308800F79F48 /* Constants.hpp */; };
+		7DAD4F332C1F308800F79F48 /* Utils.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 7DAD4F322C1F308800F79F48 /* Utils.hpp */; };
 		7DAD4F372C1F3C1C00F79F48 /* models in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DAD4F362C1F3C1500F79F48 /* models */; };
 		7DAD4F392C1F3E1200F79F48 /* textures in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DAD4F382C1F3E0A00F79F48 /* textures */; };
 /* End PBXBuildFile section */
@@ -52,12 +52,14 @@
 		7DA746B62C1DF37700DFF9EB /* Starter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Starter.hpp; sourceTree = "<group>"; };
 		7DA746B82C1DF4CF00DFF9EB /* headers */ = {isa = PBXFileReference; lastKnownFileType = folder; path = headers; sourceTree = "<group>"; };
 		7DA746BE2C1DFB1C00DFF9EB /* shaders */ = {isa = PBXFileReference; lastKnownFileType = folder; path = shaders; sourceTree = "<group>"; };
-		7DAD4F322C1F308800F79F48 /* Constants.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Constants.hpp; sourceTree = "<group>"; };
+		7DAD4F322C1F308800F79F48 /* Utils.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Utils.hpp; sourceTree = "<group>"; };
 		7DAD4F342C1F30F400F79F48 /* WVP.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = WVP.hpp; sourceTree = "<group>"; };
 		7DAD4F352C1F392600F79F48 /* Scene.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Scene.hpp; sourceTree = "<group>"; };
 		7DAD4F362C1F3C1500F79F48 /* models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = models; sourceTree = "<group>"; };
 		7DAD4F382C1F3E0A00F79F48 /* textures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = textures; sourceTree = "<group>"; };
 		7DAD4F422C1F4BC400F79F48 /* TextMaker.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TextMaker.hpp; sourceTree = "<group>"; };
+		7DE098512C202B310025DCED /* Interaction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interaction.hpp; sourceTree = "<group>"; };
+		7DE098522C2032E70025DCED /* Camera.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Camera.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,7 +81,7 @@
 			children = (
 				7DAD4F382C1F3E0A00F79F48 /* textures */,
 				7DAD4F362C1F3C1500F79F48 /* models */,
-				7DAD4F322C1F308800F79F48 /* Constants.hpp */,
+				7DAD4F322C1F308800F79F48 /* Utils.hpp */,
 				7DA746BE2C1DFB1C00DFF9EB /* shaders */,
 				7DA746B82C1DF4CF00DFF9EB /* headers */,
 				7DA746B52C1DF33B00DFF9EB /* modules */,
@@ -127,6 +129,8 @@
 				7DAD4F352C1F392600F79F48 /* Scene.hpp */,
 				7DA746B62C1DF37700DFF9EB /* Starter.hpp */,
 				7DAD4F342C1F30F400F79F48 /* WVP.hpp */,
+				7DE098512C202B310025DCED /* Interaction.hpp */,
+				7DE098522C2032E70025DCED /* Camera.hpp */,
 			);
 			path = modules;
 			sourceTree = "<group>";
@@ -189,7 +193,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7DA746B42C1DF2F300DFF9EB /* App.cpp in Sources */,
-				7DAD4F332C1F308800F79F48 /* Constants.hpp in Sources */,
+				7DAD4F332C1F308800F79F48 /* Utils.hpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
