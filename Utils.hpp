@@ -6,13 +6,32 @@
 
 #include <glm/glm.hpp>
 
+// GENERAL CONSTANTS
+
+// notable vectors
+const glm::vec3 ZERO_3 = glm::vec3(0.0f, 0.0f, 0.0f);
+const glm::vec3 X_AXIS = glm::vec3(1.0f, 0.0f, 0.0f);
+const glm::vec3 Y_AXIS = glm::vec3(0.0f, 1.0f, 0.0f);
+const glm::vec3 Z_AXIS = glm::vec3(0.0f, 0.0f, 1.0f);
+
+// notable angles
+const float DEG_30  = glm::radians(30.0f);
+const float DEG_35  = glm::radians(35.0f);
+const float DEG_90  = glm::radians(90.0f);
+const float DEG_120 = glm::radians(120.0f);
+
+// APP-SPECIFIC CONSTANTS
+
 // scene ids
 const int THIRD_PERSON_SCENE = 0;
 const int FIRST_PERSON_SCENE = 1;
 
-// 3D axes
-const glm::vec3 X_AXIS(1.0f, 0.0f, 0.0f);
-const glm::vec3 Y_AXIS(0.0f, 1.0f, 0.0f);
-const glm::vec3 Z_AXIS(0.0f, 0.0f, 1.0f);
+// car parameters
+const float STEERING_SPEED = DEG_30;
+const float MAX_STEERING_ANGLE = DEG_35;
+const float MOVE_SPEED = 7.0f;
+
+// unknown parameter
+const float ROT_SPEED = DEG_120;
 
 #endif

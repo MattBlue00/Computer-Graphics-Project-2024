@@ -60,6 +60,7 @@
 		7DAD4F422C1F4BC400F79F48 /* TextMaker.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TextMaker.hpp; sourceTree = "<group>"; };
 		7DE098512C202B310025DCED /* Interaction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interaction.hpp; sourceTree = "<group>"; };
 		7DE098522C2032E70025DCED /* Camera.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Camera.hpp; sourceTree = "<group>"; };
+		7DE098532C2084CA0025DCED /* Car.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Car.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +132,7 @@
 				7DAD4F342C1F30F400F79F48 /* WVP.hpp */,
 				7DE098512C202B310025DCED /* Interaction.hpp */,
 				7DE098522C2032E70025DCED /* Camera.hpp */,
+				7DE098532C2084CA0025DCED /* Car.hpp */,
 			);
 			path = modules;
 			sourceTree = "<group>";

@@ -5,9 +5,9 @@
 #include "modules/TextMaker.hpp"        // text header
 
 // our headers
-#include "modules/WVP.hpp"              // world view projections
-#include "modules/Interaction.hpp"      // responses to input
-#include "modules/Camera.hpp"           // handles camera data and changes
+#include "modules/Interaction.hpp"      // responds to input
+#include "modules/Camera.hpp"           // handles camera movement
+#include "modules/Car.hpp"              // handles car movement
 
 struct UniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
@@ -61,7 +61,7 @@ class App : public BaseProject {
     
     // Other application parameters
     int currScene = THIRD_PERSON_SCENE;
-    float Ar;
+    float AspectRatio;
     glm::vec3 Pos;
     float Yaw;
     glm::vec3 InitialPos;
@@ -83,13 +83,13 @@ class App : public BaseProject {
         texturesInPool = 19 + 1; // FIXME
         setsInPool = 19 + 1; // FIXME
 
-        Ar = 4.0f / 3.0f;
+        AspectRatio = 4.0f / 3.0f;
     }
     
     // What to do when the window changes size
     void onWindowResize(int w, int h) {
         std::cout << "Window resized to: " << w << " x " << h << "\n";
-        Ar = (float)w / (float)h;
+        AspectRatio = (float)w / (float)h;
     }
     
     // Here you load and setup all your Vulkan Models and Textures.
@@ -197,52 +197,47 @@ class App : public BaseProject {
     // Here is where you update the uniforms.
     // Very likely this will be where you will be writing the logic of your application.
     void updateUniformBuffer(uint32_t currentImage) {
+        
+        // true if the scene is transitioning to another scene
         static bool debounce = false;
+        
+        // holds the pressed input key
         static int curDebounce = 0;
 
+        // small amount of time that passes at every "update"
         float deltaT;
-        glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
-        bool fire = false;
-        getSixAxis(deltaT, m, r, fire);
         
+        // inits WASD and arrows user input
+        glm::vec3 carMovementInput = ZERO_3;
+        glm::vec3 cameraRotationInput = ZERO_3;
+        
+        // ???
+        bool fire = false;
+        
+        // gets WASD and arrows input from user, and sets deltaT and fire
+        getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
+        
+        // inits the camera to third position view
         static CameraData cameraData = {};
         switchToThirdPersonCamera(&cameraData);
         
-        const glm::vec3 CamTargetDelta = glm::vec3(0,2,0);
-        const glm::vec3 Cam1stPos = glm::vec3(0.49061f, 2.07f, 2.7445f);
+        // rotates car according to user input
+        rotateCar(carMovementInput, deltaT);
         
-        static float SteeringAng = 0.0f;
-        static float wheelRoll = 0.0f;
-        static float dampedVel = 0.0f;
-        
-        const float STEERING_SPEED = glm::radians(30.0f);
-        const float ROT_SPEED = glm::radians(120.0f);
-        const float MOVE_SPEED = 2.5f;
+        // car position in the world
+        static float carX = Pos.x;
+        static float carZ = Pos.z;
 
-        SteeringAng += -m.x * STEERING_SPEED * deltaT;
-        SteeringAng = (SteeringAng < glm::radians(-35.0f) ? glm::radians(-35.0f) :
-                      (SteeringAng > glm::radians(35.0f)  ? glm::radians(35.0f)  : SteeringAng));
-        
-        
-        const float trailerL = 4.5f;
-        static float tx = Pos.x - trailerL * sin(Yaw);
-        static float tz = Pos.z - trailerL * cos(Yaw);
-
-        glm::mat4 M;
+        // camera variables definition
+        glm::mat4 M; // will be used as a return result when building view matrix
         glm::vec3 CamPos = Pos;
-        // MUST stay here
-        static glm::vec3 dampedCamPos = CamPos;
-
-        double lambdaVel = 8.0f;
-        double dampedVelEpsilon = 0.001f;
-        dampedVel =  MOVE_SPEED * deltaT * m.z * (1 - exp(-lambdaVel * deltaT)) +
-                     dampedVel * exp(-lambdaVel * deltaT);
-        dampedVel = ((fabs(dampedVel) < dampedVelEpsilon) ? 0.0f : dampedVel);
-        wheelRoll -= dampedVel / 0.4;
-        wheelRoll = (wheelRoll < 0.0 ? wheelRoll + 2*M_PI : (wheelRoll > 2*M_PI ? wheelRoll - 2*M_PI : wheelRoll));
+        static glm::vec3 dampedCamPos = CamPos; // MUST stay here
+        
+        // accelerates or decelerates car according to user input
+        updateCarSpeed(carMovementInput, deltaT);
 
         if(dampedVel != 0.0f) {
-            glm::vec3 trailerPos = glm::vec3(tx, 0.0f, tz);
+            glm::vec3 carPos = glm::vec3(carX, 0.0f, carZ);
             glm::vec3 oldPos = Pos;
             
             if(SteeringAng != 0.0f) {
@@ -258,7 +253,7 @@ class App : public BaseProject {
                 Pos.x = Pos.x - sin(Yaw) * dampedVel;
                 Pos.z = Pos.z - cos(Yaw) * dampedVel;
             }
-            if(m.x == 0) {
+            if(carMovementInput.x == 0) {
                 if(SteeringAng > STEERING_SPEED * deltaT) {
                     SteeringAng -= STEERING_SPEED * deltaT;
                 } else if(SteeringAng < -STEERING_SPEED * deltaT) {
@@ -269,14 +264,14 @@ class App : public BaseProject {
             }
 
             glm::vec3 deltaPos = Pos - oldPos;
-            glm::vec3 trailerDir = glm::normalize(Pos - trailerPos);
-            glm::vec3 trailerMove = glm::dot(deltaPos, trailerDir) * trailerDir;
+            glm::vec3 carDir = glm::normalize(Pos - carPos);
+            glm::vec3 trailerMove = glm::dot(deltaPos, carDir) * carDir;
 
-            glm::vec3 preTrailerPos = trailerPos + trailerMove;
-            glm::vec3 newTrailerDir = glm::normalize(preTrailerPos - Pos);
-            trailerPos = Pos + trailerL * newTrailerDir;
-            tx = trailerPos.x;
-            tz = trailerPos.z;
+            glm::vec3 preCarPos = carPos + trailerMove;
+            glm::vec3 newCarDir = glm::normalize(preCarPos - Pos);
+            carPos = Pos + newCarDir;
+            carX = carPos.x;
+            carZ = carPos.z;
         }
         
         // checks if space was pressed
@@ -290,29 +285,13 @@ class App : public BaseProject {
         shouldQuit(window);
         
         // checks if v was pressed
-        shouldPrintDebugVariables(window, Pos, Yaw, cameraData, tx, tz, SteeringAng, wheelRoll, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
+        shouldPrintDebugVariables(window, Pos, Yaw, cameraData, carX, carZ, SteeringAng, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
         
+        // updates camera position
         if(currScene == THIRD_PERSON_SCENE) {
-            
-            updateThirdPersonCamera(&cameraData, ROT_SPEED, deltaT, r, m);
-                
-            glm::vec3 CamTarget = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
-                             glm::vec4(CamTargetDelta,1));
-            CamPos = CamTarget + glm::vec3(glm::rotate(glm::mat4(1), Yaw + cameraData.CamYaw, Y_AXIS) * glm::rotate(glm::mat4(1), -cameraData.CamPitch, X_AXIS) *
-                             glm::vec4(0,0,cameraData.CamDist,1));
-
-            const float lambdaCam = 10.0f;
-            dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
-                dampedCamPos * exp(-lambdaCam * deltaT);
-            M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, Y_AXIS, cameraData.CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
-            
+            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
         } else {
-            
-            updateFirstPersonCamera(&cameraData, ROT_SPEED, deltaT, r, m);
-                
-            glm::vec3 Cam1Pos = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
-                             glm::vec4(Cam1stPos,1));
-            M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + cameraData.CamYaw, cameraData.CamPitch, cameraData.CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
+            updateFirstPersonCamera(&cameraData, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
         }
 
         glm::mat4 ViewPrj = M;
@@ -333,7 +312,7 @@ class App : public BaseProject {
             int i = SC.InstanceIds[it->c_str()];
             glm::vec3 dP = glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
                                      glm::vec4(*deltaP[i],1));
-            ubo.mMat = MakeWorld(Pos + dP, Yaw + deltaA[i], usePitch[i] * wheelRoll, 0) * baseTr;
+            ubo.mMat = MakeWorld(Pos + dP, Yaw + deltaA[i], usePitch[i], 0) * baseTr;
             ubo.mvpMat = ViewPrj * ubo.mMat;
             ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
 
