@@ -208,8 +208,8 @@ class App : public BaseProject {
         float deltaT;
         
         // inits WASD and arrows user input
-        glm::vec3 carMovementInput = ZERO_3;
-        glm::vec3 cameraRotationInput = ZERO_3;
+        glm::vec3 carMovementInput = ZERO_VEC3;
+        glm::vec3 cameraRotationInput = ZERO_VEC3;
         
         // ???
         bool fire = false;
@@ -257,21 +257,21 @@ class App : public BaseProject {
 
         glm::mat4 ViewPrj = M;
         UniformBufferObject ubo{};
-        glm::mat4 baseTr = glm::mat4(1.0f);
+        glm::mat4 baseTr = ONE_MAT4;
         // Here is where you actually update your uniforms
 
         // updates global uniforms
         GlobalUniformBufferObject gubo{};
-        gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
-        gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        gubo.lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+        gubo.lightColor = ONE_VEC4;
         gubo.eyePos = dampedCamPos;
-        gubo.eyeDir = glm::vec4(0);
+        gubo.eyeDir = ZERO_VEC4;
         gubo.eyeDir.w = 1.0;
 
         // Draw the car
         for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
             int i = SC.InstanceIds[it->c_str()];
-            glm::vec3 dP = glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
+            glm::vec3 dP = glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
                                      glm::vec4(*deltaP[i],1));
             ubo.mMat = MakeWorld(Pos + dP, Yaw + deltaA[i], usePitch[i], 0) * baseTr;
             ubo.mvpMat = ViewPrj * ubo.mMat;

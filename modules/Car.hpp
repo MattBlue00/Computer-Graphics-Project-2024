@@ -1,6 +1,12 @@
 #ifndef CAR_HPP
 #define CAR_HPP
 
+// car parameters
+const float STEERING_SPEED = DEG_30;
+const float MAX_STEERING_ANGLE = DEG_35;
+const float MOVE_SPEED = 7.0f;
+
+// car variables
 static float SteeringAng = 0.0f;
 static float dampedVel = 0.0f;
 
@@ -23,8 +29,6 @@ void updateSpeed(glm::vec3 carMovementInput, float deltaT){
 
 void moveCar(glm::vec3 carMovementInput, float deltaT, glm::vec3* Pos, float* Yaw){
     if(dampedVel != 0.0f) {
-        glm::vec3 oldPos = *Pos;
-        
         if(SteeringAng != 0.0f) {
             const float l = 2.78f;
             float r = l / tan(SteeringAng);
