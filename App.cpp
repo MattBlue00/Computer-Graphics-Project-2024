@@ -233,7 +233,7 @@ class App : public BaseProject {
 
         glm::mat4 M;
         glm::vec3 CamPos = Pos;
-        cameraData.dampedCamPos = CamPos;
+        static glm::vec3 dampedCamPos = CamPos;
 
         double lambdaVel = 8.0f;
         double dampedVelEpsilon = 0.001f;
@@ -282,7 +282,7 @@ class App : public BaseProject {
         }
         
         // checks if space was pressed
-        bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, Pos);
+        bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
         // if so, rebuilds pipeline
         if(shouldRebuildPipeline){
             RebuildPipeline();
@@ -331,9 +331,9 @@ class App : public BaseProject {
                              glm::vec4(0,0,cameraData.CamDist,1));
 
             const float lambdaCam = 10.0f;
-            cameraData.dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
-                cameraData.dampedCamPos * exp(-lambdaCam * deltaT);
-            M = MakeViewProjectionLookAt(cameraData.dampedCamPos, CamTarget, Y_AXIS, cameraData.CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
+            dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
+                dampedCamPos * exp(-lambdaCam * deltaT);
+            M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, Y_AXIS, cameraData.CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
         } else {
             cameraData.CamYaw -= ROT_SPEED * deltaT * r.y;
             cameraData.CamPitch -= ROT_SPEED * deltaT * r.x;
@@ -357,7 +357,7 @@ class App : public BaseProject {
         GlobalUniformBufferObject gubo{};
         gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
         gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        gubo.eyePos = cameraData.dampedCamPos;
+        gubo.eyePos = dampedCamPos;
         gubo.eyeDir = glm::vec4(0);
         gubo.eyeDir.w = 1.0;
 

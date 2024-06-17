@@ -12,7 +12,7 @@ void shouldQuit(GLFWwindow* window){
 }
 
 // returns true if should rebuild pipeline
-bool shouldChangeScene(GLFWwindow* window, CameraData* cameraData, int* currScene, bool* debounce, int* curDebounce, glm::vec3 Pos){
+bool shouldChangeScene(GLFWwindow* window, CameraData* cameraData, int* currScene, bool* debounce, int* curDebounce, glm::vec3* dampedCamPos, glm::vec3 Pos){
     if(glfwGetKey(window, GLFW_KEY_SPACE)) {
         if(!*debounce) {
             *debounce = true;
@@ -22,7 +22,7 @@ bool shouldChangeScene(GLFWwindow* window, CameraData* cameraData, int* currScen
                 cameraData->CamPitch = glm::radians(20.0f);
                 cameraData->CamYaw   = M_PI;
                 cameraData->CamRoll  = 0.0f;
-                cameraData->dampedCamPos = Pos;
+                *dampedCamPos = Pos;
             } else if(*currScene == 1) {
                 cameraData->CamPitch = glm::radians(0.0f);
                 cameraData->CamYaw   = M_PI;

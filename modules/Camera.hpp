@@ -6,7 +6,6 @@ struct CameraData {
     float CamYaw;
     float CamDist;
     float CamRoll;
-    glm::vec3 dampedCamPos;
 };
 
 #endif
