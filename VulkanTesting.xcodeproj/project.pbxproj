@@ -61,6 +61,8 @@
 		7DE098512C202B310025DCED /* Interaction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interaction.hpp; sourceTree = "<group>"; };
 		7DE098522C2032E70025DCED /* Camera.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Camera.hpp; sourceTree = "<group>"; };
 		7DE098532C2084CA0025DCED /* Car.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Car.hpp; sourceTree = "<group>"; };
+		7DE098572C21C3260025DCED /* Circuit.blend1 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Circuit.blend1; sourceTree = "<group>"; };
+		7DE098582C21C3260025DCED /* Circuit.blend */ = {isa = PBXFileReference; lastKnownFileType = file; path = Circuit.blend; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +82,7 @@
 		7D9D4EF92B8504DF00B8F9F8 = {
 			isa = PBXGroup;
 			children = (
+				7DE098542C21C2780025DCED /* blender */,
 				7DAD4F382C1F3E0A00F79F48 /* textures */,
 				7DAD4F362C1F3C1500F79F48 /* models */,
 				7DAD4F322C1F308800F79F48 /* Utils.hpp */,
@@ -135,6 +138,15 @@
 				7DE098532C2084CA0025DCED /* Car.hpp */,
 			);
 			path = modules;
+			sourceTree = "<group>";
+		};
+		7DE098542C21C2780025DCED /* blender */ = {
+			isa = PBXGroup;
+			children = (
+				7DE098582C21C3260025DCED /* Circuit.blend */,
+				7DE098572C21C3260025DCED /* Circuit.blend1 */,
+			);
+			path = blender;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
