@@ -4,7 +4,7 @@
 // car parameters
 const float STEERING_SPEED = DEG_30;
 const float MAX_STEERING_ANGLE = DEG_35;
-const float MOVE_SPEED = 7.0f;
+const float MOVE_SPEED = 20.0f;
 
 // car variables
 static float SteeringAng = 0.0f;

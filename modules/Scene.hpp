@@ -1,3 +1,6 @@
+#ifndef SCENE_HPP
+#define SCENE_HPP
+
 typedef struct {
 	std::string *id;
 	int Mid;
@@ -149,3 +152,4 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 	}
 };
     
+#endif

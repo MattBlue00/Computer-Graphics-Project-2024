@@ -63,6 +63,7 @@
 		7DE098532C2084CA0025DCED /* Car.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Car.hpp; sourceTree = "<group>"; };
 		7DE098572C21C3260025DCED /* Circuit.blend1 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Circuit.blend1; sourceTree = "<group>"; };
 		7DE098582C21C3260025DCED /* Circuit.blend */ = {isa = PBXFileReference; lastKnownFileType = file; path = Circuit.blend; sourceTree = "<group>"; };
+		7DE0985A2C21C4640025DCED /* Drawer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Drawer.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +137,7 @@
 				7DE098512C202B310025DCED /* Interaction.hpp */,
 				7DE098522C2032E70025DCED /* Camera.hpp */,
 				7DE098532C2084CA0025DCED /* Car.hpp */,
+				7DE0985A2C21C4640025DCED /* Drawer.hpp */,
 			);
 			path = modules;
 			sourceTree = "<group>";

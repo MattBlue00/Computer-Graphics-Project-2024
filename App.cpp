@@ -1,35 +1,21 @@
-// HEADERS AND DATA STRUCTURES
+// HEADERS AND FUNCTION PROTOTYPES
 
 // professor headers
 #include "modules/Starter.hpp"          // vulkan starter header
 #include "modules/TextMaker.hpp"        // text header
 
 // our headers
+#include "Utils.hpp"                    // constants and structs
 #include "modules/Interaction.hpp"      // responds to input
 #include "modules/Camera.hpp"           // handles camera movement
 #include "modules/Car.hpp"              // handles car movement
+#include "modules/Drawer.hpp"           // draws the objects
 
-struct UniformBufferObject {
-    alignas(16) glm::mat4 mvpMat;
-    alignas(16) glm::mat4 mMat;
-    alignas(16) glm::mat4 nMat;
-};
-
-struct GlobalUniformBufferObject {
-    alignas(16) glm::vec3 lightDir;
-    alignas(16) glm::vec4 lightColor;
-    alignas(16) glm::vec3 eyePos;
-    alignas(16) glm::vec4 eyeDir;
-};
-
-// imported here because it needs to see UBO and GUBO
+// imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
 
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec2 UV;
-    glm::vec3 norm;
-};
+// used to set lights, camera position and direction
+void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos);
 
 // TEXT TO SHOW
 
@@ -41,6 +27,7 @@ std::vector<SingleText> outText = {
 // MAIN APP
 
 class App : public BaseProject {
+    
     protected:
     
     // Descriptor Layouts ["classes" of what will be passed to the shaders]
@@ -52,31 +39,44 @@ class App : public BaseProject {
     // Pipelines [Shader couples]
     Pipeline P;
 
+    // Scene
     Scene SC;
+    
+    // ???
     glm::vec3 **deltaP;
+    
+    // ???
     float *deltaA;
+    
+    // ???
     float *usePitch;
 
+    // Text Maker
     TextMaker txt;
     
-    // Other application parameters
+    // current scene
     int currScene = THIRD_PERSON_SCENE;
-    float AspectRatio;
-    glm::vec3 Pos;
-    float Yaw;
-    glm::vec3 InitialPos;
     
-    std::vector<std::string> car = {"car"};
-    std::vector<std::string> world = {"world"};
+    // aspect ratio
+    float AspectRatio;
+    
+    // Position
+    glm::vec3 Pos;
+    
+    // Yaw
+    float Yaw;
+    
+    // Initial position
+    glm::vec3 InitialPos;
 
     // Here you set the main application parameters
     void setWindowParameters() {
         // window size, titile and initial background
         windowWidth = 800;
         windowHeight = 600;
-        windowTitle = "Racing Stadium";
+        windowTitle = "Rainbow Stadium: Time Attack!";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.0f, 0.85f, 1.0f, 1.0f};
+        initialBackgroundColor = {0.090f, 0.024f, 0.231f, 1.0f}; // dark violet
         
         // Descriptor pool sizes
         uniformBlocksInPool = 19 * 2 + 2; // FIXME
@@ -257,44 +257,31 @@ class App : public BaseProject {
 
         glm::mat4 ViewPrj = M;
         UniformBufferObject ubo{};
-        glm::mat4 baseTr = ONE_MAT4;
-        // Here is where you actually update your uniforms
-
-        // updates global uniforms
-        GlobalUniformBufferObject gubo{};
-        gubo.lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
-        gubo.lightColor = ONE_VEC4;
-        gubo.eyePos = dampedCamPos;
-        gubo.eyeDir = ZERO_VEC4;
-        gubo.eyeDir.w = 1.0;
-
-        // Draw the car
-        for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
-            int i = SC.InstanceIds[it->c_str()];
-            glm::vec3 dP = glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
-                                     glm::vec4(*deltaP[i],1));
-            ubo.mMat = MakeWorld(Pos + dP, Yaw + deltaA[i], usePitch[i], 0) * baseTr;
-            ubo.mvpMat = ViewPrj * ubo.mMat;
-            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-
-            SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-            SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
-        }
+        glm::mat4 baseCar = ONE_MAT4;
         
-        // Draw the landscape
-        for (std::vector<std::string>::iterator it = world.begin(); it != world.end(); it++) {
-            int i = SC.InstanceIds[it->c_str()];
-            
-            ubo.mMat = SC.I[i].Wm * baseTr;
-            ubo.mvpMat = ViewPrj * ubo.mMat;
-            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        // Here is where you actually update your uniforms
+        
+        GlobalUniformBufferObject gubo{};
+        // sets lights, camera position and direction;
+        updateGUBO(&gubo, dampedCamPos);
 
-            SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-            SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
-        }
+        // draws the car
+        drawCar(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+        
+        // draws the circuit
+        drawCircuit(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
         
     }
 };
+
+void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos){
+    // updates global uniforms
+    gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+    gubo->lightColor = ONE_VEC4;
+    gubo->eyePos = dampedCamPos;
+    gubo->eyeDir = ZERO_VEC4;
+    gubo->eyeDir.w = 1.0;
+}
 
 // This is the main: probably you do not need to touch this!
 int main() {

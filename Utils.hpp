@@ -34,4 +34,25 @@ const float DEG_135 = glm::radians(135.0f);
 const int THIRD_PERSON_SCENE = 0;
 const int FIRST_PERSON_SCENE = 1;
 
+// GENERAL STRUCTS
+
+struct UniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
+};
+
+struct GlobalUniformBufferObject {
+    alignas(16) glm::vec3 lightDir;
+    alignas(16) glm::vec4 lightColor;
+    alignas(16) glm::vec3 eyePos;
+    alignas(16) glm::vec4 eyeDir;
+};
+
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec2 UV;
+    glm::vec3 norm;
+};
+
 #endif
