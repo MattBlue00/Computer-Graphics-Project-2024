@@ -1,0 +1,22 @@
+{
+	"models": [
+		{"id": "car",       "model": "models/Car.mgcg",         "format":"MGCG"},
+        {"id": "circuit",   "model": "models/Circuit.obj",      "format":"OBJ"}
+	],
+	"textures": [
+		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"},
+        {"id": "t1", "texture": "textures/RainbowRoad.png"}
+	],
+	"instances": [
+		{"id": "car",       "model": "car",     "texture": "t0",
+		 "transform": [1, 0, 0, 0,
+					   0, 1, 0, 0,
+					   0, 0, 1, 0,
+					   0, 0, 0, 1]},
+        {"id": "world",     "model": "circuit", "texture": "t1",
+         "transform": [1, 0, 0, 0,
+                       0, 1, 0, 0,
+                       0, 0, 1, 0,
+                       0, 0, 0, 1]}
+	]
+}

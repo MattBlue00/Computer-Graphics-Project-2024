@@ -1,1 +1,6 @@
 *.dylib
+*.xcodeproj
+
+.DS_Store
+
+VulkanTesting/
