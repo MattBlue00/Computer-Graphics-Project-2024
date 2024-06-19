@@ -1,5 +1,6 @@
 *.dylib
 *.xcodeproj
+.vs/
 
 .DS_Store
 

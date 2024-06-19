@@ -285,6 +285,7 @@ void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos){
 
 // This is the main: probably you do not need to touch this!
 int main() {
+    //prova
     App app;
 
     try {
