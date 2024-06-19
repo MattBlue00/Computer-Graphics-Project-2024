@@ -10,6 +10,7 @@
 #include "modules/Camera.hpp"           // handles camera movement
 #include "modules/Car.hpp"              // handles car movement
 #include "modules/Drawer.hpp"           // draws the objects
+#include "modules/Physics.hpp"          // adds physics
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
@@ -138,6 +139,9 @@ class App : public BaseProject {
             deltaA[i] = 0.0f;
             usePitch[i] = 0.0f;
         }
+        
+        // creates the physics world
+        initPhysics();
     }
     
     // Here you create your pipelines and Descriptor Sets!
