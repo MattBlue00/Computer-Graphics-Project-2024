@@ -1,6 +1,9 @@
 *.dylib
 *.xcodeproj
+*.obj
+*.mtl
 
 .DS_Store
 
+blender/
 VulkanTesting/
