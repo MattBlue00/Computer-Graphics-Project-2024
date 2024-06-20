@@ -77,7 +77,7 @@ class App : public BaseProject {
         windowHeight = 600;
         windowTitle = "Rainbow Stadium: Time Attack!";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.090f, 0.024f, 0.231f, 1.0f}; // dark violet
+        initialBackgroundColor = {0.145f, 0.157f, 0.314f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
         uniformBlocksInPool = 19 * 2 + 2; // FIXME

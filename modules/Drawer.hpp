@@ -7,7 +7,7 @@
 
 // scene IDs declaration
 std::vector<std::string> car = {"car"};
-std::vector<std::string> world = {"world"};
+std::vector<std::string> world = {"track", "barrier"};
 
 void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
