@@ -80,9 +80,9 @@ class App : public BaseProject {
         initialBackgroundColor = {0.145f, 0.157f, 0.314f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 19 * 2 + 2; // FIXME
-        texturesInPool = 19 + 1; // FIXME
-        setsInPool = 19 + 1; // FIXME
+        uniformBlocksInPool = 100; // FIXME
+        texturesInPool = 100; // FIXME
+        setsInPool = 100; // FIXME
 
         AspectRatio = 4.0f / 3.0f;
     }
