@@ -8,6 +8,9 @@ typedef struct {
 	glm::mat4 Wm;
 } Instance;
 
+// WARNING: ADDED BY US
+void buildMultipleInstances(nlohmann::json* instances); // prototype
+
 class Scene {
 	public:
 	VertexDescriptor *VD;	
@@ -50,7 +53,7 @@ class Scene {
 			
 			// MODELS
 			nlohmann::json ms = js["models"];
-			ModelCount = ms.size();
+			ModelCount = (int)ms.size();
 			std::cout << "Models count: " << ModelCount << "\n";
 
 			M = (Model **)calloc(ModelCount, sizeof(Model *));
@@ -64,7 +67,7 @@ class Scene {
 			
 			// TEXTURES
 			nlohmann::json ts = js["textures"];
-			TextureCount = ts.size();
+			TextureCount = (int)ts.size();
 			std::cout << "Textures count: " << TextureCount << "\n";
 
 			T = (Texture **)calloc(ModelCount, sizeof(Texture *));
@@ -77,7 +80,11 @@ class Scene {
 
 			// INSTANCES TextureCount
 			nlohmann::json is = js["instances"];
-			InstanceCount = is.size();
+            
+            // WARNING: ADDED BY US
+            buildMultipleInstances(&is);
+            
+			InstanceCount = (int)is.size();
 			std::cout << "Instances count: " << InstanceCount << "\n";
 
 			DS = (DescriptorSet **)calloc(InstanceCount, sizeof(DescriptorSet *));
@@ -115,7 +122,6 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 		for(int i = 0; i < InstanceCount; i++) {
 			DS[i]->cleanup();
 			delete DS[i];
-			//delete DS[i];
 		}
 	}
 
@@ -151,5 +157,48 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 		}
 	}
 };
+
+// WARNING: ADDED BY US
+
+#include "Drawer.hpp"
+
+const int FIRST_BLEACHERS_COUNT = 15; // per side
+const int FIRST_BLEACHERS_START = -45;
+const int BLEACHERS_STEP = 10;
+
+void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
+
+void buildMultipleInstances(nlohmann::json* instances){
+    
+    // bleachers on the first straight line
+    for(int i = 1; i <= FIRST_BLEACHERS_COUNT; i++) {
+        
+        // left bleachers
+        instances->push_back({
+            {"id", "bleachers_l" + std::to_string(i)},
+            {"model", "bleachers"},
+            {"texture", "bleachers"},
+            {"transform",  {0, 0, 1, 20,
+                            0, 1, 0, 5,
+                            -1, 0, 0, FIRST_BLEACHERS_START + BLEACHERS_STEP * (i-1),
+                            0, 0, 0, 1}}
+        });
+        addInstanceToWorld("bleachers_l" + std::to_string(i));
+        
+        // right bleachers
+        instances->push_back({
+            {"id", "bleachers_r" + std::to_string(i)},
+            {"model", "bleachers"},
+            {"texture", "bleachers"},
+            {"transform",  {0, 0, -1, -20,
+                            0, 1, 0, 5,
+                            1, 0, 0, FIRST_BLEACHERS_START + BLEACHERS_STEP * (i-1),
+                            0, 0, 0, 1}}
+        });
+        addInstanceToWorld("bleachers_r" + std::to_string(i));
+        
+    }
+    
+}
     
 #endif

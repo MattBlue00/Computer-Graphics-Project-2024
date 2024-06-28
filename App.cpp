@@ -273,7 +273,7 @@ class App : public BaseProject {
         drawCar(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
         
         // draws the circuit
-        drawCircuit(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+        drawWorld(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
         
     }
 };
