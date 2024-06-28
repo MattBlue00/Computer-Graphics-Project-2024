@@ -199,6 +199,24 @@ void buildMultipleInstances(nlohmann::json* instances){
         
     }
     
+    // coins
+    int global_coin_count = 0;
+    
+    // first three coins
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -7.25 + 7.25 * i,
+                            0, 0, -0.03, 2.5,
+                            0, 0.03, 0, 42.5,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToWorld("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
 }
     
 #endif
