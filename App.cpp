@@ -14,6 +14,9 @@
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/compatibility.hpp>
 
 // used to set lights, camera position and direction
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos);
@@ -184,6 +187,7 @@ class App : public BaseProject {
 
         SC.localCleanup();
         txt.localCleanup();
+        cleanupPhysics;
     }
     
     // Here it is the creation of the command buffer:
@@ -220,13 +224,13 @@ class App : public BaseProject {
         
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
+        std::cout << "DeltaT: " << deltaT << " CarMovementInput: " << glm::to_string(carMovementInput) << std::endl;
+
         
         // inits the camera to third position view
         static CameraData cameraData = {};
         switchToThirdPersonCamera(&cameraData);
         
-        // rotates car according to user input
-        updateSteeringAngle(carMovementInput, deltaT);
 
         // camera variables definition
         glm::mat4 M; // will be used as a return result when building view matrix
@@ -234,10 +238,9 @@ class App : public BaseProject {
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
         
         // accelerates or decelerates car according to user input
-        updateSpeed(carMovementInput, deltaT);
+        updateSpeed(carRigidBody, carMovementInput, deltaT);
 
-        // actually moves the car based on the updated parameters
-        moveCar(carMovementInput, deltaT, &Pos, &Yaw);
+        updatePhysics(deltaT);
         
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
@@ -257,6 +260,30 @@ class App : public BaseProject {
             updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
         } else {
             updateFirstPersonCamera(&cameraData, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
+        }
+
+        // Estrai la matrice di trasformazione dal corpo rigido
+        btTransform trans;
+        carRigidBody->getMotionState()->getWorldTransform(trans);
+        btScalar m[16];
+        trans.getOpenGLMatrix(m);
+
+        // Converti l'array btScalar in glm::mat4
+        glm::mat4 modelMatrix = glm::make_mat4(m);
+        std::cout << "Model Matrix: " << glm::to_string(modelMatrix) << std::endl;
+
+        // Estrai la posizione e l'orientamento
+        glm::vec3 newPos = glm::vec3(modelMatrix[3]);
+        glm::quat orientation = glm::quat_cast(modelMatrix);
+        float newYaw = glm::yaw(orientation);
+
+        std::cout << "Position: " << glm::to_string(newPos) << " Yaw: " << newYaw << std::endl;
+
+        // Verifica la validità dei nuovi valori prima di assegnarli
+        if (glm::all(glm::isfinite(newPos)) && glm::isfinite(newYaw)) {
+            Pos = newPos;
+            Yaw = newYaw;
+            std::cout << "Valori pos e yaw nuovi";
         }
 
         glm::mat4 ViewPrj = M;
