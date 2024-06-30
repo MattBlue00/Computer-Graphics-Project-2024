@@ -30,7 +30,7 @@ void updateSpeed(btRigidBody* carRigidBody, glm::vec3 carMovementInput, float de
     btVector3 rightDir = transform.getBasis() * btVector3(1, 0, 0);
 
     // Forza da applicare
-    btScalar forceMagnitude = MOVE_SPEED * carRigidBody->getMass() * deltaT *2;
+    btScalar forceMagnitude = MOVE_SPEED * carRigidBody->getMass() * deltaT * 2;
 
     // Forza totale da applicare
     btVector3 totalImpulse(0, 0, 0);

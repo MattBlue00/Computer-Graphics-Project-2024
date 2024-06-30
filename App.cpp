@@ -31,9 +31,9 @@ std::vector<SingleText> outText = {
 // MAIN APP
 
 class App : public BaseProject {
-    
-    protected:
-    
+
+protected:
+
     // Descriptor Layouts ["classes" of what will be passed to the shaders]
     DescriptorSetLayout DSL;
 
@@ -45,31 +45,31 @@ class App : public BaseProject {
 
     // Scene
     Scene SC;
-    
+
     // ???
-    glm::vec3 **deltaP;
-    
+    glm::vec3** deltaP;
+
     // ???
-    float *deltaA;
-    
+    float* deltaA;
+
     // ???
-    float *usePitch;
+    float* usePitch;
 
     // Text Maker
     TextMaker txt;
-    
+
     // current scene
     int currScene = THIRD_PERSON_SCENE;
-    
+
     // aspect ratio
     float AspectRatio;
-    
+
     // Position
     glm::vec3 Pos;
-    
+
     // Yaw
     float Yaw;
-    
+
     // Initial position
     glm::vec3 InitialPos;
 
@@ -80,8 +80,8 @@ class App : public BaseProject {
         windowHeight = 600;
         windowTitle = "Rainbow Stadium: Time Attack!";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.145f, 0.157f, 0.314f, 1.0f}; // dark blue
-        
+        initialBackgroundColor = { 0.145f, 0.157f, 0.314f, 1.0f }; // dark blue
+
         // Descriptor pool sizes
         uniformBlocksInPool = 100; // FIXME
         texturesInPool = 100; // FIXME
@@ -89,13 +89,13 @@ class App : public BaseProject {
 
         AspectRatio = 4.0f / 3.0f;
     }
-    
+
     // What to do when the window changes size
     void onWindowResize(int w, int h) {
         std::cout << "Window resized to: " << w << " x " << h << "\n";
         AspectRatio = (float)w / (float)h;
     }
-    
+
     // Here you load and setup all your Vulkan Models and Textures.
     // Here you also create your Descriptor set layouts and load the shaders for the pipelines
     void localInit() {
@@ -104,49 +104,49 @@ class App : public BaseProject {
                     {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
                     {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
                     {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
-                });
+            });
 
         // Vertex descriptors
         VD.init(this, {
                   {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
-                }, {
-                  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
-                         sizeof(glm::vec3), POSITION},
-                  {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
-                         sizeof(glm::vec2), UV},
-                  {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
-                         sizeof(glm::vec3), NORMAL}
-                });
+            }, {
+              {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
+                     sizeof(glm::vec3), POSITION},
+              {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
+                     sizeof(glm::vec2), UV},
+              {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
+                     sizeof(glm::vec3), NORMAL}
+            });
 
-        // Pipelines [Shader couples]
-        P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", {&DSL});
-        P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-                                     VK_CULL_MODE_NONE, false);
+            // Pipelines [Shader couples]
+            P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", { &DSL });
+            P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+                VK_CULL_MODE_NONE, false);
 
-        // Load Scene
-        SC.init(this, &VD, DSL, P, "models/scene.json");
-        
-        // updates the text
-        txt.init(this, &outText);
+            // Load Scene
+            SC.init(this, &VD, DSL, P, "models/scene.json");
 
-        // Init local variables
-        Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
-        InitialPos = Pos;
-        Yaw = 0;
-        
-        deltaP = (glm::vec3 **)calloc(SC.InstanceCount, sizeof(glm::vec3 *));
-        deltaA = (float *)calloc(SC.InstanceCount, sizeof(float));
-        usePitch = (float *)calloc(SC.InstanceCount, sizeof(float));
-        for(int i=0; i < SC.InstanceCount; i++) {
-            deltaP[i] = new glm::vec3(SC.I[i].Wm[3]);
-            deltaA[i] = 0.0f;
-            usePitch[i] = 0.0f;
-        }
-        
-        // creates the physics world
-        initPhysics();
+            // updates the text
+            txt.init(this, &outText);
+
+            // Init local variables
+            Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
+            InitialPos = Pos;
+            Yaw = 0;
+
+            deltaP = (glm::vec3**)calloc(SC.InstanceCount, sizeof(glm::vec3*));
+            deltaA = (float*)calloc(SC.InstanceCount, sizeof(float));
+            usePitch = (float*)calloc(SC.InstanceCount, sizeof(float));
+            for (int i = 0; i < SC.InstanceCount; i++) {
+                deltaP[i] = new glm::vec3(SC.I[i].Wm[3]);
+                deltaA[i] = 0.0f;
+                usePitch[i] = 0.0f;
+            }
+
+            // creates the physics world
+            initPhysics();
     }
-    
+
     // Here you create your pipelines and Descriptor Sets!
     void pipelinesAndDescriptorSetsInit() {
         // This creates a new pipeline (with the current surface), using its shaders
@@ -172,7 +172,7 @@ class App : public BaseProject {
     // You also have to destroy the pipelines: since they need to be rebuilt, they have two different
     // methods: .cleanup() recreates them, while .destroy() delete them completely
     void localCleanup() {
-        for(int i=0; i < SC.InstanceCount; i++) {
+        for (int i = 0; i < SC.InstanceCount; i++) {
             delete deltaP[i];
         }
         free(deltaP);
@@ -181,7 +181,7 @@ class App : public BaseProject {
 
         // Cleanup descriptor set layouts
         DSL.cleanup();
-        
+
         // Destroys the pipelines
         P.destroy();
 
@@ -189,11 +189,11 @@ class App : public BaseProject {
         txt.localCleanup();
         cleanupPhysics;
     }
-    
+
     // Here it is the creation of the command buffer:
     // You send to the GPU all the objects you want to draw,
     // with their buffers and textures
-    
+
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
         // binds the pipeline
         P.bind(commandBuffer);
@@ -205,60 +205,61 @@ class App : public BaseProject {
     // Here is where you update the uniforms.
     // Very likely this will be where you will be writing the logic of your application.
     void updateUniformBuffer(uint32_t currentImage) {
-        
+
         // true if the scene is transitioning to another scene
         static bool debounce = false;
-        
+
         // holds the pressed input key
         static int curDebounce = 0;
 
         // small amount of time that passes at every "update"
         float deltaT;
-        
+
         // inits WASD and arrows user input
         glm::vec3 carMovementInput = ZERO_VEC3;
         glm::vec3 cameraRotationInput = ZERO_VEC3;
-        
+
         // ???
         bool fire = false;
-        
+
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
         std::cout << "DeltaT: " << deltaT << " CarMovementInput: " << glm::to_string(carMovementInput) << std::endl;
 
-        
+
         // inits the camera to third position view
         static CameraData cameraData = {};
         switchToThirdPersonCamera(&cameraData);
-        
+
 
         // camera variables definition
         glm::mat4 M; // will be used as a return result when building view matrix
         glm::vec3 CamPos = Pos;
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
-        
+
         // accelerates or decelerates car according to user input
         updateSpeed(carRigidBody, carMovementInput, deltaT);
 
         updatePhysics(deltaT);
-        
+
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
         // if so, rebuilds pipeline
-        if(shouldRebuildPipeline){
+        if (shouldRebuildPipeline) {
             RebuildPipeline();
         }
 
         // checks if esc was pressed
         shouldQuit(window);
-        
+
         // checks if v was pressed
         shouldPrintDebugVariables(window, Pos, Yaw, cameraData, SteeringAng, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
-        
+
         // updates camera position
-        if(currScene == THIRD_PERSON_SCENE) {
+        if (currScene == THIRD_PERSON_SCENE) {
             updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
-        } else {
+        }
+        else {
             updateFirstPersonCamera(&cameraData, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
         }
 
@@ -289,23 +290,23 @@ class App : public BaseProject {
         glm::mat4 ViewPrj = M;
         UniformBufferObject ubo{};
         glm::mat4 baseCar = ONE_MAT4;
-        
+
         // Here is where you actually update your uniforms
-        
+
         GlobalUniformBufferObject gubo{};
         // sets lights, camera position and direction;
         updateGUBO(&gubo, dampedCamPos);
 
         // draws the car
         drawCar(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
-        
+
         // draws the circuit
         drawWorld(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
-        
+
     }
 };
 
-void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos){
+void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
     // updates global uniforms
     gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
     gubo->lightColor = ONE_VEC4;
@@ -321,7 +322,8 @@ int main() {
 
     try {
         app.run();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
