@@ -67,7 +67,7 @@ void initPhysics(){
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
 
     // Load the circuit mesh
-    btTriangleMesh* circuitMesh = loadMesh("models/Circuit.obj");
+    btTriangleMesh* circuitMesh = loadMesh("models/Track.obj");
     btBvhTriangleMeshShape* circuitShape = new btBvhTriangleMeshShape(circuitMesh, true);
     collisionShapes.push_back(circuitShape);
 

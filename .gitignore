@@ -1,8 +1,8 @@
 *.dylib
 *.xcodeproj
-.vs/
 *.obj
 *.mtl
+.vs/
 
 .DS_Store
 
