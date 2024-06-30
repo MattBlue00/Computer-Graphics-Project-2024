@@ -67,6 +67,7 @@ void initPhysics(){
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
 
     // Load the circuit mesh
+    
     btTriangleMesh* circuitMesh = loadMesh("models/Track.obj");
     btBvhTriangleMeshShape* circuitShape = new btBvhTriangleMeshShape(circuitMesh, true);
     collisionShapes.push_back(circuitShape);
@@ -79,7 +80,7 @@ void initPhysics(){
     //circuitRigidBody->setFriction(0.8f); // Imposta un attrito moderato per il circuito
 
     dynamicsWorld->addRigidBody(circuitRigidBody);
-
+    
     // Car initialization
    // Aggiunta della macchina come corpo rigido dinamico con btCompoundShape
     btCollisionShape* carBoxShape = new btBoxShape(btVector3(1.0, 0.5, 2.0));
