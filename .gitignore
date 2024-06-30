@@ -1,11 +1,8 @@
 *.dylib
 *.xcodeproj
-<<<<<<< HEAD
 .vs/
-=======
 *.obj
 *.mtl
->>>>>>> main
 
 .DS_Store
 
