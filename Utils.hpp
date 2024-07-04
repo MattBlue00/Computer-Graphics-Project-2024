@@ -55,4 +55,29 @@ struct Vertex {
     glm::vec3 norm;
 };
 
+// PROJECT-SPECIFIC FUNCTIONS
+
+using json = nlohmann::json;
+
+std::string getProjectPath() {
+    json js;
+    std::ifstream ifs("config.json");
+    if (!ifs.is_open()) {
+        std::cerr << "Error! Config file not found!" << std::endl;
+        exit(-1);
+    }
+    
+    try {
+        std::cout << "Parsing config.json" << std::endl;
+        ifs >> js;
+        ifs.close();
+    }
+    catch (const json::exception& e) {
+        std::cerr << "JSON parse error: " << e.what() << std::endl;
+        exit(-1);
+    }
+
+    return js["project_path"].get<std::string>();
+}
+
 #endif

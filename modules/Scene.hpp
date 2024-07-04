@@ -46,7 +46,7 @@ class Scene {
 		  exit(-1);
 		}
 		try {
-			std::cout << "Parsing JSON\n";
+			std::cout << "Parsing scene.json\n";
 			ifs >> js;
 			ifs.close();
 			std::cout << "\n\n\nScene contains " << js.size() << " definitions sections\n\n\n";

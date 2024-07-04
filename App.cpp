@@ -11,6 +11,7 @@
 #include "modules/Car.hpp"              // handles car movement
 #include "modules/Drawer.hpp"           // draws the objects
 #include "modules/Physics.hpp"          // adds physics
+#include "modules/Audio.hpp"            // adds audio management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
@@ -142,6 +143,12 @@ class App : public BaseProject {
         
         // creates the physics world
         initPhysics();
+        
+        // initializes the audio system and loads the sounds
+        initAudio(getProjectPath());
+        
+        // plays the race music
+        playSound("RACE_MUSIC", 0.5f, 7);
     }
     
     // Here you create your pipelines and Descriptor Sets!
