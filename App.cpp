@@ -224,8 +224,8 @@ protected:
 
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
-        std::cout << "DeltaT: " << deltaT << " CarMovementInput: " << glm::to_string(carMovementInput) << std::endl;
-
+        //std::cout << "DeltaT: " << deltaT << " CarMovementInput: " << glm::to_string(carMovementInput) << std::endl;
+        std::cout << carMovementInput.x << "\n";
 
         // inits the camera to third position view
         static CameraData cameraData = {};
@@ -238,7 +238,10 @@ protected:
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
 
         // accelerates or decelerates car according to user input
-        updateSpeed(carRigidBody, carMovementInput, deltaT);
+        //updateSpeed(carRigidBody, carMovementInput, deltaT);
+        updateCarMovement(carRigidBody, carMovementInput);
+
+        updateCarOrientation();
 
         updatePhysics(deltaT);
 
@@ -271,20 +274,20 @@ protected:
 
         // Converti l'array btScalar in glm::mat4
         glm::mat4 modelMatrix = glm::make_mat4(m);
-        std::cout << "Model Matrix: " << glm::to_string(modelMatrix) << std::endl;
+        //std::cout << "Model Matrix: " << glm::to_string(modelMatrix) << std::endl;
 
         // Estrai la posizione e l'orientamento
         glm::vec3 newPos = glm::vec3(modelMatrix[3]);
         glm::quat orientation = glm::quat_cast(modelMatrix);
         float newYaw = glm::yaw(orientation);
 
-        std::cout << "Position: " << glm::to_string(newPos) << " Yaw: " << newYaw << std::endl;
+        //std::cout << "Position: " << glm::to_string(newPos) << " Yaw: " << newYaw << std::endl;
 
         // Verifica la validità dei nuovi valori prima di assegnarli
         if (glm::all(glm::isfinite(newPos)) && glm::isfinite(newYaw)) {
             Pos = newPos;
             Yaw = newYaw;
-            std::cout << "Valori pos e yaw nuovi";
+            //std::cout << "Valori pos e yaw nuovi";
         }
 
         glm::mat4 ViewPrj = M;

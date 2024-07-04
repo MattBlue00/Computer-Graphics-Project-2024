@@ -28,11 +28,6 @@ const float DEG_90  = glm::radians(90.0f);
 const float DEG_120 = glm::radians(120.0f);
 const float DEG_135 = glm::radians(135.0f);
 
-// car parameters
-const float STEERING_SPEED = DEG_30;
-const float MAX_STEERING_ANGLE = DEG_35;
-const float MOVE_SPEED = 100.0f;
-
 // APP-SPECIFIC CONSTANTS
 
 // scene ids
