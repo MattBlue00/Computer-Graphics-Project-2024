@@ -162,8 +162,8 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 
 #include "Drawer.hpp"
 
-const int FIRST_BLEACHERS_COUNT = 15; // per side
-const int FIRST_BLEACHERS_START = -45;
+const int FIRST_BLEACHERS_COUNT = 29; // per side
+const int FIRST_BLEACHERS_START = -155;
 const int BLEACHERS_STEP = 10;
 
 void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
