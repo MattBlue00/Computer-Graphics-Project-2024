@@ -12,6 +12,7 @@
 #include "modules/Drawer.hpp"           // draws the objects
 #include "modules/Physics.hpp"          // adds physics
 #include "modules/Audio.hpp"            // adds audio management
+#include "modules/Lights.hpp"           // adds lights management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
@@ -146,6 +147,11 @@ class App : public BaseProject {
         
         // initializes the audio system and loads the sounds
         initAudio(getProjectPath());
+        
+        // loads lights
+        loadLightsData();
+        
+        std::cout << "Initialization completed!\n";
         
         // plays the race music
         playSound("RACE_MUSIC", 0.0f, 7);
@@ -290,11 +296,20 @@ class App : public BaseProject {
 
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos){
     // updates global uniforms
-    gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+    /*gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
     gubo->lightColor = ONE_VEC4;
     gubo->eyePos = dampedCamPos;
     gubo->eyeDir = ZERO_VEC4;
-    gubo->eyeDir.w = 1.0;
+    gubo->eyeDir.w = 1.0;*/
+    
+    for(int i = 0; i < 5; i++) {
+        gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
+        gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
+        gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);
+    }
+
+    gubo->eyePos = dampedCamPos;
+    gubo->lightOn = lightOn;
 }
 
 // This is the main: probably you do not need to touch this!

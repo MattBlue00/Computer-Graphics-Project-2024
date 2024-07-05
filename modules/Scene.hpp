@@ -9,7 +9,7 @@ typedef struct {
 } Instance;
 
 // WARNING: ADDED BY US
-void buildMultipleInstances(nlohmann::json* instances); // prototype
+void buildMultipleInstances(json* instances); // prototype
 
 class Scene {
 	public:
@@ -39,7 +39,7 @@ class Scene {
 			  Pipeline &P, std::string file) {
 		BP = _BP;
 		// Models, textures and Descriptors (values assigned to the uniforms)
-		nlohmann::json js;
+		json js;
 		std::ifstream ifs("models/scene.json");
 		if (!ifs.is_open()) {
 		  std::cout << "Error! Scene file not found!";
@@ -52,7 +52,7 @@ class Scene {
 			std::cout << "\n\n\nScene contains " << js.size() << " definitions sections\n\n\n";
 			
 			// MODELS
-			nlohmann::json ms = js["models"];
+			json ms = js["models"];
 			ModelCount = (int)ms.size();
 			std::cout << "Models count: " << ModelCount << "\n";
 
@@ -66,7 +66,7 @@ class Scene {
 			}
 			
 			// TEXTURES
-			nlohmann::json ts = js["textures"];
+			json ts = js["textures"];
 			TextureCount = (int)ts.size();
 			std::cout << "Textures count: " << TextureCount << "\n";
 
@@ -79,7 +79,7 @@ class Scene {
 			}
 
 			// INSTANCES TextureCount
-			nlohmann::json is = js["instances"];
+			json is = js["instances"];
             
             // WARNING: ADDED BY US
             buildMultipleInstances(&is);
@@ -95,12 +95,12 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 				I[k].id  = new std::string(is[k]["id"]);
 				I[k].Mid = MeshIds[is[k]["model"]];
 				I[k].Tid = TextureIds[is[k]["texture"]];
-				nlohmann::json TMjson = is[k]["transform"];
+				json TMjson = is[k]["transform"];
 				float TMj[16];
 				for(int l = 0; l < 16; l++) {TMj[l] = TMjson[l];}
 				I[k].Wm = glm::mat4(TMj[0],TMj[4],TMj[8],TMj[12],TMj[1],TMj[5],TMj[9],TMj[13],TMj[2],TMj[6],TMj[10],TMj[14],TMj[3],TMj[7],TMj[11],TMj[15]);
 			}			
-		} catch (const nlohmann::json::exception& e) {
+		} catch (const json::exception& e) {
 			std::cout << e.what() << '\n';
 		}
 	}
@@ -169,7 +169,7 @@ const int BLEACHERS_STEP = 10;
 void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
 void addInstanceToCoins(std::string instance_id); // external function ("Drawer.hpp")
 
-void buildMultipleInstances(nlohmann::json* instances){
+void buildMultipleInstances(json* instances){
     
     // bleachers on the first straight line
     for(int i = 1; i <= FIRST_BLEACHERS_COUNT; i++) {

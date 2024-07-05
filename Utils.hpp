@@ -6,10 +6,15 @@
 
 #include <glm/glm.hpp>
 
+// TYPE ALIASES
+
+using json = nlohmann::json;
+
 // GENERAL CONSTANTS
 
 // notable vectors
 const glm::vec3 ZERO_VEC3   = glm::vec3(0.0f, 0.0f, 0.0f);
+const glm::vec3 ONE_VEC3    = glm::vec3(1.0f, 1.0f, 1.0f);
 const glm::vec3 X_AXIS      = glm::vec3(1.0f, 0.0f, 0.0f);
 const glm::vec3 Y_AXIS      = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 Z_AXIS      = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -18,6 +23,9 @@ const glm::vec4 ONE_VEC4    = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 // notable matrices
 const glm::mat4 ONE_MAT4    = glm::mat4(1.0f);
+
+// notable quaternions
+const glm::quat ONE_QUAT    = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
 // notable angles
 const float DEG_0   = glm::radians(0.0f);
@@ -36,6 +44,9 @@ const float DEG_135 = glm::radians(135.0f);
 const int THIRD_PERSON_SCENE = 0;
 const int FIRST_PERSON_SCENE = 1;
 
+// lights count
+const int LIGHTS_COUNT = 3;
+
 // GENERAL STRUCTS
 
 struct UniformBufferObject {
@@ -45,10 +56,16 @@ struct UniformBufferObject {
 };
 
 struct GlobalUniformBufferObject {
-    alignas(16) glm::vec3 lightDir;
-    alignas(16) glm::vec4 lightColor;
+    struct {
+        alignas(16) glm::vec3 v;
+    } lightDir[LIGHTS_COUNT];
+    struct {
+        alignas(16) glm::vec3 v;
+    } lightPos[LIGHTS_COUNT];
+    alignas(16) glm::vec4 lightColor[LIGHTS_COUNT];
     alignas(16) glm::vec3 eyePos;
     alignas(16) glm::vec4 eyeDir;
+    alignas(16) glm::vec4 lightOn;
 };
 
 struct Vertex {
@@ -58,8 +75,6 @@ struct Vertex {
 };
 
 // PROJECT-SPECIFIC FUNCTIONS
-
-using json = nlohmann::json;
 
 std::string getProjectPath() {
     json js;

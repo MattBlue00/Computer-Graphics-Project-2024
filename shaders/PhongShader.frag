@@ -1,5 +1,7 @@
 #version 450
 
+const int LIGHTS_COUNT = 3;
+
 // LAYOUT BINDINGS AND LOCATIONS
 
 layout(binding = 0) uniform UniformBufferObject
@@ -11,12 +13,23 @@ layout(binding = 0) uniform UniformBufferObject
 
 layout(binding = 1) uniform sampler2D texSampler;
 
+/*
 layout(binding = 2) uniform GlobalUniformBufferObject
 {
     vec3 lightDir;
     vec4 lightColor;
     vec3 eyePos;
     vec4 eyeDir;
+} gubo;
+ */
+
+layout(binding = 2) uniform GlobalUniformBufferObject {
+    vec3 lightDir[LIGHTS_COUNT];
+    vec3 lightPos[LIGHTS_COUNT];
+    vec4 lightColor[LIGHTS_COUNT];
+    vec3 eyePos;
+    vec4 eyeDir;
+    vec4 lightOn;
 } gubo;
 
 layout(location = 0) in vec3 fragPos;
@@ -56,6 +69,8 @@ vec3 point_light_color(vec3 pos, int i) {
     return lightColor * pow(lightIntensity / dist, attenuationFactor);
 }
 
+/*
+
 // SPOT LIGHT DIRECTION
 
 vec3 spot_light_dir(vec3 pos, int i) {
@@ -78,17 +93,15 @@ vec3 spot_light_color(vec3 pos, int i) {
     float falloff = clamp((cosTheta - gubo.cosOut) / (gubo.cosIn - gubo.cosOut), 0.0f, 1.0f);
     return lightColor * pow(lightIntensity / dist, attenuationFactor) * falloff;
 }
-
+*/
+ 
 // BRDF
 
 vec3 BRDF(vec3 Albedo, vec3 Norm, vec3 EyeDir, vec3 LD) {
-// Compute the BRDF, with a given color <Albedo>, in a given position characterized by a given normal vector <Norm>,
-// for a light direct according to <LD>, and viewed from a direction <EyeDir>
     vec3 Diffuse;
     vec3 Specular;
     Diffuse = Albedo * max(dot(Norm, LD),0.0f);
     Specular = vec3(pow(max(dot(EyeDir, -reflect(LD, Norm)),0.0f), 160.0f));
-    
     return Diffuse + Specular;
 }
 
@@ -119,16 +132,6 @@ void main()
     LD = point_light_dir(fragPos, 2);
     LC = point_light_color(fragPos, 2);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.x;
-
-    // Fourth light
-    LD = direct_light_dir(fragPos, 3);
-    LC = direct_light_color(fragPos, 3);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.y;
-
-    // Fifth light
-    LD = spot_light_dir(fragPos, 4);
-    LC = spot_light_color(fragPos, 4);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.z;
 
     // Indirect illumination simulation
     // A special type of non-uniform ambient color, invented for this course
