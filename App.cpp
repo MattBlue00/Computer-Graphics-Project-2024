@@ -78,7 +78,7 @@ class App : public BaseProject {
         windowHeight = 600;
         windowTitle = "Rainbow Stadium: Time Attack!";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.145f, 0.157f, 0.314f, 1.0f}; // dark blue
+        initialBackgroundColor = {0.1f, 0.1f, 0.3f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
         uniformBlocksInPool = 200; // FIXME
@@ -148,7 +148,7 @@ class App : public BaseProject {
         initAudio(getProjectPath());
         
         // plays the race music
-        playSound("RACE_MUSIC", 0.5f, 7);
+        playSound("RACE_MUSIC", 0.0f, 7);
     }
     
     // Here you create your pipelines and Descriptor Sets!
@@ -279,8 +279,11 @@ class App : public BaseProject {
         // draws the car
         drawCar(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
         
-        // draws the circuit
+        // draws the circuit and its decorations
         drawWorld(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+        
+        // draws the coins
+        drawCoins(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
         
     }
 };

@@ -10,7 +10,9 @@
         {"id": "finish_line_floor", "model": "models/FinishLineFloor.obj",  "format":"OBJ"},
         {"id": "small_ramps",       "model": "models/SmallRamps.obj",       "format":"OBJ"},
         {"id": "tower",             "model": "models/Tower.obj",            "format":"OBJ"},
-        {"id": "banners",           "model": "models/Banners.obj",          "format":"OBJ"}
+        {"id": "banners",           "model": "models/Banners.obj",          "format":"OBJ"},
+        {"id": "big_star",          "model": "models/BigStar.obj",          "format":"OBJ"},
+        {"id": "rainbow",           "model": "models/Rainbow.obj",          "format":"OBJ"}
     ],
     "textures": [
         {"id": "car",               "texture": "textures/CarTexture.png"},
@@ -66,6 +68,16 @@
                        0, 0, 1, 0,
                        0, 0, 0, 1]},
         {"id": "banners",           "model": "banners",             "texture": "banners",
+         "transform": [1, 0, 0, 0,
+                       0, 1, 0, 0,
+                       0, 0, 1, 0,
+                       0, 0, 0, 1]},
+        {"id": "big_star",          "model": "big_star",            "texture": "barrier",
+         "transform": [1, 0, 0, 0,
+                       0, 1, 0, 0,
+                       0, 0, 1, 0,
+                       0, 0, 0, 1]},
+        {"id": "rainbow",           "model": "rainbow",             "texture": "track",
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 0,
                        0, 0, 1, 0,

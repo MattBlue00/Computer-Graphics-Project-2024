@@ -167,6 +167,7 @@ const int FIRST_BLEACHERS_START = -155;
 const int BLEACHERS_STEP = 10;
 
 void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
+void addInstanceToCoins(std::string instance_id); // external function ("Drawer.hpp")
 
 void buildMultipleInstances(nlohmann::json* instances){
     
@@ -213,7 +214,7 @@ void buildMultipleInstances(nlohmann::json* instances){
                             0, 0.03, 0, 42.5,
                             0, 0, 0, 1}}
         });
-        addInstanceToWorld("coin_" + std::to_string(global_coin_count));
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     
