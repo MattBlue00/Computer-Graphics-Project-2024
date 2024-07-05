@@ -1,49 +1,25 @@
 {
     "lights" : [
         {
-            "color" : [
-                0.681277871131897,
-                1,
-                0.9654425978660583
-            ],
-            "intensity" : 1.8,
-            "translation" : [
-                0,
-                5,
-                5
-            ],
-            "type" : "point",
-            "name" : "Light"
+            "color": [0.681277871131897, 1.0, 0.9654425978660583],
+            "translation": [0, 30, 225],
+            "intensity": 20.0,
+            "type": "point",
+            "name": "light_rainbow_1"
         },
         {
-            "color" : [
-                0.681277871131897,
-                1,
-                0.9654425978660583
-            ],
-            "intensity" : 1.8,
-            "translation" : [
-                10,
-                5,
-                5
-            ],
-            "type" : "point",
-            "name" : "Light.001"
+            "color": [0.681277871131897, 1.0, 0.9654425978660583],
+            "translation": [-30, 10, 225],
+            "intensity": 20.0,
+            "type": "point",
+            "name": "light_rainbow_2"
         },
         {
-            "color" : [
-                0.681277871131897,
-                1,
-                0.9654425978660583
-            ],
-            "translation" : [
-                -10,
-                5,
-                5
-            ],
-            "intensity" : 1.8,
-            "type" : "point",
-            "name" : "Light.002"
+            "color": [0.681277871131897, 1.0, 0.9654425978660583],
+            "translation": [30, 10, 225],
+            "intensity": 20.0,
+            "type": "point",
+            "name": "light_rainbow_3"
         }
     ]
 }

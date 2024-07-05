@@ -1,6 +1,10 @@
 #version 450
 
-const int LIGHTS_COUNT = 3;
+const int POINT_LIGHTS_BLEACHERS = 30;
+const int POINT_LIGHTS_RAINBOW = 3;
+const int POINT_LIGHTS_COUNT = POINT_LIGHTS_BLEACHERS + POINT_LIGHTS_RAINBOW;
+const int DIR_LIGHTS_COUNT = 0;
+const int LIGHTS_COUNT = POINT_LIGHTS_COUNT + DIR_LIGHTS_COUNT;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
@@ -118,20 +122,11 @@ void main()
 
     vec3 RendEqSol = vec3(0);
     
-    // First light
-    LD = point_light_dir(fragPos, 0);
-    LC = point_light_color(fragPos, 0);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.x;
-
-    // Second light
-    LD = point_light_dir(fragPos, 1);
-    LC = point_light_color(fragPos, 1);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.x;
-
-    // Third light
-    LD = point_light_dir(fragPos, 2);
-    LC = point_light_color(fragPos, 2);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.x;
+    for(int i = 0; i < LIGHTS_COUNT; i++){
+        LD = point_light_dir(fragPos, i);
+        LC = point_light_color(fragPos, i);
+        RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.x;
+    }
 
     // Indirect illumination simulation
     // A special type of non-uniform ambient color, invented for this course

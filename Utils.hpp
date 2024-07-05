@@ -1,8 +1,9 @@
+#ifndef UTILS_HPP
+#define UTILS_HPP
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#ifndef UTILS_HPP
-#define UTILS_HPP
 
 #include <glm/glm.hpp>
 
@@ -44,17 +45,23 @@ const float DEG_135 = glm::radians(135.0f);
 const int THIRD_PERSON_SCENE = 0;
 const int FIRST_PERSON_SCENE = 1;
 
-// lights count
-const int LIGHTS_COUNT = 3;
+// total lights count
+const int POINT_LIGHTS_BLEACHERS = 30;
+const int POINT_LIGHTS_RAINBOW = 3;
+const int POINT_LIGHTS_COUNT = POINT_LIGHTS_BLEACHERS + POINT_LIGHTS_RAINBOW;
+const int DIR_LIGHTS_COUNT = 0;
+const int LIGHTS_COUNT = POINT_LIGHTS_COUNT + DIR_LIGHTS_COUNT;
 
 // GENERAL STRUCTS
 
+// ubo
 struct UniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
     alignas(16) glm::mat4 mMat;
     alignas(16) glm::mat4 nMat;
 };
 
+// gubo
 struct GlobalUniformBufferObject {
     struct {
         alignas(16) glm::vec3 v;
@@ -68,6 +75,7 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec4 lightOn;
 };
 
+// vertex
 struct Vertex {
     glm::vec3 pos;
     glm::vec2 UV;

@@ -1,4 +1,4 @@
-// HEADERS AND FUNCTION PROTOTYPES
+// HEADERS
 
 // professor headers
 #include "modules/Starter.hpp"          // vulkan starter header
@@ -16,6 +16,8 @@
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
+
+// PROTOTYPES DECLARATION
 
 // used to set lights, camera position and direction
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos);
@@ -148,8 +150,8 @@ class App : public BaseProject {
         // initializes the audio system and loads the sounds
         initAudio(getProjectPath());
         
-        // loads lights
-        loadLightsData();
+        // init lights
+        initLights();
         
         std::cout << "Initialization completed!\n";
         
@@ -302,7 +304,7 @@ void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos){
     gubo->eyeDir = ZERO_VEC4;
     gubo->eyeDir.w = 1.0;*/
     
-    for(int i = 0; i < 5; i++) {
+    for(int i = 0; i < LIGHTS_COUNT; i++) {
         gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
         gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
         gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);
