@@ -30,6 +30,7 @@ const glm::quat ONE_QUAT    = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
 // notable angles
 const float DEG_0   = glm::radians(0.0f);
+const float DEG_2_5 = glm::radians(2.5f);
 const float DEG_5   = glm::radians(5.0f);
 const float DEG_20  = glm::radians(20.0f);
 const float DEG_30  = glm::radians(30.0f);
@@ -46,11 +47,15 @@ const int THIRD_PERSON_SCENE = 0;
 const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
-const int POINT_LIGHTS_BLEACHERS = 30;
+
+const int POINT_LIGHTS_GOAL_BLEACHERS = 30;
+const int POINT_LIGHTS_OVAL_TRACK = 4;
 const int POINT_LIGHTS_RAINBOW = 3;
-const int POINT_LIGHTS_COUNT = POINT_LIGHTS_BLEACHERS + POINT_LIGHTS_RAINBOW;
-const int DIR_LIGHTS_COUNT = 0;
-const int LIGHTS_COUNT = POINT_LIGHTS_COUNT + DIR_LIGHTS_COUNT;
+const int POINT_LIGHTS_BIG_STAR = 1;
+const int POINT_LIGHTS_COUNT = POINT_LIGHTS_GOAL_BLEACHERS + POINT_LIGHTS_OVAL_TRACK +
+    POINT_LIGHTS_RAINBOW + POINT_LIGHTS_BIG_STAR;
+
+const int LIGHTS_COUNT = POINT_LIGHTS_COUNT;
 
 // GENERAL STRUCTS
 

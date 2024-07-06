@@ -284,15 +284,8 @@ class App : public BaseProject {
         // sets lights, camera position and direction;
         updateGUBO(&gubo, dampedCamPos);
 
-        // draws the car
-        drawCar(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
-        
-        // draws the circuit and its decorations
-        drawWorld(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
-        
-        // draws the coins
-        drawCoins(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
-        
+        // draws every object of this app
+        drawAll(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
     }
 };
 

@@ -20,6 +20,41 @@
             "intensity": 20.0,
             "type": "point",
             "name": "light_rainbow_3"
+        },
+        {
+            "color": [0.681277871131897, 1.0, 0.9654425978660583],
+            "translation": [15, 5, 160],
+            "intensity": 20.0,
+            "type": "point",
+            "name": "oval_light_l1"
+        },
+        {
+            "color": [0.681277871131897, 1.0, 0.9654425978660583],
+            "translation": [-15, 5, 160],
+            "intensity": 20.0,
+            "type": "point",
+            "name": "oval_light_r1"
+        },
+        {
+            "color": [0.681277871131897, 1.0, 0.9654425978660583],
+            "translation": [15, 5, 190],
+            "intensity": 20.0,
+            "type": "point",
+            "name": "oval_light_l2"
+        },
+        {
+            "color": [0.681277871131897, 1.0, 0.9654425978660583],
+            "translation": [-15, 5, 190],
+            "intensity": 20.0,
+            "type": "point",
+            "name": "oval_light_r2"
+        },
+        {
+            "color": [1.0, 0.75, 0.80],
+            "translation": [-60, 20, 380],
+            "intensity": 75.0,
+            "type": "point",
+            "name": "big_star_light"
         }
     ]
 }

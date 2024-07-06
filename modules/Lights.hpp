@@ -39,7 +39,7 @@ void initLights(){
         json lightArray = js["lights"];
         
         // bleachers point lights
-        for(int i = 1; i <= POINT_LIGHTS_BLEACHERS / 2; i++) {
+        for(int i = 1; i <= POINT_LIGHTS_GOAL_BLEACHERS / 2; i++) {
             lightArray.push_back({
                 { "color", {POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
                 { "translation", {15, 5, FIRST_BLEACHERS_START + BLEACHERS_STEP * 2 * (i-1)} },
