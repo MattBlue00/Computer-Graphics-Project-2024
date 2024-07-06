@@ -59,6 +59,7 @@ void initPhysics() {
 
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
     dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
+    dynamicsWorld->getSolverInfo().m_solverMode |= SOLVER_USE_2_FRICTION_DIRECTIONS;
 
     // Load the circuit mesh
     btTriangleMesh* circuitMesh = loadMesh("models/Track.obj");
@@ -112,13 +113,12 @@ void initPhysics() {
     btRigidBody::btRigidBodyConstructionInfo carRigidBodyCI(mass, carMotionState, carBoxShape, carInertia);
     carRigidBody = new btRigidBody(carRigidBodyCI);
     carRigidBody->setFriction(0.5f);
-    //carRigidBody->setRollingFriction(0.1f);
+    //carRigidBody->setRollingFriction(0.0f);
     carRigidBody->setDamping(0.9f, 0.9f);
     carRigidBody->setActivationState(DISABLE_DEACTIVATION); // Ensure car stays active
-    //carRigidBody->setAngularFactor(btVector3(0, 1, 0)); // Limita la rotazione solo sull'asse y
+    carRigidBody->setAngularFactor(btVector3(1, 1, 1)); // LPermette al corpo rigido di ruotare su tutti gli assi
     //carRigidBody->setRestitution(0.1f); // Reduce bounciness
     dynamicsWorld->addRigidBody(carRigidBody);
-
 }
 
 
@@ -145,79 +145,8 @@ void cleanupPhysics() {
     delete broadphase;
 }
 
-void applyTiltForces(btRigidBody* carBody, const btVector3& hitNormal) {
-    // Estrai la matrice di trasformazione dal corpo rigido
-    btTransform carTransform;
-    carBody->getMotionState()->getWorldTransform(carTransform);
-
-    // Calcola i punti di applicazione delle forze (davanti e dietro la macchina)
-    btVector3 carPosition = carTransform.getOrigin();
-    btVector3 forwardDir = carTransform.getBasis().getColumn(2);
-    btVector3 upDir = carTransform.getBasis().getColumn(1);
-
-    btVector3 rearPosition = carPosition - forwardDir * 2.0f;  // Punto dietro la macchina
-    btVector3 frontPosition = carPosition + forwardDir * 2.0f; // Punto davanti la macchina
-
-    // Calcola la forza da applicare in base all'angolo di inclinazione del terreno
-    btScalar tiltForceMagnitude = 500.0f; // Modifica questo valore in base alle necessità
-
-    // Applicare forza dietro in salita (hitNormal con componente Y < 1)
-    if (hitNormal.getY() < 1.0f) {
-        btVector3 tiltForce = upDir * tiltForceMagnitude * (1.0f - hitNormal.getY());
-        carBody->applyForce(tiltForce, rearPosition - carPosition);
-    }
-
-    // Applicare forza davanti in discesa (hitNormal con componente Y < 1)
-    if (hitNormal.getY() > 0.0f && hitNormal.getY() < 1.0f) {
-        btVector3 tiltForce = -upDir * tiltForceMagnitude * (1.0f - hitNormal.getY());
-        carBody->applyForce(tiltForce, frontPosition - carPosition);
-    }
-}
-
-void updateCarOrientation() {
-    // Esegui un raycast dalla posizione del veicolo verso il basso
-    btTransform carTransform;
-    carRigidBody->getMotionState()->getWorldTransform(carTransform);
-    btVector3 carPosition = carTransform.getOrigin();
-
-    btVector3 rayStart = carPosition;
-    btVector3 rayEnd = carPosition - btVector3(0, 10.0f, 0); // Lancia il raggio 10 unità verso il basso
-
-    btCollisionWorld::ClosestRayResultCallback rayCallback(rayStart, rayEnd);
-    dynamicsWorld->rayTest(rayStart, rayEnd, rayCallback);
-
-    btVector3 hitNormal(0, 1, 0); // Default normal in caso di mancato hit
-    if (rayCallback.hasHit()) {
-        hitNormal = rayCallback.m_hitNormalWorld;
-        hitNormal.normalize();
-
-        // Debug: Stampa dettagli sull'oggetto colpito
-        const btCollisionObject* hitObject = rayCallback.m_collisionObject;
-        const btRigidBody* hitBody = btRigidBody::upcast(hitObject);
-        if (hitBody == circuitRigidBody) {
-            //std::cout << "Hit the circuit!" << std::endl;
-        }
-        else {
-            //std::cout << "Hit another object!" << std::endl;
-        }
-    } else {
-        //std::cout << "Raycast missed!" << std::endl;
-    }
-
-    // Debug: Stampa la normale colpita
-    //std::cout << "Hit Normal: " << hitNormal.getX() << ", " << hitNormal.getY() << ", " << hitNormal.getZ() << std::endl;
-
-    // Applica le forze di inclinazione in base alla normale colpita
-    applyTiltForces(carRigidBody, hitNormal);
-}
-
 void updatePhysics(float deltaT) {
-
     dynamicsWorld->stepSimulation(deltaT, 60);
-    
-    btTransform trans;
-    carRigidBody->getMotionState()->getWorldTransform(trans);
-    btVector3 pos = trans.getOrigin();
 }
 
 #endif

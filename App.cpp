@@ -215,6 +215,8 @@ protected:
         // small amount of time that passes at every "update"
         float deltaT;
 
+        float turningSpeed = 1.0f;
+
         // inits WASD and arrows user input
         glm::vec3 carMovementInput = ZERO_VEC3;
         glm::vec3 cameraRotationInput = ZERO_VEC3;
@@ -224,8 +226,18 @@ protected:
 
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
-        //std::cout << "DeltaT: " << deltaT << " CarMovementInput: " << glm::to_string(carMovementInput) << std::endl;
-        std::cout << carMovementInput.x << "\n";
+
+        // accelerates or decelerates car according to user input
+        updateCarMovement(carRigidBody, carMovementInput);
+
+        updatePhysics(deltaT);
+
+        btTransform transform;
+        carRigidBody->getMotionState()->getWorldTransform(transform);
+        glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+        btQuaternion rotation = transform.getRotation();
+        float bodyYaw = atan2(2.0 * (rotation.getY() * rotation.getW() + rotation.getX() * rotation.getZ()),
+            1.0 - 2.0 * (rotation.getY() * rotation.getY() + rotation.getX() * rotation.getX()));
 
         // inits the camera to third position view
         static CameraData cameraData = {};
@@ -237,13 +249,7 @@ protected:
         glm::vec3 CamPos = Pos;
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
 
-        // accelerates or decelerates car according to user input
-        //updateSpeed(carRigidBody, carMovementInput, deltaT);
-        updateCarMovement(carRigidBody, carMovementInput);
-
-        updateCarOrientation();
-
-        updatePhysics(deltaT);
+        
 
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
@@ -260,34 +266,10 @@ protected:
 
         // updates camera position
         if (currScene == THIRD_PERSON_SCENE) {
-            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
+            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, bodyYaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
         }
         else {
-            updateFirstPersonCamera(&cameraData, &M, Yaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, Pos);
-        }
-
-        // Estrai la matrice di trasformazione dal corpo rigido
-        btTransform trans;
-        carRigidBody->getMotionState()->getWorldTransform(trans);
-        btScalar m[16];
-        trans.getOpenGLMatrix(m);
-
-        // Converti l'array btScalar in glm::mat4
-        glm::mat4 modelMatrix = glm::make_mat4(m);
-        //std::cout << "Model Matrix: " << glm::to_string(modelMatrix) << std::endl;
-
-        // Estrai la posizione e l'orientamento
-        glm::vec3 newPos = glm::vec3(modelMatrix[3]);
-        glm::quat orientation = glm::quat_cast(modelMatrix);
-        float newYaw = glm::yaw(orientation);
-
-        //std::cout << "Position: " << glm::to_string(newPos) << " Yaw: " << newYaw << std::endl;
-
-        // Verifica la validità dei nuovi valori prima di assegnarli
-        if (glm::all(glm::isfinite(newPos)) && glm::isfinite(newYaw)) {
-            Pos = newPos;
-            Yaw = newYaw;
-            //std::cout << "Valori pos e yaw nuovi";
+            updateFirstPersonCamera(&cameraData, &M, bodyYaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
         }
 
         glm::mat4 ViewPrj = M;
@@ -301,10 +283,10 @@ protected:
         updateGUBO(&gubo, dampedCamPos);
 
         // draws the car
-        drawCar(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+        drawCar(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch);
 
         // draws the circuit
-        drawWorld(&SC, &gubo, &ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+        drawWorld(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch);
 
     }
 };
