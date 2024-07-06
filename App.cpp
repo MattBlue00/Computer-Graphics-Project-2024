@@ -228,7 +228,7 @@ protected:
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
 
         // accelerates or decelerates car according to user input
-        updateCarMovement(carRigidBody, carMovementInput);
+        updateCarMovement(carRigidBody, carMovementInput, deltaT, dynamicsWorld);
 
         updatePhysics(deltaT);
 
