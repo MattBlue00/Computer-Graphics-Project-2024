@@ -28,7 +28,15 @@ std::vector<btCollisionShape*> collisionShapes;
 // This function uses the library assimp to take the xxx.obj file and convert it to a mesh
 btTriangleMesh* loadMesh(const std::string& filePath) {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals | aiProcess_PreTransformVertices | aiProcess_ImproveCacheLocality | aiProcess_SplitLargeMeshes);
+    const aiScene* scene = importer.ReadFile(filePath,  aiProcess_Triangulate | 
+                                                        aiProcess_JoinIdenticalVertices | 
+                                                        aiProcess_GenSmoothNormals | 
+                                                        aiProcess_PreTransformVertices | 
+                                                        aiProcess_ImproveCacheLocality | 
+                                                        aiProcess_SplitLargeMeshes |
+                                                        aiProcess_LimitBoneWeights |
+                                                        aiProcess_OptimizeMeshes |
+                                                        aiProcess_OptimizeGraph);
     if (!scene || !scene->HasMeshes()) {
         throw std::runtime_error("Failed to load mesh: " + filePath);
     }
@@ -135,7 +143,7 @@ void initPhysics() {
 
     // Car initialization with btBoxShape
     btBoxShape* carBoxShape = new btBoxShape(btVector3(1.0, 0.5, 2.0));
-    carBoxShape->setMargin(0.3f); // Adding collision margin
+    carBoxShape->setMargin(0.4f); // Adding collision margin
     collisionShapes.push_back(carBoxShape);
 
     btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 2, -10)));

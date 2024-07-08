@@ -276,10 +276,10 @@ protected:
 
         // updates camera position
         if (currScene == THIRD_PERSON_SCENE) {
-            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, bodyYaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
+            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, bodyYaw, bodyPitch, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
         }
         else {
-            updateFirstPersonCamera(&cameraData, &M, bodyYaw, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
+            updateFirstPersonCamera(&cameraData, &M, bodyYaw, bodyPitch, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
         }
 
         glm::mat4 ViewPrj = M;
