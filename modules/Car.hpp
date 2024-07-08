@@ -13,31 +13,42 @@ static float desiredSpeed = 0.0f;
 const float acceleration = 3.5f; // Incrementa la velocità desiderata ogni secondo
 const float deceleration = 3.5f; // Riduci la velocità desiderata ogni secondo
 
+const float gravityMultiplier = 10.0f; // Forza extra verso il basso
+const float raycastDistance = 5.0f; // Distanza del raycast verso il basso
+
 float dampedVel = 0.0f;
 float SteeringAng = 0.0f;
 
 // Funzione per rilevare se la macchina è in contatto con il terreno
-bool isCarOnGround(btDiscreteDynamicsWorld* dynamicsWorld, btRigidBody* carBody) {
-    const btScalar threshold = 1.0f; // Distanza sotto la quale consideriamo la macchina sul terreno
-    btVector3 carPosition = carBody->getCenterOfMassPosition();
-    btVector3 rayStart = carPosition;
-    btVector3 rayEnd = carPosition - btVector3(0, threshold, 0); // Raggio verso il basso
+bool isCarOnGround(btRigidBody* carBody, btDiscreteDynamicsWorld* dynamicsWorld, float& distance) {
+    btTransform transform;
+    carBody->getMotionState()->getWorldTransform(transform);
+    btVector3 start = transform.getOrigin();
+    btVector3 end = start - btVector3(0, raycastDistance, 0);
 
-    btCollisionWorld::ClosestRayResultCallback rayCallback(rayStart, rayEnd);
-    dynamicsWorld->rayTest(rayStart, rayEnd, rayCallback);
+    btCollisionWorld::ClosestRayResultCallback rayCallback(start, end);
+    dynamicsWorld->rayTest(start, end, rayCallback);
 
-    return rayCallback.hasHit();
+    if (rayCallback.hasHit()) {
+        distance = start.getY() - rayCallback.m_hitPointWorld.getY();
+        return true;
+    }
+
+    distance = raycastDistance; // Se non c'è collisione, impostiamo la distanza alla distanza massima del raycast
+    return false;
 }
 
 // Funzione per aggiornare il movimento della macchina
 void updateCarMovement(btRigidBody* carBody, const glm::vec3& carMovementInput, float deltaT, btDiscreteDynamicsWorld* dynamicsWorld) {
-    // Controlla se la macchina è in contatto con il terreno
-    bool onGround = isCarOnGround(dynamicsWorld, carBody);
-    std::cout << onGround << std::endl;
-    glm::vec3 adjustedMovementInput = carMovementInput;
-    if (!onGround) {
-        adjustedMovementInput = glm::vec3(0.0f); // Disabilita i controlli
-    }
+
+    float distanceToGround;
+    bool onGround = isCarOnGround(carBody, dynamicsWorld, distanceToGround);
+
+    // Forza extra proporzionale alla distanza dal terreno
+    float additionalDownForceMagnitude = gravityMultiplier * distanceToGround * carBody->getMass();
+    btVector3 additionalDownForce(0, -additionalDownForceMagnitude, 0);
+    carBody->applyCentralForce(additionalDownForce);
+
     // Ottieni la direzione frontale della macchina
     btTransform transform;
     carBody->getMotionState()->getWorldTransform(transform);
@@ -46,9 +57,9 @@ void updateCarMovement(btRigidBody* carBody, const glm::vec3& carMovementInput, 
     forwardDir.normalize();
 
     // Gestione dell'accelerazione e della decelerazione
-    if (adjustedMovementInput.z != 0.0f) {
+    if (carMovementInput.z != 0.0f) {
         // Incrementa o decrementa la velocità desiderata in base all'input
-        desiredSpeed += -adjustedMovementInput.z * acceleration * deltaT;
+        desiredSpeed += -carMovementInput.z * acceleration * deltaT;
         // Limita la velocità desiderata alla velocità massima
         desiredSpeed = std::clamp(desiredSpeed, -maxSpeed, maxSpeed);
     }
@@ -76,7 +87,7 @@ void updateCarMovement(btRigidBody* carBody, const glm::vec3& carMovementInput, 
     }
 
     // Debug: Stampa la velocità attuale e desiderata
-    std::cout << "Current Speed: " << velocity.length() << ", Desired Speed: " << desiredSpeed << std::endl;
+    //std::cout << "Current Speed: " << velocity.length() << ", Desired Speed: " << desiredSpeed << std::endl;
 
     // Applicare la forza per avanzare o indietreggiare
     if (desiredSpeed != 0.0f) {
@@ -92,9 +103,9 @@ void updateCarMovement(btRigidBody* carBody, const glm::vec3& carMovementInput, 
     }
 
     // Applicare il momento torcente per girare
-    if (adjustedMovementInput.x != 0.0f) {
+    if (carMovementInput.x != 0.0f) {
         // Calcola il torque da applicare
-        btVector3 torque(0.0, -adjustedMovementInput.x * turningTorque, 0.0);
+        btVector3 torque(0.0, -carMovementInput.x * turningTorque, 0.0);
 
         // Applica il torque
         carBody->applyTorque(torque);

@@ -11,11 +11,11 @@ std::vector<std::string> world = {
     "track", "barrier", "finish_line_top", "finish_line_floor", "small_ramps", "airship"
 };
 
-void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float* usePitch) {
+void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch) {
     for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
         
-        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], usePitch[i], 0) * baseCar;
+        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, 0) * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
