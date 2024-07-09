@@ -279,6 +279,36 @@ void buildMultipleInstances(json* instances){
         global_coin_count++;
     }
     
+    // three coins after the crossroads
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -6.5 + 7 * i,
+                            0, 0, -0.03, 2.5,
+                            0, 0.03, 0, i != 1 ? 322.5 : 332.5,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // ten coins near the star and the rocket
+    for(int i = 0; i < 10; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, i%2 == 0 ? -4.5 : 4.5,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, 400 + 15 * i,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
 }
     
 #endif

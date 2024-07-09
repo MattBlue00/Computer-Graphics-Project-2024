@@ -9,17 +9,28 @@
 std::vector<std::string> car = {"car"};
 std::vector<std::string> coins = {};
 std::vector<std::string> airplane = {"airplane"};
+std::vector<std::string> airship = {"airship"};
 std::vector<std::string> world = {
-    "track", "barrier", "finish_line_top", "finish_line_floor", "small_ramps", "airship", "tower", "banners",
-    "big_star", "rainbow", "arcade_1", "arcade_2"
+    "track", "barrier", "finish_line_top", "finish_line_floor", "ramps", "tower", "banners",
+    "big_star", "rainbow", "arcade_1", "arcade_2", "dir_barrier_oval", "dir_banners", "rocket",
+    "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "world"
 };
 
 // utility airplane variables and constants
-const float AIRPLANE_MOV_PER_FRAME = 0.425f;
+const float AIRPLANE_MOV_PER_FRAME = 0.5f;
 const float AIRPLANE_FIRST_TURN = 735.0f;
-const float AIRPLANE_SECOND_TURN = -735.0f;
+const float AIRPLANE_SECOND_TURN = -740.0f;
+const float AIRPLANE_LANDING = 700.0f;
+const float AIRPLANE_LAND_MOV_PER_FRAME = 0.1f;
+const float AIRPLANE_LAND_Y = -2.0f;
+const float AIRPLANE_BRAKING_PER_FRAME = 0.00135f;
+float brakingFactor = 1.0f;
 float airplaneAngle = 0;
 int airplaneActionsDone = 0;
+
+// utility airship variables and constants
+const float AIRSHIP_MOV_PER_FRAME = 0.02f;
+bool airshipGoingUp = true;
 
 void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
@@ -95,6 +106,24 @@ void drawAirplane(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferOb
                 break;
             
             case 2:
+                if(scene->I[i].Wm[3][2] < AIRPLANE_LANDING){
+                    if(scene->I[i].Wm[3][1] > AIRPLANE_LAND_Y){
+                        scene->I[i].Wm = glm::translate(scene->I[i].Wm, glm::vec3(0.0f, -AIRPLANE_LAND_MOV_PER_FRAME, 0.0f));
+                    }
+                    if(scene->I[i].Wm[3][1] <= AIRPLANE_LAND_Y){
+                        airplaneActionsDone++;
+                    }
+                }
+                break;
+            
+            case 3:
+                if(brakingFactor > 0.0f){
+                    brakingFactor -= AIRPLANE_BRAKING_PER_FRAME;
+                }
+                else{
+                    brakingFactor = 0;
+                    airplaneActionsDone++;
+                }
                 break;
                 
             default:
@@ -102,7 +131,41 @@ void drawAirplane(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferOb
                 
         }
         
-        scene->I[i].Wm = glm::translate(scene->I[i].Wm, glm::vec3(0.0f, 0.0f, AIRPLANE_MOV_PER_FRAME));
+        if(airplaneActionsDone < 4){
+            scene->I[i].Wm = glm::translate(scene->I[i].Wm, glm::vec3(0.0f, 0.0f, AIRPLANE_MOV_PER_FRAME
+                                                                      * brakingFactor));
+        }
+        
+        ubo->mMat = scene->I[i].Wm * baseCar;
+        ubo->mvpMat = ViewPrj * ubo->mMat;
+        ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
+
+        scene->DS[i]->map(currentImage, ubo, sizeof(*ubo), 0);
+        scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
+    }
+}
+
+void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+    for (std::vector<std::string>::iterator it = airship.begin(); it != airship.end(); it++) {
+        int i = scene->InstanceIds[it->c_str()];
+        
+        // updates airship's transform matrix
+        if(airshipGoingUp){
+            if(scene->I[i].Wm[3][1] < 3.0f){
+                scene->I[i].Wm = glm::translate(scene->I[i].Wm, glm::vec3(0.0f, AIRSHIP_MOV_PER_FRAME, 0.0f));
+            }
+            else{
+                airshipGoingUp = false;
+            }
+        }
+        else{
+            if(scene->I[i].Wm[3][1] > -3.0f){
+                scene->I[i].Wm = glm::translate(scene->I[i].Wm, glm::vec3(0.0f, -AIRSHIP_MOV_PER_FRAME, 0.0f));
+            }
+            else{
+                airshipGoingUp = true;
+            }
+        }
         
         ubo->mMat = scene->I[i].Wm * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
@@ -125,6 +188,9 @@ void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject*
     
     // draws the airplane
     drawAirplane(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    
+    // draws the airship
+    drawAirship(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
 }
 
 void addInstanceToWorld(std::string instance_id){

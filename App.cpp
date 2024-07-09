@@ -84,9 +84,9 @@ class App : public BaseProject {
         initialBackgroundColor = {0.1f, 0.1f, 0.3f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 200; // FIXME
-        texturesInPool = 200; // FIXME
-        setsInPool = 200; // FIXME
+        uniformBlocksInPool = 300; // FIXME
+        texturesInPool = 300; // FIXME
+        setsInPool = 300; // FIXME
 
         AspectRatio = 4.0f / 3.0f;
     }
@@ -151,7 +151,7 @@ class App : public BaseProject {
         initAudio(getProjectPath());
         
         // init lights
-        initLights();
+        //initLights();
         
         std::cout << "Initialization completed!\n";
         
@@ -291,12 +291,13 @@ class App : public BaseProject {
 
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos){
     // updates global uniforms
-    /*gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+    gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
     gubo->lightColor = ONE_VEC4;
     gubo->eyePos = dampedCamPos;
     gubo->eyeDir = ZERO_VEC4;
-    gubo->eyeDir.w = 1.0;*/
+    gubo->eyeDir.w = 1.0;
     
+    /*
     for(int i = 0; i < LIGHTS_COUNT; i++) {
         gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
         gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
@@ -304,7 +305,7 @@ void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos){
     }
 
     gubo->eyePos = dampedCamPos;
-    gubo->lightOn = lightOn;
+    gubo->lightOn = lightOn;*/
 }
 
 // This is the main: probably you do not need to touch this!

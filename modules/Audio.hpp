@@ -64,8 +64,6 @@ void playSound(const std::string& soundName, float volume, int loopStartSecond =
     checkFmodError(result);
 }
 
-
-
 void checkFmodError(FMOD_RESULT result) {
     if (result != FMOD_OK) {
         std::cerr << "FMOD error! (" << result << ") " << FMOD_ErrorString(result) << std::endl;

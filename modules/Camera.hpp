@@ -8,7 +8,7 @@
 
 const float ROT_SPEED = DEG_120;
 const float NEAR_PLANE = 0.1f;
-const float FAR_PLANE = 1000.0f;
+const float FAR_PLANE = 2000.0f;
 
 // third person constants
 
