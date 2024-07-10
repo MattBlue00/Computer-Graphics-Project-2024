@@ -160,6 +160,9 @@ void initPhysics(const Scene* s) {
     btRigidBody* carRigidBody = new btRigidBody(carRigidBodyCI);
     carRigidBody->setActivationState(DISABLE_DEACTIVATION); // Ensure car stays active
     carRigidBody->activate(true);
+    //carRigidBody->setFriction(1.0f);
+    carRigidBody->setDamping(0.2f, 0.2f); // Aumentato il damping lineare e angolare
+
     dynamicsWorld->addRigidBody(carRigidBody);
 
     // Set up the Raycast Vehicle
@@ -214,23 +217,13 @@ void setupRaycastVehicle(btDiscreteDynamicsWorld* dynamicsWorld, btRigidBody* ca
     // Set wheel parameters
     for (int i = 0; i < vehicle->getNumWheels(); i++) {
         btWheelInfo& wheel = vehicle->getWheelInfo(i);
-        wheel.m_suspensionStiffness = 50.0f;
-        wheel.m_wheelsDampingRelaxation = 2.3f;
-        wheel.m_wheelsDampingCompression = 4.4f;
+        wheel.m_suspensionStiffness = 100.0f;
+        wheel.m_wheelsDampingRelaxation = 20.0f;
+        wheel.m_wheelsDampingCompression = 20.0f;
         wheel.m_frictionSlip = 1000.0f;
-        wheel.m_rollInfluence = 0.1f;
-        // Log per verificare la posizione delle ruote
-        std::cout << "Wheel " << i << ": Connection Point: ("
-            << vehicle->getWheelInfo(i).m_chassisConnectionPointCS.getX() << ", "
-            << vehicle->getWheelInfo(i).m_chassisConnectionPointCS.getY() << ", "
-            << vehicle->getWheelInfo(i).m_chassisConnectionPointCS.getZ() << ")" << std::endl;
+        wheel.m_rollInfluence = 0.0f;
+        wheel.m_maxSuspensionTravelCm = 500.0f;
     }
-    
-    btVector3 aabbMin, aabbMax;
-    carRigidBody->getAabb(aabbMin, aabbMax);
-    std::cout << "Car AABB Min: (" << aabbMin.getX() << ", " << aabbMin.getY() << ", " << aabbMin.getZ() << "), Max: ("
-        << aabbMax.getX() << ", " << aabbMax.getY() << ", " << aabbMax.getZ() << ")" << std::endl;
-
 }
 
 void cleanupPhysics() {
