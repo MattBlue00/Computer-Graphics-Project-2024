@@ -24,7 +24,7 @@
     "instances": [
         {"id": "car",               "model": "car",                 "texture": "car",
          "transform": [1, 0, 0, 0,
-                       0, 1, 0, 2,
+                       0, 1, 0, 10,
                        0, 0, 1, -10,
                        0, 0, 0, 1]},
         {"id": "track",             "model": "track",               "texture": "track",
@@ -32,11 +32,11 @@
                        0, 1, 0, 0,
                        0, 0, 1, 0,
                        0, 0, 0, 1]},
-        {"id": "barrier",           "model": "barrier",             "texture": "barrier",
+        /*{"id": "barrier",           "model": "barrier",             "texture": "barrier",
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 0,
                        0, 0, 1, 0,
-                       0, 0, 0, 1]},
+                       0, 0, 0, 1]},*/
         {"id": "finish_line_top",   "model": "finish_line_top",     "texture": "finish_line_top",
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 0,

@@ -3,10 +3,10 @@
 
 #include <btBulletDynamicsCommon.h>
 
-float forwardForce = 25000.0f;
+float forwardForce = 20000.0f;
 float brakingForce = 4000.0f;
 float turningTorque = 5000.0f;
-float maxSpeed = 30.0f; //metri al secondo (25 -> 90 km/h)
+float maxSpeed = 25.0f; //metri al secondo (25 -> 90 km/h)
 
 // Variabile statica per mantenere la velocità desiderata tra i frame
 static float desiredSpeed = 0.0f;
@@ -18,6 +18,11 @@ const float raycastDistance = 5.0f; // Distanza del raycast verso il basso
 
 float dampedVel = 0.0f;
 float SteeringAng = 0.0f;
+
+const float maxEngineForce = 20000.0f; // Maximum force applied to wheels
+const float maxBrakeForce = 100.0f; // Maximum brake force
+const float steeringIncrement = 0.04f;
+const float steeringClamp = 0.3f;
 
 // Funzione per rilevare se la macchina è in contatto con il terreno
 bool isCarOnGround(btRigidBody* carBody, btDiscreteDynamicsWorld* dynamicsWorld, float& distance) {
@@ -31,6 +36,7 @@ bool isCarOnGround(btRigidBody* carBody, btDiscreteDynamicsWorld* dynamicsWorld,
 
     if (rayCallback.hasHit()) {
         distance = start.getY() - rayCallback.m_hitPointWorld.getY();
+        std::cout << "Distance to ground: " << distance << std::endl;
         return true;
     }
 
@@ -46,9 +52,11 @@ void updateCarMovement(btRigidBody* carBody, const glm::vec3& carMovementInput, 
 
     // Forza extra proporzionale alla distanza dal terreno
     float additionalDownForceMagnitude = gravityMultiplier * distanceToGround * carBody->getMass();
-    btVector3 additionalDownForce(0, -additionalDownForceMagnitude, 0);
-    carBody->applyCentralForce(additionalDownForce);
-
+    if (distanceToGround > 1.0f) {
+        btVector3 additionalDownForce(0, -additionalDownForceMagnitude, 0);
+        carBody->applyCentralForce(additionalDownForce);
+    }
+    
     // Ottieni la direzione frontale della macchina
     btTransform transform;
     carBody->getMotionState()->getWorldTransform(transform);
@@ -93,6 +101,11 @@ void updateCarMovement(btRigidBody* carBody, const glm::vec3& carMovementInput, 
     if (desiredSpeed != 0.0f) {
         btVector3 force = forwardDir * desiredSpeed * forwardForce * deltaT;
         carBody->applyCentralForce(force);
+        /*
+        std::cout << "Total Force: ("
+            << force.getX() << ", "
+            << force.getY() << ", "
+            << force.getZ() << ")" << std::endl;*/
     }
     else {
         // Applicare una forza frenante se non c'è velocità desiderata
@@ -116,6 +129,64 @@ void updateCarMovement(btRigidBody* carBody, const glm::vec3& carMovementInput, 
         angularVelocity.setY(0); // Mantieni solo la componente Y della velocità angolare
         carBody->setAngularVelocity(angularVelocity);
     }
+}
+
+void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput, float deltaT) {
+
+    // Controlli del veicolo
+    float engineForce = 0.f;
+    float brakeForce = 0.f;
+    float steering = vehicle->getSteeringValue(0); // Assumi che le ruote anteriori siano a indice 0 e 1
+
+    // Movimento avanti/indietro
+    if (carMovementInput.z < 0) {
+        engineForce = maxEngineForce;
+        brakeForce = 0.f;
+    }
+    else if (carMovementInput.z > 0) {
+        engineForce = 0.f;
+        brakeForce = maxBrakeForce;
+    }
+    else {
+        engineForce = 0.f;
+        brakeForce = 0.f;
+    }
+
+    // Sterzata destra/sinistra
+    if (carMovementInput.x > 0) {
+        steering -= steeringIncrement;
+        if (steering < -steeringClamp) {
+            steering = -steeringClamp;
+        }
+    }
+    else if (carMovementInput.x < 0) {
+        steering += steeringIncrement;
+        if (steering > steeringClamp) {
+            steering = steeringClamp;
+        }
+    }
+    else {
+        // Se non ci sono input, ritorna gradualmente la sterzata a zero
+        if (steering > 0) {
+            steering -= steeringIncrement;
+            if (steering < 0) steering = 0;
+        }
+        else if (steering < 0) {
+            steering += steeringIncrement;
+            if (steering > 0) steering = 0;
+        }
+    }
+
+    // Applicazione dei controlli
+    vehicle->applyEngineForce(engineForce, 2); // Ruote posteriori
+    vehicle->applyEngineForce(engineForce, 3);
+    vehicle->setBrake(brakeForce, 2);
+    vehicle->setBrake(brakeForce, 3);
+    vehicle->setSteeringValue(steering, 0); // Ruote anteriori
+    vehicle->setSteeringValue(steering, 1);
+
+    // Log per il debugging
+    std::cout << "Engine Force: " << engineForce << ", Brake Force: " << brakeForce << ", Steering: " << steering << std::endl;
 }
 
 #endif

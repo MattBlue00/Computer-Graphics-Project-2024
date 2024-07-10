@@ -144,7 +144,7 @@ protected:
             }
 
             // creates the physics world
-            initPhysics();
+            initPhysics(&SC);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -224,17 +224,26 @@ protected:
         // ???
         bool fire = false;
 
+        std::vector<float> vertices;
+        std::vector<unsigned int> indices;
+
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
 
         // accelerates or decelerates car according to user input
-        updateCarMovement(carRigidBody, carMovementInput, deltaT, dynamicsWorld);
+        //updateCarMovement(carRigidBody, carMovementInput, deltaT, dynamicsWorld);
+
+        updateVehicle(vehicle, carMovementInput, deltaT);
+
+        std::cout << vehicle->getForwardAxis() << std::endl;
+
+        std::cout << vehicle->getRigidBody()->getTotalForce().getX() << " " << vehicle->getRigidBody()->getTotalForce().getY() << " " << vehicle->getRigidBody()->getTotalForce().getZ() << std::endl;
 
         updatePhysics(deltaT);
 
         // take position and yaw of car rigid body
         btTransform transform;
-        carRigidBody->getMotionState()->getWorldTransform(transform);
+        vehicle->getRigidBody()->getMotionState()->getWorldTransform(transform);
         glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
         btQuaternion rotation = transform.getRotation();
         float bodyYaw = atan2(2.0 * (rotation.getY() * rotation.getW() + rotation.getX() * rotation.getZ()),
