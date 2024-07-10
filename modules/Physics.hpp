@@ -101,7 +101,6 @@ btTriangleMesh* loadMesh(const std::string& filePath) {
             if (fv != 3) {
                 continue; // Ignora le facce non triangolari
             }
-
             btVector3 vertices[3];
             for (int v = 0; v < fv; v++) {
                 tinyobj::index_t idx = shape.mesh.indices[indexOffset + v];
@@ -350,6 +349,109 @@ void updatePhysics(float deltaT) {
         */
 }
 
+struct Vertex {
+    glm::vec3 position;
+    glm::vec3 color;
+};
+
+std::vector<Vertex> lineVertices;
+
+void addLine(const btVector3& from, const btVector3& to, const btVector3& color) {
+    lineVertices.push_back({ glm::vec3(from.getX(), from.getY(), from.getZ()), glm::vec3(color.getX(), color.getY(), color.getZ()) });
+    lineVertices.push_back({ glm::vec3(to.getX(), to.getY(), to.getZ()), glm::vec3(color.getX(), color.getY(), color.getZ()) });
+}
+
+int getNumberOfVertices(btTriangleMesh * triangleMesh) {
+        unsigned char* vertexBase;
+        unsigned char* indexBase;
+        int numVertices;
+        PHY_ScalarType vertexType;
+        int vertexStride;
+        int numFaces;
+        PHY_ScalarType indexType;
+        int indexStride;
+
+        // Blocca la mesh per ottenere l'accesso ai vertici e agli indici
+        triangleMesh->getLockedVertexIndexBase(
+            &vertexBase, numVertices, vertexType, vertexStride,
+            &indexBase, indexStride, numFaces, indexType);
+
+        // Set per memorizzare i vertici unici
+        std::set<btVector3> uniqueVertices;
+
+        // Itera attraverso i triangoli della mesh
+        for (int i = 0; i < numFaces; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                int index;
+                if (indexType == PHY_SHORT) {
+                    index = ((unsigned short*)indexBase)[i * 3 + j];
+                }
+                else if (indexType == PHY_INTEGER) {
+                    index = ((unsigned int*)indexBase)[i * 3 + j];
+                }
+                else {
+                    // Tipo di indice non supportato
+                    continue;
+                }
+
+                float* vertex = (float*)(vertexBase + index * vertexStride);
+                uniqueVertices.insert(btVector3(vertex[0], vertex[1], vertex[2]));
+            }
+        }
+
+        // Sblocca la mesh
+        triangleMesh->unLockVertexBase(0);
+
+        // Il numero di vertici unici è la dimensione del set
+        return uniqueVertices.size();
+}
+
+void updateVertexBuffer(VkDevice* device, VkDeviceMemory* vertexBufferMemory, btTriangleMesh* mesh) {
+    // Aggiorna il buffer dei vertici con i dati delle linee
+    int vertices = getNumberOfVertices(mesh);
+
+    void* data;
+    vkMapMemory(*device, *vertexBufferMemory, 0, vertices, 0, &data);
+    memcpy(data, lineVertices.data(), (size_t)vertices);
+    vkUnmapMemory(*device, *vertexBufferMemory);
+}
+
+
+class DebugDrawer : public btIDebugDraw {
+public:
+    DebugDrawer() : m_debugMode(DBG_DrawWireframe) {}
+
+    virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) {
+        // Implementa la tua logica di rendering qui (ad esempio, usa le funzioni di rendering di Vulkan)
+        addLine(from, to, color);
+    }
+
+    virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) {}
+    virtual void reportErrorWarning(const char* warningString) {}
+    virtual void draw3dText(const btVector3& location, const char* textString) {}
+    virtual void setDebugMode(int debugMode) { m_debugMode = debugMode; }
+    virtual int getDebugMode() const { return m_debugMode; }
+
+private:
+    int m_debugMode;
+};
+
+void initializeDebugDrawer(btDiscreteDynamicsWorld* dynamicsWorld) {
+    DebugDrawer* debugDrawer = new DebugDrawer();
+    dynamicsWorld->setDebugDrawer(debugDrawer);
+}
+
+void renderLines(VkCommandBuffer* commandBuffer, VkPipeline* linePipeline) {
+    // Bind della pipeline per le linee
+    vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *linePipeline);
+
+    VkBuffer vertexBuffers[] = { vertexBuffer };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
+
+    // Disegna le linee
+    vkCmdDraw(*commandBuffer, static_cast<uint32_t>(lineVertices.size()), 1, 0, 0);
+}
 #endif
 
 
