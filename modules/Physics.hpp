@@ -2,9 +2,6 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,51 +33,6 @@ void setupRaycastVehicle(btDiscreteDynamicsWorld* dynamicsWorld, btRigidBody* ca
 void printWheelPositions(btRaycastVehicle* vehicle);
 
 // This function uses the library assimp to take the xxx.obj file and convert it to a mesh
-/*btTriangleMesh* loadMesh(const std::string& filePath) {
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filePath,  aiProcess_Triangulate | 
-                                                        aiProcess_JoinIdenticalVertices | 
-                                                        aiProcess_ImproveCacheLocality | 
-                                                        aiProcess_SortByPType |
-                                                        aiProcess_OptimizeMeshes);
-    if (!scene || !scene->HasMeshes()) {
-        throw std::runtime_error("Failed to load mesh: " + filePath);
-    }
-
-    btTriangleMesh* mesh = new btTriangleMesh();
-    unsigned int triangleCount = 0;
-    for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
-        aiMesh* aiMesh = scene->mMeshes[i];
-        if (!aiMesh->HasFaces()) {
-            continue;
-        }
-        for (unsigned int j = 0; j < aiMesh->mNumFaces; ++j) {
-            aiFace& face = aiMesh->mFaces[j];
-            if (face.mNumIndices != 3) continue; // Ensure the face is a triangle
-
-            btVector3 vertices[3];
-            for (unsigned int k = 0; k < 3; ++k) {
-                aiVector3D& vertex = aiMesh->mVertices[face.mIndices[k]];
-                vertices[k] = btVector3(vertex.x, vertex.y, vertex.z);
-            }
-
-            mesh->addTriangle(vertices[0], vertices[1], vertices[2]);
-
-            // Print vertices of the first 5 triangles
-            if (triangleCount < 5) {
-                std::cout << "Triangle " << triangleCount + 1 << ":" << std::endl;
-                std::cout << "  Vertex 0: (" << vertices[0].x() << ", " << vertices[0].y() << ", " << vertices[0].z() << ")" << std::endl;
-                std::cout << "  Vertex 1: (" << vertices[1].x() << ", " << vertices[1].y() << ", " << vertices[1].z() << ")" << std::endl;
-                std::cout << "  Vertex 2: (" << vertices[2].x() << ", " << vertices[2].y() << ", " << vertices[2].z() << ")" << std::endl;
-            }
-
-            triangleCount++;
-        }
-    }
-
-    std::cout << "Loaded mesh with " << mesh->getNumTriangles() << " triangles" << std::endl;
-    return mesh;
-}*/
 btTriangleMesh* loadMesh(const std::string& filePath) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -118,26 +70,6 @@ btTriangleMesh* loadMesh(const std::string& filePath) {
     std::cout << "Loaded mesh with " << mesh->getNumTriangles() << " triangles" << std::endl;
     return mesh;
 }
-/*btTriangleMesh* loadMesh(const Model* m) {
-    btTriangleMesh* mesh = new btTriangleMesh();
-
-    for (size_t i = 0; i < m->indices.size(); i += 3) {
-        btVector3 vertex0(m->vertices[3 * m->indices[i]], m->vertices[3 * m->indices[i] + 1], m->vertices[3 * m->indices[i] + 2]);
-        btVector3 vertex1(m->vertices[3 * m->indices[i + 1]], m->vertices[3 * m->indices[i + 1] + 1], m->vertices[3 * m->indices[i + 1] + 2]);
-        btVector3 vertex2(m->vertices[3 * m->indices[i + 2]], m->vertices[3 * m->indices[i + 2] + 1], m->vertices[3 * m->indices[i + 2] + 2]);
-
-        if (i < 15) {
-            std::cout << "Triangle " << i / 3 << " : " << std::endl;
-            std::cout << "  Vertex 0: (" << vertex0.x() << ", " << vertex0.y() << ", " << vertex0.z() << ")" << std::endl;
-            std::cout << "  Vertex 1: (" << vertex1.x() << ", " << vertex1.y() << ", " << vertex1.z() << ")" << std::endl;
-            std::cout << "  Vertex 2: (" << vertex2.x() << ", " << vertex2.y() << ", " << vertex2.z() << ")" << std::endl;
-        }
-        
-        mesh->addTriangle(vertex0, vertex1, vertex2);
-    }
-    std::cout << "Loaded mesh with " << mesh->getNumTriangles() << " triangles" << std::endl;
-    return mesh;
-}*/
 
 // Funzione per estrarre la matrice di trasformazione e verificarne l'orientamento
 void checkCarOrientation(btRigidBody* carBody) {
@@ -187,10 +119,10 @@ void initPhysics(const Scene* s) {
     circuitRigidBody = new btRigidBody(circuitRigidBodyCI);
     circuitRigidBody->setFriction(0.9); // Valore di attrito per asfalto (0.8 - 1.0)
     circuitRigidBody->setCollisionFlags(circuitRigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    circuitRigidBody->setRestitution(0.0f);
+    //circuitRigidBody->setRestitution(0.0f);
     dynamicsWorld->addRigidBody(circuitRigidBody);
 
-    /*// Load the barrier mesh
+    // Load the barrier mesh
     btTriangleMesh* barrierMesh = loadMesh("models/Barrier.obj");
     btBvhTriangleMeshShape* barrierShape = new btBvhTriangleMeshShape(barrierMesh, true);
     //barrierShape->setMargin(0.1); // Ensure margin is set
@@ -202,7 +134,7 @@ void initPhysics(const Scene* s) {
     btRigidBody* barrierRigidBody = new btRigidBody(barrierRigidBodyCI);
     barrierRigidBody->setFriction(0.8);
     barrierRigidBody->setRestitution(0.1f); // Reduce bounciness
-    dynamicsWorld->addRigidBody(barrierRigidBody);*/
+    dynamicsWorld->addRigidBody(barrierRigidBody);
 
     // Load the ramp mesh
     //btTriangleMesh* rampMesh = loadMesh(s->M[s->MeshIds.at("small_ramps")]);
@@ -220,16 +152,14 @@ void initPhysics(const Scene* s) {
 
     // Car initialization with btBoxShape
     btBoxShape* carBoxShape = new btBoxShape(btVector3(1.0, 0.5, 2.0));
-    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 10, -10)));
+    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 1, -10)));
     btScalar mass = 800.0f;
     btVector3 carInertia(0, 0, 0);
     carBoxShape->calculateLocalInertia(mass, carInertia);
     btRigidBody::btRigidBodyConstructionInfo carRigidBodyCI(mass, carMotionState, carBoxShape, carInertia);
     btRigidBody* carRigidBody = new btRigidBody(carRigidBodyCI);
-    carRigidBody->setFriction(0.5f);
-    carRigidBody->setDamping(0.9f, 0.9f);
     carRigidBody->setActivationState(DISABLE_DEACTIVATION); // Ensure car stays active
-    carRigidBody->setAngularFactor(btVector3(1, 1, 1)); // Permette al corpo rigido di ruotare su tutti gli assi
+    carRigidBody->activate(true);
     dynamicsWorld->addRigidBody(carRigidBody);
 
     // Set up the Raycast Vehicle
@@ -245,62 +175,62 @@ void setupRaycastVehicle(btDiscreteDynamicsWorld* dynamicsWorld, btRigidBody* ca
     dynamicsWorld->addAction(vehicle); // add action o vehicle
 
     // Set coordinate system (X right, Y up, Z forward)
-    //vehicle->setCoordinateSystem(0, 1, 2);
+    vehicle->setCoordinateSystem(0, 1, 2);
+
+    // Verifica la direzione delle ruote e delle sospensioni
+    btVector3 wheelDirectionCS0(0, -1, 0); // Direzione della sospensione verso il basso lungo l'asse Z negativo
+    btVector3 wheelAxleCS(-1, 0, 0); // Assale della ruota lungo l'asse X negativo
 
     // Aggiungi le ruote
     btVector3 connectionPointCS0;
     bool isFrontWheel;
 
     // Lunghezza a riposo della sospensione
-    btScalar suspensionRestLength = 0.15;
+    btScalar suspensionRestLength = 0.7;
 
     // Raggio della ruota
-    btScalar wheelRadius = 0.4;
+    btScalar wheelRadius = 0.5;
 
     // Anteriore sinistra
     connectionPointCS0 = btVector3(-1, 0.5, 2);
     isFrontWheel = true;
-    vehicle->addWheel(connectionPointCS0, btVector3(0, -1, 0), btVector3(-1, 0, 0), suspensionRestLength, wheelRadius, tuning, isFrontWheel);
+    vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Anteriore destra
     connectionPointCS0 = btVector3(1, 0.5, 2);
     isFrontWheel = true;
-    vehicle->addWheel(connectionPointCS0, btVector3(0, -1, 0), btVector3(-1, 0, 0), suspensionRestLength, wheelRadius, tuning, isFrontWheel);
+    vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Posteriore sinistra
     connectionPointCS0 = btVector3(-1, 0.5, -2);
     isFrontWheel = false;
-    vehicle->addWheel(connectionPointCS0, btVector3(0, -1, 0), btVector3(-1, 0, 0), suspensionRestLength, wheelRadius, tuning, isFrontWheel);
+    vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Posteriore destra
     connectionPointCS0 = btVector3(1, 0.5, -2);
     isFrontWheel = false;
-    vehicle->addWheel(connectionPointCS0, btVector3(0, -1, 0), btVector3(-1, 0, 0), suspensionRestLength, wheelRadius, tuning, isFrontWheel);
+    vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Set wheel parameters
     for (int i = 0; i < vehicle->getNumWheels(); i++) {
         btWheelInfo& wheel = vehicle->getWheelInfo(i);
-        wheel.m_suspensionStiffness = 20.0f;
+        wheel.m_suspensionStiffness = 50.0f;
         wheel.m_wheelsDampingRelaxation = 2.3f;
         wheel.m_wheelsDampingCompression = 4.4f;
         wheel.m_frictionSlip = 1000.0f;
         wheel.m_rollInfluence = 0.1f;
+        // Log per verificare la posizione delle ruote
+        std::cout << "Wheel " << i << ": Connection Point: ("
+            << vehicle->getWheelInfo(i).m_chassisConnectionPointCS.getX() << ", "
+            << vehicle->getWheelInfo(i).m_chassisConnectionPointCS.getY() << ", "
+            << vehicle->getWheelInfo(i).m_chassisConnectionPointCS.getZ() << ")" << std::endl;
     }
     
-    printWheelPositions(vehicle);
+    btVector3 aabbMin, aabbMax;
+    carRigidBody->getAabb(aabbMin, aabbMax);
+    std::cout << "Car AABB Min: (" << aabbMin.getX() << ", " << aabbMin.getY() << ", " << aabbMin.getZ() << "), Max: ("
+        << aabbMax.getX() << ", " << aabbMax.getY() << ", " << aabbMax.getZ() << ")" << std::endl;
 
-}
-
-void printWheelPositions(btRaycastVehicle* vehicle) {
-    for (int i = 0; i < vehicle->getNumWheels(); i++) {
-        btWheelInfo& wheel = vehicle->getWheelInfo(i);
-        btTransform trans = wheel.m_worldTransform;
-        btVector3 position = trans.getOrigin();
-        std::cout << "Wheel " << i << " Position: ("
-            << position.getX() << ", "
-            << position.getY() << ", "
-            << position.getZ() << ")" << std::endl;
-    }
 }
 
 void cleanupPhysics() {
@@ -329,128 +259,6 @@ void cleanupPhysics() {
 void updatePhysics(float deltaT) {
     dynamicsWorld->stepSimulation(deltaT, 60);
 
-    //checkCarOrientation(carRigidBody);
-
-    // Ottieni la forza totale accumulata sul corpo rigido
-    btVector3 totalForce = carRigidBody->getTotalForce();
-    btVector3 totalTorque = carRigidBody->getTotalTorque();
-    /*
-    // Stampa le forze sulle tre coordinate
-    std::cout << "Total Force: ("
-        << totalForce.getX() << ", "
-        << totalForce.getY() << ", "
-        << totalForce.getZ() << ")" << std::endl;
-
-    // Stampa i momenti torcenti (torque) sulle tre coordinate
-    std::cout << "Total Torque: ("
-        << totalTorque.getX() << ", "
-        << totalTorque.getY() << ", "
-        << totalTorque.getZ() << ")" << std::endl;
-        */
-}
-
-struct Vertex {
-    glm::vec3 position;
-    glm::vec3 color;
-};
-
-std::vector<Vertex> lineVertices;
-
-void addLine(const btVector3& from, const btVector3& to, const btVector3& color) {
-    lineVertices.push_back({ glm::vec3(from.getX(), from.getY(), from.getZ()), glm::vec3(color.getX(), color.getY(), color.getZ()) });
-    lineVertices.push_back({ glm::vec3(to.getX(), to.getY(), to.getZ()), glm::vec3(color.getX(), color.getY(), color.getZ()) });
-}
-
-int getNumberOfVertices(btTriangleMesh * triangleMesh) {
-        unsigned char* vertexBase;
-        unsigned char* indexBase;
-        int numVertices;
-        PHY_ScalarType vertexType;
-        int vertexStride;
-        int numFaces;
-        PHY_ScalarType indexType;
-        int indexStride;
-
-        // Blocca la mesh per ottenere l'accesso ai vertici e agli indici
-        triangleMesh->getLockedVertexIndexBase(
-            &vertexBase, numVertices, vertexType, vertexStride,
-            &indexBase, indexStride, numFaces, indexType);
-
-        // Set per memorizzare i vertici unici
-        std::set<btVector3> uniqueVertices;
-
-        // Itera attraverso i triangoli della mesh
-        for (int i = 0; i < numFaces; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                int index;
-                if (indexType == PHY_SHORT) {
-                    index = ((unsigned short*)indexBase)[i * 3 + j];
-                }
-                else if (indexType == PHY_INTEGER) {
-                    index = ((unsigned int*)indexBase)[i * 3 + j];
-                }
-                else {
-                    // Tipo di indice non supportato
-                    continue;
-                }
-
-                float* vertex = (float*)(vertexBase + index * vertexStride);
-                uniqueVertices.insert(btVector3(vertex[0], vertex[1], vertex[2]));
-            }
-        }
-
-        // Sblocca la mesh
-        triangleMesh->unLockVertexBase(0);
-
-        // Il numero di vertici unici è la dimensione del set
-        return uniqueVertices.size();
-}
-
-void updateVertexBuffer(VkDevice* device, VkDeviceMemory* vertexBufferMemory, btTriangleMesh* mesh) {
-    // Aggiorna il buffer dei vertici con i dati delle linee
-    int vertices = getNumberOfVertices(mesh);
-
-    void* data;
-    vkMapMemory(*device, *vertexBufferMemory, 0, vertices, 0, &data);
-    memcpy(data, lineVertices.data(), (size_t)vertices);
-    vkUnmapMemory(*device, *vertexBufferMemory);
-}
-
-
-class DebugDrawer : public btIDebugDraw {
-public:
-    DebugDrawer() : m_debugMode(DBG_DrawWireframe) {}
-
-    virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) {
-        // Implementa la tua logica di rendering qui (ad esempio, usa le funzioni di rendering di Vulkan)
-        addLine(from, to, color);
-    }
-
-    virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) {}
-    virtual void reportErrorWarning(const char* warningString) {}
-    virtual void draw3dText(const btVector3& location, const char* textString) {}
-    virtual void setDebugMode(int debugMode) { m_debugMode = debugMode; }
-    virtual int getDebugMode() const { return m_debugMode; }
-
-private:
-    int m_debugMode;
-};
-
-void initializeDebugDrawer(btDiscreteDynamicsWorld* dynamicsWorld) {
-    DebugDrawer* debugDrawer = new DebugDrawer();
-    dynamicsWorld->setDebugDrawer(debugDrawer);
-}
-
-void renderLines(VkCommandBuffer* commandBuffer, VkPipeline* linePipeline) {
-    // Bind della pipeline per le linee
-    vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *linePipeline);
-
-    VkBuffer vertexBuffers[] = { vertexBuffer };
-    VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
-
-    // Disegna le linee
-    vkCmdDraw(*commandBuffer, static_cast<uint32_t>(lineVertices.size()), 1, 0, 0);
 }
 #endif
 

@@ -235,10 +235,6 @@ protected:
 
         updateVehicle(vehicle, carMovementInput, deltaT);
 
-        std::cout << vehicle->getForwardAxis() << std::endl;
-
-        std::cout << vehicle->getRigidBody()->getTotalForce().getX() << " " << vehicle->getRigidBody()->getTotalForce().getY() << " " << vehicle->getRigidBody()->getTotalForce().getZ() << std::endl;
-
         updatePhysics(deltaT);
 
         // take position and yaw of car rigid body
@@ -281,7 +277,7 @@ protected:
         shouldQuit(window);
 
         // checks if v was pressed
-        shouldPrintDebugVariables(window, Pos, Yaw, cameraData, SteeringAng, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
+        //shouldPrintDebugVariables(window, Pos, Yaw, cameraData, SteeringAng, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
 
         // updates camera position
         if (currScene == THIRD_PERSON_SCENE) {
