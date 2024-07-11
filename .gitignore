@@ -6,5 +6,7 @@
 
 .DS_Store
 
+config.json
+
 blender/
 VulkanTesting/

@@ -1,4 +1,4 @@
-// HEADERS AND FUNCTION PROTOTYPES
+// HEADERS
 
 // professor headers
 #include "modules/Starter.hpp"          // vulkan starter header
@@ -11,12 +11,16 @@
 #include "modules/Car.hpp"              // handles car movement
 #include "modules/Drawer.hpp"           // draws the objects
 #include "modules/Physics.hpp"          // adds physics
+#include "modules/Audio.hpp"            // adds audio management
+#include "modules/Lights.hpp"           // adds lights management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/compatibility.hpp>
+
+// PROTOTYPES DECLARATION
 
 // used to set lights, camera position and direction
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos);
@@ -80,12 +84,12 @@ protected:
         windowHeight = 600;
         windowTitle = "Rainbow Stadium: Time Attack!";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = { 0.145f, 0.157f, 0.314f, 1.0f }; // dark blue
-
+        initialBackgroundColor = {0.1f, 0.1f, 0.3f, 1.0f}; // dark blue
+        
         // Descriptor pool sizes
-        uniformBlocksInPool = 100; // FIXME
-        texturesInPool = 100; // FIXME
-        setsInPool = 100; // FIXME
+        uniformBlocksInPool = 300; // FIXME
+        texturesInPool = 300; // FIXME
+        setsInPool = 300; // FIXME
 
         AspectRatio = 4.0f / 3.0f;
     }
@@ -147,6 +151,17 @@ protected:
         initPhysics(SC.sceneJson);
         
         initCar();
+        
+        // initializes the audio system and loads the sounds
+        initAudio(getProjectPath());
+        
+        // init lights
+        //initLights();
+        
+        std::cout << "Initialization completed!\n";
+        
+        // plays the race music
+        playSound("RACE_MUSIC", 0.0f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -216,8 +231,6 @@ protected:
 
         // small amount of time that passes at every "update"
         float deltaT;
-
-        float turningSpeed = 1.0f;
 
         // inits WASD and arrows user input
         glm::vec3 carMovementInput = ZERO_VEC3;
@@ -299,12 +312,8 @@ protected:
         // sets lights, camera position and direction;
         updateGUBO(&gubo, dampedCamPos);
 
-        // draws the car
-        drawCar(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, bodyPitch);
-
-        // draws the circuit
-        drawWorld(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch);
-
+        // draws every object of this app
+        drawAll(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch, bodyPitch);
     }
 };
 
@@ -315,6 +324,16 @@ void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
     gubo->eyePos = dampedCamPos;
     gubo->eyeDir = ZERO_VEC4;
     gubo->eyeDir.w = 1.0;
+    
+    /*
+    for(int i = 0; i < LIGHTS_COUNT; i++) {
+        gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
+        gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
+        gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);
+    }
+
+    gubo->eyePos = dampedCamPos;
+    gubo->lightOn = lightOn;*/
 }
 
 // This is the main: probably you do not need to touch this!
