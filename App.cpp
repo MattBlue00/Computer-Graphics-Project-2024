@@ -118,33 +118,35 @@ protected:
                      sizeof(glm::vec3), NORMAL}
             });
 
-            // Pipelines [Shader couples]
-            P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", { &DSL });
-            P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-                VK_CULL_MODE_NONE, false);
+        // Pipelines [Shader couples]
+        P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", { &DSL });
+        P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_NONE, false);
 
-            // Load Scene
-            SC.init(this, &VD, DSL, P, "models/scene.json");
+        // Load Scene
+        SC.init(this, &VD, DSL, P, "models/scene.json");
 
-            // updates the text
-            txt.init(this, &outText);
+        // updates the text
+        txt.init(this, &outText);
 
-            // Init local variables
-            Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
-            InitialPos = Pos;
-            Yaw = 0;
+        // Init local variables
+        Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
+        InitialPos = Pos;
+        Yaw = 0;
 
-            deltaP = (glm::vec3**)calloc(SC.InstanceCount, sizeof(glm::vec3*));
-            deltaA = (float*)calloc(SC.InstanceCount, sizeof(float));
-            usePitch = (float*)calloc(SC.InstanceCount, sizeof(float));
-            for (int i = 0; i < SC.InstanceCount; i++) {
-                deltaP[i] = new glm::vec3(SC.I[i].Wm[3]);
-                deltaA[i] = 0.0f;
-                usePitch[i] = 0.0f;
-            }
+        deltaP = (glm::vec3**)calloc(SC.InstanceCount, sizeof(glm::vec3*));
+        deltaA = (float*)calloc(SC.InstanceCount, sizeof(float));
+        usePitch = (float*)calloc(SC.InstanceCount, sizeof(float));
+        for (int i = 0; i < SC.InstanceCount; i++) {
+            deltaP[i] = new glm::vec3(SC.I[i].Wm[3]);
+            deltaA[i] = 0.0f;
+            usePitch[i] = 0.0f;
+        }
 
-            // creates the physics world
-            initPhysics(&SC);
+        // creates the physics world
+        initPhysics(SC.sceneJson);
+        
+        initCar();
     }
 
     // Here you create your pipelines and Descriptor Sets!

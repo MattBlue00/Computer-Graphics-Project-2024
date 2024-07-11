@@ -8,7 +8,7 @@
 // instance IDs declaration
 std::vector<std::string> car = {"car"};
 std::vector<std::string> world = {
-    "track", "barrier", "finish_line_top", "finish_line_floor", "small_ramps", "airship"
+    "track", "barrier", "finish_line_top", "finish_line_floor", "ramps", "airship"
 };
 
 void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch) {

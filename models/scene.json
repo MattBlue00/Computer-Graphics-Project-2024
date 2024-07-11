@@ -8,7 +8,7 @@
         {"id": "barrier",           "model": "models/Barrier.obj",          "format":"OBJ"},
         {"id": "finish_line_top",   "model": "models/FinishLineTop.obj",    "format":"OBJ"},
         {"id": "finish_line_floor", "model": "models/FinishLineFloor.obj",  "format":"OBJ"},
-        {"id": "small_ramps",       "model": "models/SmallRamps.obj",       "format":"OBJ"}
+        {"id": "ramps",             "model": "models/Ramps.obj",            "format":"OBJ"}
     ],
     "textures": [
         {"id": "car",               "texture": "textures/CarTexture.png"},
@@ -17,14 +17,14 @@
         {"id": "bleachers",         "texture": "textures/BleachersTexture.png"},
         {"id": "finish_line_top",   "texture": "textures/FinishLineTop.png"},
         {"id": "finish_line_floor", "texture": "textures/FinishLineFloor.png"},
-        {"id": "small_ramps",       "texture": "textures/SmallRamp.png"},
+        {"id": "ramp",              "texture": "textures/Ramp.png"},
         {"id": "coin",              "texture": "textures/GoldCoinTexture.png"},
         {"id": "airship",           "texture": "textures/AirshipTexture.png"}
     ],
     "instances": [
         {"id": "car",               "model": "car",                 "texture": "car",
          "transform": [1, 0, 0, 0,
-                       0, 1, 0, 1,
+                       0, 1, 0, 0,
                        0, 0, 1, -10,
                        0, 0, 0, 1]},
         {"id": "track",             "model": "track",               "texture": "track",
@@ -47,7 +47,7 @@
                        0, 1, 0, 0,
                        0, 0, 1, 0,
                        0, 0, 0, 1]},
-        {"id": "small_ramps",       "model": "small_ramps",         "texture": "small_ramps",
+        {"id": "ramps",             "model": "ramps",               "texture": "ramp",
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 0,
                        0, 0, 1, 0,
