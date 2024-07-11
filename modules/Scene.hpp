@@ -34,8 +34,11 @@ class Scene {
 	DescriptorSet **DS;
 	Instance *I;
 	std::unordered_map<std::string, int> InstanceIds;
+    
+    // json file
+    nlohmann::json sceneJson;
 
-	void init(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL, 
+	void init(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL,
 			  Pipeline &P, std::string file) {
 		BP = _BP;
 		// Models, textures and Descriptors (values assigned to the uniforms)
@@ -50,6 +53,8 @@ class Scene {
 			ifs >> js;
 			ifs.close();
 			std::cout << "\n\n\nScene contains " << js.size() << " definitions sections\n\n\n";
+            
+            sceneJson = js;
 			
 			// MODELS
 			json ms = js["models"];

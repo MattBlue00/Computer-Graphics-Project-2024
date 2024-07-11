@@ -20,8 +20,7 @@
         {"id": "big_star",          "model": "models/BigStar.obj",          "format":"OBJ"},
         {"id": "rainbow",           "model": "models/Rainbow.obj",          "format":"OBJ"},
         {"id": "dir_banners",       "model": "models/DirBanners.obj",       "format":"OBJ"},
-        {"id": "rocket",            "model": "models/Rocket.obj",           "format":"OBJ"},
-        {"id": "world",             "model": "models/World.obj",            "format":"OBJ"}
+        {"id": "rocket",            "model": "models/Rocket.obj",           "format":"OBJ"}
     ],
     "textures": [
         {"id": "car",               "texture": "textures/CarTexture.png"},
@@ -31,7 +30,7 @@
         {"id": "bleachers",         "texture": "textures/BleachersTexture.png"},
         {"id": "finish_line_top",   "texture": "textures/FinishLineTop.png"},
         {"id": "finish_line_floor", "texture": "textures/FinishLineFloor.png"},
-        {"id": "ramps",             "texture": "textures/Ramp.png"},
+        {"id": "ramp",              "texture": "textures/Ramp.png"},
         {"id": "coin",              "texture": "textures/GoldCoinTexture.png"},
         {"id": "airship",           "texture": "textures/AirshipTexture.png"},
         {"id": "airplane",          "texture": "textures/AirplaneTexture.png"},
@@ -39,8 +38,7 @@
         {"id": "entertainment",     "texture": "textures/EntertainmentTexture.png"},
         {"id": "arrow",             "texture": "textures/Arrow.png"},
         {"id": "rocket",            "texture": "textures/Rocket.png"},
-        {"id": "road",              "texture": "textures/RoadTexture.png"},
-        {"id": "world",             "texture": "textures/World.png"}
+        {"id": "road",              "texture": "textures/RoadTexture.png"}
     ],
     "instances": [
         {"id": "car",               "model": "car",                 "texture": "car",
@@ -73,7 +71,7 @@
                        0, 1, 0, 0,
                        0, 0, 1, 0,
                        0, 0, 0, 1]},
-        {"id": "ramps",             "model": "ramps",               "texture": "ramps",
+        {"id": "ramps",             "model": "ramps",               "texture": "ramp",
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 0,
                        0, 0, 1, 0,
@@ -162,11 +160,6 @@
          "transform": [5, 0, 0, -750,
                        0, 5, 0, -3,
                        0, 0, 5, 300,
-                       0, 0, 0, 1]},
-        {"id": "world",              "model": "world",              "texture": "world",
-         "transform": [1, 0, 0, 0,
-                       0, 1, 0, 0,
-                       0, 0, 1, 0,
                        0, 0, 0, 1]}
     ]
 }

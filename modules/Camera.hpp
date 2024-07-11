@@ -30,8 +30,8 @@ const float ROLL_THIRD = 0.0f;
 
 const float MIN_YAW_FIRST = M_PI_2;
 const float MAX_YAW_FIRST = 1.5f*M_PI;
-const float MIN_PITCH_FIRST = -0.25f*M_PI;
-const float MAX_PITCH_FIRST = 0.25f*M_PI;
+const float MIN_PITCH_FIRST = -0.1f*M_PI;
+const float MAX_PITCH_FIRST = 0.1f*M_PI;
 const float MIN_ROLL_FIRST = -M_PI;
 const float MAX_ROLL_FIRST = M_PI;
 
@@ -74,7 +74,7 @@ void switchToFirstPersonCamera(CameraData* cameraData){
 
 // These functions update the camera data
 
-void updateThirdPersonCamera(CameraData* cameraData, glm::vec3* CamPos, glm::vec3* dampedCamPos, glm::mat4* M, float Yaw, float AspectRatio, float rot_speed, float deltaT, glm::vec3 cameraRotationInput, glm::vec3 carMovementInput, glm::vec3 Pos){
+void updateThirdPersonCamera(CameraData* cameraData, glm::vec3* CamPos, glm::vec3* dampedCamPos, glm::mat4* M, float Yaw, float Pitch, float AspectRatio, float rot_speed, float deltaT, glm::vec3 cameraRotationInput, glm::vec3 carMovementInput, glm::vec3 Pos){
     
     // moves camera
     cameraData->CamYaw += rot_speed * deltaT * cameraRotationInput.y;
@@ -89,18 +89,18 @@ void updateThirdPersonCamera(CameraData* cameraData, glm::vec3* CamPos, glm::vec
     cameraData->CamDist = (cameraData->CamDist < MIN_DIST_THIRD ? MIN_DIST_THIRD : (cameraData->CamDist > MAX_DIST_THIRD ? MAX_DIST_THIRD : cameraData->CamDist));
     
     // computes camera position
-    glm::vec3 CamTarget = Pos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, Y_AXIS) *
-                     glm::vec4(CamTargetDelta,1));
-    *CamPos = CamTarget + glm::vec3(glm::rotate(glm::mat4(1), Yaw + cameraData->CamYaw, Y_AXIS) * glm::rotate(glm::mat4(1), -cameraData->CamPitch, X_AXIS) *
-                                   glm::vec4(0,0,cameraData->CamDist,1));
+    glm::vec3 CamTarget = Pos + glm::vec3(glm::rotate(ONE_MAT4, Yaw, Y_AXIS) * glm::vec4(CamTargetDelta,1));
+    // Add vehicle pitch to camera transformations
+    glm::mat4 cameraTransform = glm::rotate(glm::mat4(1), Yaw + cameraData->CamYaw, Y_AXIS) * glm::rotate(ONE_MAT4, -cameraData->CamPitch - Pitch, X_AXIS);
 
-    *dampedCamPos = *CamPos; // no damping
+    *CamPos = CamTarget + glm::vec3(cameraTransform * glm::vec4(0, 0, cameraData->CamDist, 1));
+    *dampedCamPos = *CamPos;
     
     // builds third person view matrix
     *M = MakeViewProjectionLookAt(*dampedCamPos, CamTarget, Y_AXIS, cameraData->CamRoll, DEG_90, AspectRatio, NEAR_PLANE, FAR_PLANE);
 }
 
-void updateFirstPersonCamera(CameraData* cameraData, glm::mat4* M, float Yaw, float AspectRatio, float rot_speed, float deltaT, glm::vec3 r, glm::vec3 m, glm::vec3 Pos){
+void updateFirstPersonCamera(CameraData* cameraData, glm::mat4* M, float Yaw, float Pitch, float AspectRatio, float rot_speed, float deltaT, glm::vec3 r, glm::vec3 m, glm::vec3 Pos){
     
     // moves camera
     cameraData->CamYaw -= rot_speed * deltaT * r.y;
@@ -115,7 +115,7 @@ void updateFirstPersonCamera(CameraData* cameraData, glm::mat4* M, float Yaw, fl
     // computes camera position
     glm::vec3 Cam1Pos = Pos + glm::vec3(glm::rotate(ONE_MAT4, Yaw, Y_AXIS) *
                      glm::vec4(Cam1stPos,1));
-    
+
     // builds first person view matrix
     *M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + cameraData->CamYaw, cameraData->CamPitch, cameraData->CamRoll, DEG_90, AspectRatio, NEAR_PLANE, FAR_PLANE);
 }

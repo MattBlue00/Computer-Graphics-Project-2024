@@ -13,7 +13,7 @@ std::vector<std::string> airship = {"airship"};
 std::vector<std::string> world = {
     "track", "barrier", "finish_line_top", "finish_line_floor", "ramps", "tower", "banners",
     "big_star", "rainbow", "arcade_1", "arcade_2", "dir_barrier_oval", "dir_banners", "rocket",
-    "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "world"
+    "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2"
 };
 
 // utility airplane variables and constants
@@ -32,11 +32,12 @@ int airplaneActionsDone = 0;
 const float AIRSHIP_MOV_PER_FRAME = 0.02f;
 bool airshipGoingUp = true;
 
-void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+
+void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch) {
     for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
         
-        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], usePitch[i], 0) * baseCar;
+        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, 0) * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -176,9 +177,9 @@ void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObj
     }
 }
 
-void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch, float bodyPitch){
     // draws the car
-    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, bodyPitch);
     
     // draws the circuit and its decorations
     drawWorld(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
