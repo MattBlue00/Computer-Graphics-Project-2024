@@ -2,6 +2,7 @@
 *.xcodeproj
 *.obj
 *.mtl
+.vs/
 
 .DS_Store
 
