@@ -99,7 +99,7 @@ struct Vertex {
 
 std::string getProjectPath() {
     json js;
-    std::ifstream ifs("config.json");
+    std::ifstream ifs("config/config.json");
     if (!ifs.is_open()) {
         std::cerr << "Error! Config file not found!" << std::endl;
         exit(-1);
