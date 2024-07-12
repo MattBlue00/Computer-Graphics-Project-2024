@@ -198,6 +198,7 @@ protected:
 
         SC.localCleanup();
         uiManager.localCleanup();
+        cleanupPhysics();
     }
 
     // Here it is the creation of the command buffer:
