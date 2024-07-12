@@ -2,8 +2,12 @@
 *.xcodeproj
 *.obj
 *.mtl
+.vs/
 
 .DS_Store
 
+config.json
+
+config/
 blender/
 VulkanTesting/

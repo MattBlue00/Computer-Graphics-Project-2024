@@ -9,7 +9,7 @@ typedef struct {
 } Instance;
 
 // WARNING: ADDED BY US
-void buildMultipleInstances(nlohmann::json* instances); // prototype
+void buildMultipleInstances(json* instances); // prototype
 
 class Scene {
 	public:
@@ -34,25 +34,30 @@ class Scene {
 	DescriptorSet **DS;
 	Instance *I;
 	std::unordered_map<std::string, int> InstanceIds;
+    
+    // json file
+    nlohmann::json sceneJson;
 
-	void init(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL, 
+	void init(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL,
 			  Pipeline &P, std::string file) {
 		BP = _BP;
 		// Models, textures and Descriptors (values assigned to the uniforms)
-		nlohmann::json js;
+		json js;
 		std::ifstream ifs("models/scene.json");
 		if (!ifs.is_open()) {
 		  std::cout << "Error! Scene file not found!";
 		  exit(-1);
 		}
 		try {
-			std::cout << "Parsing JSON\n";
+			std::cout << "Parsing scene.json\n";
 			ifs >> js;
 			ifs.close();
 			std::cout << "\n\n\nScene contains " << js.size() << " definitions sections\n\n\n";
+            
+            sceneJson = js;
 			
 			// MODELS
-			nlohmann::json ms = js["models"];
+			json ms = js["models"];
 			ModelCount = (int)ms.size();
 			std::cout << "Models count: " << ModelCount << "\n";
 
@@ -66,7 +71,7 @@ class Scene {
 			}
 			
 			// TEXTURES
-			nlohmann::json ts = js["textures"];
+			json ts = js["textures"];
 			TextureCount = (int)ts.size();
 			std::cout << "Textures count: " << TextureCount << "\n";
 
@@ -79,7 +84,7 @@ class Scene {
 			}
 
 			// INSTANCES TextureCount
-			nlohmann::json is = js["instances"];
+			json is = js["instances"];
             
             // WARNING: ADDED BY US
             buildMultipleInstances(&is);
@@ -95,12 +100,12 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 				I[k].id  = new std::string(is[k]["id"]);
 				I[k].Mid = MeshIds[is[k]["model"]];
 				I[k].Tid = TextureIds[is[k]["texture"]];
-				nlohmann::json TMjson = is[k]["transform"];
+				json TMjson = is[k]["transform"];
 				float TMj[16];
 				for(int l = 0; l < 16; l++) {TMj[l] = TMjson[l];}
 				I[k].Wm = glm::mat4(TMj[0],TMj[4],TMj[8],TMj[12],TMj[1],TMj[5],TMj[9],TMj[13],TMj[2],TMj[6],TMj[10],TMj[14],TMj[3],TMj[7],TMj[11],TMj[15]);
 			}			
-		} catch (const nlohmann::json::exception& e) {
+		} catch (const json::exception& e) {
 			std::cout << e.what() << '\n';
 		}
 	}
@@ -162,13 +167,15 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 
 #include "Drawer.hpp"
 
-const int FIRST_BLEACHERS_COUNT = 15; // per side
-const int FIRST_BLEACHERS_START = -45;
+void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
+void addInstanceToCoins(std::string instance_id); // external function ("Drawer.hpp")
+
+// bleachers count and parameters
+const int FIRST_BLEACHERS_COUNT = 29; // per side
+const int FIRST_BLEACHERS_START = -155;
 const int BLEACHERS_STEP = 10;
 
-void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
-
-void buildMultipleInstances(nlohmann::json* instances){
+void buildMultipleInstances(json* instances){
     
     // bleachers on the first straight line
     for(int i = 1; i <= FIRST_BLEACHERS_COUNT; i++) {
@@ -213,7 +220,97 @@ void buildMultipleInstances(nlohmann::json* instances){
                             0, 0.03, 0, 42.5,
                             0, 0, 0, 1}}
         });
-        addInstanceToWorld("coin_" + std::to_string(global_coin_count));
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // three coins on the right
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -7.25,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, 90 + 7 * i,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // three coins on the left
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, 7.25,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, 120 + 7 * i,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // three coins in the middle
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, 0.25,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, 180 + 7 * i,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // three coins under the rainbow
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -7 + 7.25 * i,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, 250,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // three coins after the crossroads
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -6.5 + 7 * i,
+                            0, 0, -0.03, 2.5,
+                            0, 0.03, 0, i != 1 ? 322.5 : 332.5,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // ten coins near the star and the rocket
+    for(int i = 0; i < 10; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, i%2 == 0 ? -4.5 : 4.5,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, 400 + 15 * i,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     

@@ -1,0 +1,39 @@
+{
+    "lights" : [
+        {
+            "color": [1.0, 1.0, 0.0],
+            "translation": [-755, 20, 473],
+            "intensity": 10.0,
+            "type": "point",
+            "name": "airstrip_light_1"
+        },
+        {
+            "color": [1.0, 1.0, 0.0],
+            "translation": [-755, 20, 433],
+            "intensity": 10.0,
+            "type": "point",
+            "name": "airstrip_light_2"
+        },
+        {
+            "color": [1.0, 1.0, 0.0],
+            "translation": [-755, 20, 393],
+            "intensity": 10.0,
+            "type": "point",
+            "name": "airstrip_light_3"
+        },
+        {
+            "color": [1.0, 1.0, 0.0],
+            "translation": [-755, 20, 353],
+            "intensity": 10.0,
+            "type": "point",
+            "name": "airstrip_light_4"
+        },
+        {
+            "color": [1.0, 1.0, 0.0],
+            "translation": [-755, 20, 313],
+            "intensity": 10.0,
+            "type": "point",
+            "name": "airstrip_light_5"
+        }
+    ]
+}
