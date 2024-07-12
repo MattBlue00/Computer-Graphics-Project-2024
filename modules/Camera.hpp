@@ -83,8 +83,7 @@ void updateThirdPersonCamera(CameraData* cameraData, glm::vec3* CamPos, glm::vec
 
     // smoothes camera movement
     const float lambdaCam = 10.0f;
-    *dampedCamPos = *CamPos * (1 - exp(-lambdaCam * deltaT)) +
-        *dampedCamPos * exp(-lambdaCam * deltaT);
+    *dampedCamPos = *CamPos;
     
     // builds third person view matrix
     *M = MakeViewProjectionLookAt(*dampedCamPos, CamTarget, Y_AXIS, cameraData->CamRoll, DEG_90, AspectRatio, 0.1f, 500.0f);

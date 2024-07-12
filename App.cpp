@@ -13,17 +13,12 @@
 #include "modules/Physics.hpp"          // adds physics
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
+// imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
+#include "modules/UIManager.hpp"
 
 // used to set lights, camera position and direction
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos);
-
-// TEXT TO SHOW
-
-std::vector<SingleText> outText = {
-    {1, {"Third Person", "Press SPACE to change view", "", ""}, 0, 0},
-    {1, {"First Person", "Press SPACE to change view", "", ""}, 0, 0},
-};
 
 // MAIN APP
 
@@ -52,8 +47,8 @@ class App : public BaseProject {
     // ???
     float *usePitch;
 
-    // Text Maker
-    TextMaker txt;
+    // UI Manager
+    UIManager uiManager;
     
     // current scene
     int currScene = THIRD_PERSON_SCENE;
@@ -123,9 +118,9 @@ class App : public BaseProject {
         // Load Scene
         SC.init(this, &VD, DSL, P, "models/scene.json");
         
-        // updates the text
-        txt.init(this, &outText);
-
+        // init the UI
+        uiManager.init(this);
+        
         // Init local variables
         Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
         InitialPos = Pos;
@@ -151,7 +146,7 @@ class App : public BaseProject {
 
         // Here you define the data set
         SC.pipelinesAndDescriptorSetsInit(DSL);
-        txt.pipelinesAndDescriptorSetsInit();
+        uiManager.pipelinesAndDescriptorSetsInit();
     }
 
     // Here you destroy your pipelines and Descriptor Sets!
@@ -161,7 +156,7 @@ class App : public BaseProject {
         P.cleanup();
 
         SC.pipelinesAndDescriptorSetsCleanup();
-        txt.pipelinesAndDescriptorSetsCleanup();
+        uiManager.pipelinesAndDescriptorSetsCleanup();
     }
 
     // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -183,7 +178,7 @@ class App : public BaseProject {
         P.destroy();
 
         SC.localCleanup();
-        txt.localCleanup();
+        uiManager.localCleanup();
     }
     
     // Here it is the creation of the command buffer:
@@ -195,7 +190,7 @@ class App : public BaseProject {
         P.bind(commandBuffer);
 
         SC.populateCommandBuffer(commandBuffer, currentImage, P);
-        txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
+        uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
     }
 
     // Here is where you update the uniforms.
@@ -241,10 +236,12 @@ class App : public BaseProject {
         
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
+        bool shouldRebuildPipelineUI = uiManager.shouldUpdateUI();
         // if so, rebuilds pipeline
-        if(shouldRebuildPipeline){
+        if(shouldRebuildPipeline || shouldRebuildPipelineUI){
             RebuildPipeline();
         }
+        
 
         // checks if esc was pressed
         shouldQuit(window);
@@ -262,7 +259,7 @@ class App : public BaseProject {
         glm::mat4 ViewPrj = M;
         UniformBufferObject ubo{};
         glm::mat4 baseCar = ONE_MAT4;
-        
+                        
         // Here is where you actually update your uniforms
         
         GlobalUniformBufferObject gubo{};
