@@ -9,29 +9,23 @@ FMOD_RESULT result;
 
 std::map<std::string, FMOD::Sound*> soundMap;
 
-std::map<std::string, const char*> soundLoadingMap = {
-    {"RACE_MUSIC", "assets/audio/music/RaceBackgroundMusic.mp3"}
-};
-
 void checkFmodError(FMOD_RESULT result);
 
-void initAudio(const std::string& projectPath){
+void initAudio(const json musicMap) {
     result = FMOD::System_Create(&audio_system);
     checkFmodError(result);
     result = audio_system->init(512, FMOD_INIT_NORMAL, 0);
     checkFmodError(result);
-    
-    for (auto it = soundLoadingMap.begin(); it != soundLoadingMap.end(); ++it) {
+
+    for (const auto& music : musicMap) {
+        std::string name = music["name"];
+        std::string path = music["path"];
+
         FMOD::Sound *sound;
-
-        std::stringstream fullPathStream;
-        fullPathStream << projectPath << it->second;
-        std::string fullPath = fullPathStream.str();
-
-        FMOD_RESULT result = audio_system->createSound(fullPath.c_str(), FMOD_DEFAULT, 0, &sound);
+        result = audio_system->createSound(path.c_str(), FMOD_DEFAULT, 0, &sound);
         checkFmodError(result);
 
-        soundMap[it->first] = sound;
+        soundMap[name] = sound;
     }
 }
 
