@@ -153,7 +153,7 @@ protected:
         initCar();
         
         // initializes the audio system and loads the sounds
-        initAudio(getProjectPath());
+        //initAudio(getProjectPath());
         
         // init lights
         //initLights();
@@ -161,7 +161,7 @@ protected:
         std::cout << "Initialization completed!\n";
         
         // plays the race music
-        playSound("RACE_MUSIC", 0.0f, 7);
+        //playSound("RACE_MUSIC", 0.0f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -245,12 +245,11 @@ protected:
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
 
-        // accelerates or decelerates car according to user input
-        //updateCarMovement(carRigidBody, carMovementInput, deltaT, dynamicsWorld);
-
         updateVehicle(vehicle, carMovementInput, deltaT);
 
         updatePhysics(deltaT);
+
+        checkCollisions(vehicle, SC.sceneJson);
 
         // take position and yaw of car rigid body
         btTransform transform;

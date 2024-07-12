@@ -10,7 +10,7 @@ FMOD_RESULT result;
 std::map<std::string, FMOD::Sound*> soundMap;
 
 std::map<std::string, const char*> soundLoadingMap = {
-    {"RACE_MUSIC", "assets/audio/music/RaceBackgroundMusic.mp3"}
+    {"RACE_MUSIC", "assets\audio\music\RaceBackgroundMusic.mp3"}
 };
 
 void checkFmodError(FMOD_RESULT result);
