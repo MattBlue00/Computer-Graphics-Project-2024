@@ -15,19 +15,14 @@
 #include "modules/Lights.hpp"           // adds lights management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
+// imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
+#include "modules/UIManager.hpp"
 
 // PROTOTYPES DECLARATION
 
 // used to set lights, camera position and direction
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos);
-
-// TEXT TO SHOW
-
-std::vector<SingleText> outText = {
-    {1, {"Third Person", "Press SPACE to change view", "", ""}, 0, 0},
-    {1, {"First Person", "Press SPACE to change view", "", ""}, 0, 0},
-};
 
 // MAIN APP
 
@@ -56,9 +51,9 @@ protected:
     // ???
     float* usePitch;
 
-    // Text Maker
-    TextMaker txt;
-
+    // UI Manager
+    UIManager uiManager;
+    
     // current scene
     int currScene = THIRD_PERSON_SCENE;
 
@@ -126,10 +121,10 @@ protected:
 
         // Load Scene
         SC.init(this, &VD, DSL, P, "models/scene.json");
-
-        // updates the text
-        txt.init(this, &outText);
-
+        
+        // init the UI
+        uiManager.init(this);
+        
         // Init local variables
         Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
         InitialPos = Pos;
@@ -170,7 +165,7 @@ protected:
 
         // Here you define the data set
         SC.pipelinesAndDescriptorSetsInit(DSL);
-        txt.pipelinesAndDescriptorSetsInit();
+        uiManager.pipelinesAndDescriptorSetsInit();
     }
 
     // Here you destroy your pipelines and Descriptor Sets!
@@ -180,7 +175,7 @@ protected:
         P.cleanup();
 
         SC.pipelinesAndDescriptorSetsCleanup();
-        txt.pipelinesAndDescriptorSetsCleanup();
+        uiManager.pipelinesAndDescriptorSetsCleanup();
     }
 
     // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -202,7 +197,7 @@ protected:
         P.destroy();
 
         SC.localCleanup();
-        txt.localCleanup();
+        uiManager.localCleanup();
         cleanupPhysics();
     }
 
@@ -215,7 +210,7 @@ protected:
         P.bind(commandBuffer);
 
         SC.populateCommandBuffer(commandBuffer, currentImage, P);
-        txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
+        uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
     }
 
     // Here is where you update the uniforms.
@@ -279,10 +274,12 @@ protected:
 
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
+        bool shouldRebuildPipelineUI = uiManager.shouldUpdateUI();
         // if so, rebuilds pipeline
-        if (shouldRebuildPipeline) {
+        if(shouldRebuildPipeline || shouldRebuildPipelineUI){
             RebuildPipeline();
         }
+        
 
         // checks if esc was pressed
         shouldQuit(window);
@@ -301,7 +298,7 @@ protected:
         glm::mat4 ViewPrj = M;
         UniformBufferObject ubo{};
         glm::mat4 baseCar = ONE_MAT4;
-
+                        
         // Here is where you actually update your uniforms
 
         GlobalUniformBufferObject gubo{};

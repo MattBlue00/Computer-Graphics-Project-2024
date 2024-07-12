@@ -231,6 +231,13 @@ class Model {
 	VkBuffer indexBuffer;
 	VkDeviceMemory indexBufferMemory;
 	VertexDescriptor *VD;
+    
+    struct PendingResource {
+            VkBuffer buffer;
+            VkDeviceMemory memory;
+            VkFence fence;
+        };
+    std::vector<PendingResource> pendingResources;
 
 	public:
 	std::vector<unsigned char> vertices{};
@@ -239,10 +246,16 @@ class Model {
 	void loadModelGLTF(std::string file, bool encoded);
 	void createIndexBuffer();
 	void createVertexBuffer();
+    void updateIndexBuffer();
+    void updateVertexBuffer();
+    void destroyPendingResources();
 
 	void init(BaseProject *bp, VertexDescriptor *VD, std::string file, ModelType MT);
 	void initMesh(BaseProject *bp, VertexDescriptor *VD);
+    void updateMesh(BaseProject *bp, VertexDescriptor *VD);
 	void cleanup();
+    void replaceVertexBuffer(VkDeviceSize newsize);
+    void replaceIndexBuffer(VkDeviceSize newsize);
   	void bind(VkCommandBuffer commandBuffer);
 };
 
@@ -1479,7 +1492,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 			throw std::runtime_error("failed to allocate vertex buffer memory!");
 		}
 		
-		vkBindBufferMemory(device, buffer, bufferMemory, 0);	
+        vkBindBufferMemory(device, buffer, bufferMemory, 0);
 	}
 	
 	uint32_t findMemoryType(uint32_t typeFilter,
@@ -1750,6 +1763,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 	}
 		
     void cleanup() {
+        
 		cleanupSwapChain();
     	 	
 		localCleanup();
@@ -2743,30 +2757,32 @@ void Model::createVertexBuffer() {
 //	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 	VkDeviceSize bufferSize = vertices.size();
 
-	BP->createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+	BP->createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 						VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 						VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 						vertexBuffer, vertexBufferMemory);
-
-	void* data;
+    
+        
+    void* data;
 	vkMapMemory(BP->device, vertexBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, vertices.data(), (size_t) bufferSize);
-	vkUnmapMemory(BP->device, vertexBufferMemory);			
+	vkUnmapMemory(BP->device, vertexBufferMemory);
 }
 
 void Model::createIndexBuffer() {
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
+    
 	BP->createBuffer(bufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 							 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 							 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 							 indexBuffer, indexBufferMemory);
-
+        
 	void* data;
 	vkMapMemory(BP->device, indexBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, indices.data(), (size_t) bufferSize);
 	vkUnmapMemory(BP->device, indexBufferMemory);
 }
+
 
 void Model::initMesh(BaseProject *bp, VertexDescriptor *vd) {
 	BP = bp;
@@ -2774,8 +2790,154 @@ void Model::initMesh(BaseProject *bp, VertexDescriptor *vd) {
 	int mainStride = VD->Bindings[0].stride;
 	std::cout << "[Manual] Vertices: " << (vertices.size()/mainStride)
 			  << "\nIndices: " << indices.size() << "\n";
-	createVertexBuffer();
-	createIndexBuffer();
+    // Check if buffers need to be created or updated
+    createVertexBuffer();
+    createIndexBuffer();
+}
+
+void Model::updateMesh(BaseProject *bp, VertexDescriptor *vd){
+    updateVertexBuffer();
+    updateIndexBuffer();
+}
+
+
+void Model::updateVertexBuffer() {
+    VkDeviceSize bufferSize = vertices.size();
+    
+    replaceVertexBuffer(bufferSize);
+    
+    void* data;
+    vkMapMemory(BP->device, vertexBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, vertices.data(), (size_t) bufferSize);
+    vkUnmapMemory(BP->device, vertexBufferMemory);
+}
+
+void Model::replaceVertexBuffer(VkDeviceSize newSize) {
+    destroyPendingResources();
+    // Create new buffer
+    VkBuffer newVertexBuffer;
+    VkDeviceMemory newVertexBufferMemory;
+
+    BP->createBuffer(newSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, newVertexBuffer, newVertexBufferMemory);
+
+
+    // Update references
+    VkBuffer oldVertexBuffer = vertexBuffer;
+    VkDeviceMemory oldVertexBufferMemory = vertexBufferMemory;
+    vertexBuffer = newVertexBuffer;
+    vertexBufferMemory = newVertexBufferMemory;
+
+    if (oldVertexBuffer != VK_NULL_HANDLE) {
+        // Create a fence to ensure commands using old buffer are finished
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        VkFence fence;
+        vkCreateFence(BP->device, &fenceInfo, nullptr, &fence);
+
+        // Submit a dummy command buffer or use the existing queue submit to signal the fence
+        // Assume commandBuffer has commands using old buffer, replace this with actual submission
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = BP->commandPool; // Assumes you have a command pool
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(BP->device, &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+        vkQueueSubmit(BP->graphicsQueue, 1, &submitInfo, fence);
+
+        // Store old resources and fence
+        pendingResources.push_back({oldVertexBuffer, oldVertexBufferMemory, fence});
+    }
+
+}
+
+void Model::updateIndexBuffer() {
+    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+    
+    replaceIndexBuffer(bufferSize);
+        
+    void* data;
+    vkMapMemory(BP->device, indexBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, indices.data(), (size_t) bufferSize);
+    vkUnmapMemory(BP->device, indexBufferMemory);
+}
+
+void Model::replaceIndexBuffer(VkDeviceSize newSize) {
+    destroyPendingResources();
+    // Create new buffer
+    VkBuffer newIndexBuffer;
+    VkDeviceMemory newIndexBufferMemory;
+
+    BP->createBuffer(newSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                             newIndexBuffer, newIndexBufferMemory);
+
+    // Update references
+    VkBuffer oldIndexBuffer = indexBuffer;
+    VkDeviceMemory oldIndexBufferMemory = indexBufferMemory;
+    indexBuffer = newIndexBuffer;
+    indexBufferMemory = newIndexBufferMemory;
+
+    if (oldIndexBuffer != VK_NULL_HANDLE) {
+        // Create a fence to ensure commands using old buffer are finished
+        VkFenceCreateInfo fenceInfo = {};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        VkFence fence;
+        vkCreateFence(BP->device, &fenceInfo, nullptr, &fence);
+
+        // Submit a dummy command buffer or use the existing queue submit to signal the fence
+        // Assume commandBuffer has commands using old buffer, replace this with actual submission
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = BP->commandPool; // Assumes you have a command pool
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(BP->device, &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+        vkQueueSubmit(BP->graphicsQueue, 1, &submitInfo, fence);
+
+        // Store old resources and fence
+        pendingResources.push_back({oldIndexBuffer, oldIndexBufferMemory, fence});
+    }
+
+}
+
+// Destroy pending buffers (for Text updates)
+void Model::destroyPendingResources() {
+    for (auto it = pendingResources.begin(); it != pendingResources.end();) {
+        VkResult result = vkGetFenceStatus(BP->device, it->fence);
+        if (result == VK_SUCCESS) {
+            vkDestroyBuffer(BP->device, it->buffer, nullptr);
+            vkFreeMemory(BP->device, it->memory, nullptr);
+            vkDestroyFence(BP->device, it->fence, nullptr);
+            it = pendingResources.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelType MT) {
@@ -2794,10 +2956,24 @@ void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelT
 }
 
 void Model::cleanup() {
-   	vkDestroyBuffer(BP->device, indexBuffer, nullptr);
-   	vkFreeMemory(BP->device, indexBufferMemory, nullptr);
-	vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
-   	vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
+    destroyPendingResources();
+
+    if (vertexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
+        vertexBuffer = VK_NULL_HANDLE;
+    }
+    if (vertexBufferMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
+        vertexBufferMemory = VK_NULL_HANDLE;
+    }
+    if (indexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(BP->device, indexBuffer, nullptr);
+        indexBuffer = VK_NULL_HANDLE;
+    }
+    if (indexBufferMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(BP->device, indexBufferMemory, nullptr);
+        indexBufferMemory = VK_NULL_HANDLE;
+    }
 }
 
 void Model::bind(VkCommandBuffer commandBuffer) {
@@ -2957,10 +3133,6 @@ void Texture::cleanup() {
 	vkDestroyImage(BP->device, textureImage, nullptr);
 	vkFreeMemory(BP->device, textureImageMemory, nullptr);
 }
-
-
-
-
 
 void Pipeline::init(BaseProject *bp, VertexDescriptor *vd,
 					const std::string& VertShader, const std::string& FragShader,
