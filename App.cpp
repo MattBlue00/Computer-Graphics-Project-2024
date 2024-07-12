@@ -16,9 +16,6 @@
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
-#include <glm/gtx/compatibility.hpp>
 
 // PROTOTYPES DECLARATION
 
@@ -146,6 +143,8 @@ protected:
             deltaA[i] = 0.0f;
             usePitch[i] = 0.0f;
         }
+        
+        json config = parseConfigFile();
 
         // creates the physics world
         initPhysics(SC.sceneJson);
@@ -153,7 +152,7 @@ protected:
         initCar();
         
         // initializes the audio system and loads the sounds
-        initAudio(getProjectPath());
+        initAudio(config["music"]);
         
         // init lights
         //initLights();
@@ -238,9 +237,6 @@ protected:
 
         // ???
         bool fire = false;
-
-        std::vector<float> vertices;
-        std::vector<unsigned int> indices;
 
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);

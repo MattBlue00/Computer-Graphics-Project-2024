@@ -25,7 +25,7 @@ void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float f
 
 void printWheelPositions(btRaycastVehicle* vehicle);
 
-void initPhysics(nlohmann::json sceneJson) {
+void initPhysics(json sceneJson) {
     broadphase = new btDbvtBroadphase();
     collisionConfiguration = new btDefaultCollisionConfiguration();
     dispatcher = new btCollisionDispatcher(collisionConfiguration);
@@ -41,7 +41,7 @@ void initPhysics(nlohmann::json sceneJson) {
         std::string id = it->first;
         
         // Cercare il modello corrispondente nell'array "models"
-        auto modelIt = std::find_if(sceneJson["models"].begin(), sceneJson["models"].end(), [&id](const nlohmann::json& model) {
+        auto modelIt = std::find_if(sceneJson["models"].begin(), sceneJson["models"].end(), [&id](const json& model) {
                return model["id"] == id;
         });
 

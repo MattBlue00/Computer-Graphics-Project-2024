@@ -97,7 +97,7 @@ struct Vertex {
 
 // PROJECT-SPECIFIC FUNCTIONS
 
-std::string getProjectPath() {
+json parseConfigFile() {
     json js;
     std::ifstream ifs("config/config.json");
     if (!ifs.is_open()) {
@@ -115,7 +115,7 @@ std::string getProjectPath() {
         exit(-1);
     }
 
-    return js["project_path"].get<std::string>();
+    return js;
 }
 
 #endif
