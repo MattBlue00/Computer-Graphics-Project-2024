@@ -147,11 +147,8 @@ protected:
         initCar();
         
         // initializes the audio system and loads the sounds
-<<<<<<< HEAD
-        //initAudio(getProjectPath());
-=======
+
         initAudio(config["music"]);
->>>>>>> main
         
         // init lights
         //initLights();
@@ -159,7 +156,7 @@ protected:
         std::cout << "Initialization completed!\n";
         
         // plays the race music
-        //playSound("RACE_MUSIC", 0.0f, 7);
+        playSound("RACE_MUSIC", 0.3f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -244,7 +241,7 @@ protected:
 
         updatePhysics(deltaT);
 
-        checkCollisions(vehicle, SC.sceneJson);
+        //checkCollisions(vehicle, SC.sceneJson);
 
         // take position and yaw of car rigid body
         btTransform transform;

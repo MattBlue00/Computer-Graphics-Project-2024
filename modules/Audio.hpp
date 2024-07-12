@@ -9,13 +9,6 @@ FMOD_RESULT result;
 
 std::map<std::string, FMOD::Sound*> soundMap;
 
-<<<<<<< HEAD
-std::map<std::string, const char*> soundLoadingMap = {
-    {"RACE_MUSIC", "assets\audio\music\RaceBackgroundMusic.mp3"}
-};
-
-=======
->>>>>>> main
 void checkFmodError(FMOD_RESULT result);
 
 void initAudio(const json musicMap) {
