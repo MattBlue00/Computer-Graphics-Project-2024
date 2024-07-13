@@ -32,12 +32,13 @@ int airplaneActionsDone = 0;
 const float AIRSHIP_MOV_PER_FRAME = 0.02f;
 bool airshipGoingUp = true;
 
-
-void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch) {
+void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch, float Roll) {
     for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
+
+        float adjustedRoll = std::clamp(Roll, -0.01f, 0.01f);
         
-        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, 0) * baseCar;
+        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, adjustedRoll) * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -177,9 +178,9 @@ void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObj
     }
 }
 
-void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch, float bodyPitch){
+void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch, float bodyPitch, float bodyRoll){
     // draws the car
-    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, bodyPitch);
+    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, bodyPitch, bodyRoll);
     
     // draws the circuit and its decorations
     drawWorld(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);

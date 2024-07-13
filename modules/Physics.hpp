@@ -14,7 +14,7 @@ std::vector<btCollisionShape*> collisionShapes;
 
 std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     // id           friction    restitution
-    {"track",       {0.9f,      0.0f}},
+    {"track",       {0.0f,      0.0f}},
     {"barrier",     {0.8f,      0.5f}},
     {"ramps",       {0.0f,      0.0f}}
 };
@@ -22,8 +22,6 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
 // prototypes declaration
 btBvhTriangleMeshShape* getCollisionShape(std::string filepath);
 void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float friction, float restitution);
-
-void printWheelPositions(btRaycastVehicle* vehicle);
 
 void initPhysics(json sceneJson) {
     broadphase = new btDbvtBroadphase();
@@ -138,5 +136,3 @@ void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float f
 }
 
 #endif
-
-
