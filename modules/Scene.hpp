@@ -305,7 +305,7 @@ void buildMultipleInstances(json* instances){
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
-            {"transform",  {0.03, 0, 0, i%2 == 0 ? -4.5 : 4.5,
+            {"transform",  {0.03, 0, 0, i%2 == 0 ? -4.25 : 4.75,
                             0, 0, -0.03, 0.5,
                             0, 0.03, 0, 400 + 15 * i,
                             0, 0, 0, 1}}

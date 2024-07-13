@@ -100,7 +100,7 @@ void initCar() {
 void setSuspensions(btRaycastVehicle* vehicle) {
     for (int i = 0; i < vehicle->getNumWheels(); i++) {
         btWheelInfo& wheel = vehicle->getWheelInfo(i);
-        wheel.m_suspensionStiffness = 75.0f;
+        wheel.m_suspensionStiffness = 80.0f;
         wheel.m_wheelsDampingRelaxation = 10.0f;
         wheel.m_wheelsDampingCompression = 8.0f;
         wheel.m_frictionSlip = 1000.0f;
@@ -305,7 +305,7 @@ void limitVehicleRotationInAir(btRaycastVehicle* vehicle) {
     btVector3 up = rotation.getColumn(1); // Y axis
     btVector3 desiredUp(0, 1, 0);
 
-    btVector3 correctionTorque = up.cross(desiredUp) * 0.15; // 0.1 è un fattore di correzione
+    btVector3 correctionTorque = up.cross(desiredUp) * 0.4; // 0.1 è un fattore di correzione
     vehicle->getRigidBody()->applyTorque(correctionTorque);
 }
 
