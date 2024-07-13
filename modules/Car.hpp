@@ -4,11 +4,14 @@
 #include <btBulletDynamicsCommon.h>
 #include "Physics.hpp"
 
-const float maxEngineForce = 4000.0f; // Maximum force applied to wheels
+const float maxEngineForce = 6000.0f; // Maximum force applied to wheels
 const float maxBrakeForce = 200.0f; // Maximum brake force
 const float steeringIncrement = 0.08f;
-const float steeringClamp = 0.3f;
-const float maxSpeed = 30.0f;
+const float steeringDegradationExponent = 0.5f;
+const float speedStartSteeringDegradation = 8.0f;
+const float steeringMax = 0.3f;
+const float steeringMin = 0.01f;
+const float maxSpeed = 50.0f;
 
 const float raycastDistance = 2.0f;
 
@@ -31,7 +34,7 @@ void initCar() {
     btCompoundShape* vehicleShape = new btCompoundShape();
     btTransform localTrans;
     localTrans.setIdentity();
-    localTrans.setOrigin(btVector3(0, -50, 0)); // Chassis remains at the origin
+    localTrans.setOrigin(btVector3(0, 0, 0)); // Chassis remains at the origin
     vehicleShape->addChildShape(localTrans, chassisShape);
 
     btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, -10)));
@@ -97,13 +100,13 @@ void initCar() {
 void setSuspensions(btRaycastVehicle* vehicle) {
     for (int i = 0; i < vehicle->getNumWheels(); i++) {
         btWheelInfo& wheel = vehicle->getWheelInfo(i);
-        wheel.m_suspensionStiffness = 20.0f;
-        wheel.m_wheelsDampingRelaxation = i < 2 ? 3.0f : 2.5f;
-        wheel.m_wheelsDampingCompression = i < 2 ? 4.4f : 4.0f;
+        wheel.m_suspensionStiffness = 75.0f;
+        wheel.m_wheelsDampingRelaxation = 10.0f;
+        wheel.m_wheelsDampingCompression = 8.0f;
         wheel.m_frictionSlip = 1000.0f;
         wheel.m_rollInfluence = 0.1f;
-        wheel.m_maxSuspensionTravelCm = 20.0f;
-        wheel.m_maxSuspensionForce = 10000000.0f;
+        wheel.m_maxSuspensionTravelCm = 10.0f;
+        wheel.m_maxSuspensionForce = 1000000.0f;
     }
 }
 
@@ -176,20 +179,20 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
 
     // Fattore di riduzione della sterzata basato sulla velocità
-    float speedFactor = glm::clamp(1.0f - (currentSpeed / maxSpeed), 0.015f, 1.0f);
+    float speedFactor = currentSpeed < speedStartSteeringDegradation ? 1.0f : glm::clamp(1.0f - glm::pow(currentSpeed / maxSpeed, steeringDegradationExponent), steeringMin, 1.0f);
     float dynamicSteeringIncrement = steeringIncrement * speedFactor;
 
     // Sterzata destra/sinistra
     if (carMovementInput.x > 0) {
         steering -= dynamicSteeringIncrement;
-        if (steering < -steeringClamp) {
-            steering = -steeringClamp;
+        if (steering < -steeringMax) {
+            steering = -steeringMax;
         }
     }
     else if (carMovementInput.x < 0) {
         steering += dynamicSteeringIncrement;
-        if (steering > steeringClamp) {
-            steering = steeringClamp;
+        if (steering > steeringMax) {
+            steering = steeringMax;
         }
     }
     else {
@@ -208,10 +211,10 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     if(!isVehicleInAir(dynamicsWorld, vehicle)){
         if(vehicle->getRigidBody()->getLinearVelocity().length() <= maxSpeed){
             if(engineForce != 0.0f && isVehicleBlocked(vehicle)){
-                vehicle->applyEngineForce(3*engineForce, 0);
-                vehicle->applyEngineForce(3*engineForce, 1);
-                vehicle->applyEngineForce(3*engineForce, 2);
-                vehicle->applyEngineForce(3*engineForce, 3);
+                vehicle->applyEngineForce(4*engineForce, 0);
+                vehicle->applyEngineForce(4*engineForce, 1);
+                vehicle->applyEngineForce(4*engineForce, 2);
+                vehicle->applyEngineForce(4*engineForce, 3);
             }
             else{
                 vehicle->applyEngineForce(0.0f, 0);
@@ -237,14 +240,11 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     if(engineForce == 0.0f && isVehicleStopped(vehicle, 0.5f)){
         vehicle->getRigidBody()->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
         vehicle->getRigidBody()->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
-        
-        btRigidBody* carRigidBody = vehicle->getRigidBody();
-        btVector3 correctiveForce = -dynamicsWorld->getGravity() * carRigidBody->getMass();
-        correctiveForce.setY(correctiveForce.getY());
-        carRigidBody->applyCentralForce(correctiveForce);
     }
     
-    printVehicleState(vehicle);
+    std::cout << dynamicSteeringIncrement << std::endl;
+    
+    //printVehicleState(vehicle);
 }
 
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold) {

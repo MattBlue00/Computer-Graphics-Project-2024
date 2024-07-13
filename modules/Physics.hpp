@@ -30,7 +30,7 @@ void initPhysics(json sceneJson) {
     solver = new btSequentialImpulseConstraintSolver();
 
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-    dynamicsWorld->setGravity(btVector3(0, -9.81, 0));
+    dynamicsWorld->setGravity(btVector3(0, -12.5, 0));
     dynamicsWorld->getSolverInfo().m_solverMode |= SOLVER_USE_2_FRICTION_DIRECTIONS;
     dynamicsWorld->getSolverInfo().m_splitImpulse = true;
     dynamicsWorld->getSolverInfo().m_numIterations = 10;
