@@ -71,6 +71,7 @@ public:
 CoinCollectorCallback* coinCallback;
 
 void initPhysics(json sceneJson) {
+
     broadphase = new btDbvtBroadphase();
     collisionConfiguration = new btDefaultCollisionConfiguration();
     dispatcher = new btCollisionDispatcher(collisionConfiguration);
@@ -102,7 +103,10 @@ void initPhysics(json sceneJson) {
     }
 
     for (const auto& instance : sceneJson["instances"]) {
+        std::cout << "sono nel for" << std::endl;
+        std::cout << "instance[\"model\"]: " << instance["model"] << std::endl;  // Stampa il valore di instance["model"]
         if (instance["model"] == "coin") {
+            std::cout << "sono nell'if" << std::endl;
             btTransform transform;
             // Converti i dati della trasformazione in btTransform
             const auto& t = instance["transform"];
@@ -123,6 +127,11 @@ void initPhysics(json sceneJson) {
             // Stampa di conferma per la creazione del collider della moneta
             std::cout << "Created coin collider with ID: " << coinID << std::endl;
         }
+    }
+    // Stampa della mappa finale dei collider delle monete
+    std::cout << "Final coinMap contents:" << std::endl;
+    for (const auto& pair : coinMap) {
+        std::cout << "Coin ID: " << pair.first << std::endl;
     }
 }
 
