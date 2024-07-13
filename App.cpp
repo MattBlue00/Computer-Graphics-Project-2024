@@ -145,6 +145,8 @@ protected:
         initPhysics(SC.sceneJson);
         
         initCar();
+        // register the UI observer for speed
+        speedSubject.addObserver(&uiManager);
         
         // initializes the audio system and loads the sounds
         initAudio(config["music"]);
@@ -280,7 +282,6 @@ protected:
             RebuildPipeline();
         }
         
-
         // checks if esc was pressed
         shouldQuit(window);
 

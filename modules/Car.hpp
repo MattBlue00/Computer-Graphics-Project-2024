@@ -3,6 +3,9 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "Physics.hpp"
+#include "Subject.hpp"
+
+
 
 const float maxEngineForce = 4000.0f; // Maximum force applied to wheels
 const float maxBrakeForce = 200.0f; // Maximum brake force
@@ -13,6 +16,10 @@ const float maxSpeed = 27.0f;
 const float raycastDistance = 2.0f;
 
 btRaycastVehicle* vehicle;
+
+// subject to be observed by UI
+Subject speedSubject;
+int lastSpeedKmh = 0;
 
 void printVehicleStatus(btRaycastVehicle* vehicle);
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold);
@@ -174,6 +181,15 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         vehicle->getRigidBody()->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
     }
     
+    // update Kmh Speed and notify UI only when necessaty
+    float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
+    int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
+    if(lastSpeedKmh != currentSpeedKmh){
+        speedSubject.notifySpeedChanged(currentSpeedKmh);
+        lastSpeedKmh = currentSpeedKmh;
+    }
+    
+    // debug vehicle stats
     printVehicleStatus(vehicle);
     
 }

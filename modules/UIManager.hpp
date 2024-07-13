@@ -5,7 +5,7 @@
 #include <chrono>         // for time tracking
 #include <glm/vec2.hpp>   // for glm::vec2
 
-struct UIManager {
+struct UIManager: public Observer {
     
     // Text Positions
     glm::vec2 outStartTimerPosition = glm::vec2(0.0f, -0.9f);
@@ -23,8 +23,8 @@ struct UIManager {
     };
     
     std::vector<SingleText> outTimer = {
-        {1, {"Time: 0"}, 0, 0, outTimerPosition},
-        {1, {"Time: 0"}, 0, 0, outTimerPosition}
+        {1, {"Time: 0s"}, 0, 0, outTimerPosition},
+        {1, {"Time: 0s"}, 0, 0, outTimerPosition}
     };
     
     std::vector<SingleText> outLapse = {
@@ -33,8 +33,8 @@ struct UIManager {
     };
     
     std::vector<SingleText> outSpeed = {
-        {1, {"Speed: 0 kmh"}, 0, 0, outSpeedPosition},
-        {1, {"Speed: 0 kmh"}, 0, 0, outSpeedPosition}
+        {1, {"Speed: 0 km/h"}, 0, 0, outSpeedPosition},
+        {1, {"Speed: 0 km/h"}, 0, 0, outSpeedPosition}
     };
     
     std::vector<SingleText> outCoins = {
@@ -119,7 +119,6 @@ struct UIManager {
         
         // TODO: to be implemented, laps and coins may be updated via "events"
         // shouldUpdate = handleLaps();
-        // shouldUpdate = handleSpeed();
         // shouldUpdate = handleCoins();
         
         return shouldUpdate; // UI has not been updated
@@ -165,13 +164,19 @@ struct UIManager {
         if (durationSinceLastUpdate.count() >= 1) {
             auto durationSinceStart = std::chrono::duration_cast<std::chrono::seconds>(now - startTimeAfterBegin);
             int seconds = static_cast<int>(durationSinceStart.count());
-            outTimer[0] = {1, {"Time: " + std::to_string(seconds)}, 0, 0, outTimerPosition};
-            outTimer[1] = {1, {"Time: " + std::to_string(seconds)}, 0, 0, outTimerPosition};
+            outTimer[0] = {1, {"Time: " + std::to_string(seconds) + "s"}, 0, 0, outTimerPosition};
+            outTimer[1] = {1, {"Time: " + std::to_string(seconds) + "s"}, 0, 0, outTimerPosition};
             timer.changeText(&outTimer);
             lastUpdateTimeAfterBegin = now; // Update the last update time
             return true; // UI has been updated
         }
         return false; // UI has not been updated
+    }
+    
+    void onSpeedChanged(int newSpeed) override {
+        outSpeed[0] = {1, {"Speed: " + std::to_string(newSpeed) + " km/h"}, 0, 0, outSpeedPosition};
+        outSpeed[1] = {1, {"Speed: " + std::to_string(newSpeed) + " km/h"}, 0, 0, outSpeedPosition};
+        speed.changeText(&outSpeed);
     }
 };
 
