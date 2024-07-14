@@ -202,4 +202,33 @@ void addInstanceToCoins(std::string instance_id){
     coins.push_back(instance_id);
 }
 
+void removeInstanceToCoins(std::string instance_id) {
+
+    /*std::cout << "Vettore coins prima della rimozione: ";
+    for (const auto& coin : coins) {
+        std::cout << coin << " ";
+    }
+    std::cout << std::endl;*/
+
+
+    // Trova l'elemento nell'array
+    auto it = std::find(coins.begin(), coins.end(), instance_id);
+
+    // Se l'elemento è trovato, rimuovilo
+    if (it != coins.end()) {
+        coins.erase(it);
+        std::cout << "Elemento '" << instance_id << "' rimosso con successo." << std::endl;
+    }
+    else {
+        std::cout << "Elemento '" << instance_id << "' non trovato." << std::endl;
+    }
+
+    /*// Stampa il vettore coins dopo la rimozione
+    std::cout << "Vettore coins dopo la rimozione: ";
+    for (const auto& coin : coins) {
+        std::cout << coin << " ";
+    }
+    std::cout << std::endl;*/
+}
+
 #endif

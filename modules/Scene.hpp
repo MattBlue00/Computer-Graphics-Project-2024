@@ -86,10 +86,8 @@ class Scene {
 			// INSTANCES TextureCount
 			json is = js["instances"];
             
-            std::cout << "prima di buildmultipleinstances" << std::endl;
             // WARNING: ADDED BY US
             buildMultipleInstances(&is, &sceneJson);
-            std::cout << "dopo buildmultipleinstances" << std::endl;
             
 			InstanceCount = (int)is.size();
 			std::cout << "Instances count: " << InstanceCount << "\n";
