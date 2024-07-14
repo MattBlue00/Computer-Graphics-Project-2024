@@ -2572,7 +2572,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 //}
 
 		decomp = calloc(size, 1);
-		int n = sinflate(decomp, (int)size, &decrypted[16], decrypted.size()-16);
+		sinflate(decomp, (int)size, &decrypted[16], decrypted.size()-16);
 		
 		if (!loader.LoadASCIIFromString(&model, &warn, &err, 
 						reinterpret_cast<const char *>(decomp), size, "/")) {

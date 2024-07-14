@@ -242,9 +242,6 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         vehicle->getRigidBody()->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
     }
     
-    std::cout << dynamicSteeringIncrement << std::endl;
-    
-    //printVehicleState(vehicle);
 }
 
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold) {

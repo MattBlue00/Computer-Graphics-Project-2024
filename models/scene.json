@@ -9,6 +9,7 @@
         {"id": "arcade_2",          "model": "models/ArcadeMachine2.mgcg",  "format":"MGCG"},
         {"id": "road",              "model": "models/Road.mgcg",            "format":"MGCG"},
         {"id": "road_end",          "model": "models/RoadEnd.mgcg",         "format":"MGCG"},
+        {"id": "tires_pile",        "model": "models/TiresPile.mgcg",       "format":"MGCG"},
         {"id": "track",             "model": "models/Track.obj",            "format":"OBJ"},
         {"id": "barrier",           "model": "models/Barrier.obj",          "format":"OBJ"},
         {"id": "dir_barrier_oval",  "model": "models/DirBarrierOval.obj",   "format":"OBJ"},
@@ -160,6 +161,11 @@
          "transform": [5, 0, 0, -750,
                        0, 5, 0, -3,
                        0, 0, 5, 300,
+                       0, 0, 0, 1]},
+        {"id": "tires_pile_1",       "model": "tires_pile",         "texture": "car",
+         "transform": [5, 0, 0, -5,
+                       0, 5, 0, -1,
+                       0, 0, 5, 600,
                        0, 0, 0, 1]}
     ]
 }
