@@ -14,7 +14,8 @@ std::vector<std::string> airship = {"airship"};
 std::vector<std::string> world = {
     "track", "barrier", "finish_line_top", "finish_line_floor", "ramps", "tower", "banners",
     "big_stars", "rainbow", "arcade_1", "arcade_2", "dir_barrier_oval", "dir_banners", "rocket",
-    "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "tires_pile_1"
+    "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "tires_pile_1",
+    "traffic_lights"
 };
 
 // utility airplane variables and constants
