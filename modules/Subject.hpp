@@ -28,6 +28,12 @@ struct Subject {
             observer->onCoinCollected(collectedCoins);
         }
     }
+    
+    void notifyCheckLaps(int lapsDone){
+        for (Observer* observer : observers) {
+            observer->onCheckLaps(lapsDone);
+        }
+    }
 };
 
 #endif

@@ -49,6 +49,7 @@ bool updateCheckpoints; // Variabile di stato per indicare se i checkpoint devon
 
 // subject to be observed by UI
 Subject collectedCoinsSubject;
+Subject checkLapsSubject;
 
 // prototypes declaration
 btBvhTriangleMeshShape* getCollisionShape(std::string filepath, std::string format, glm::mat4 TransformMatrix);
@@ -100,12 +101,15 @@ public:
                 nextCheckpointIndex++;
                 if (nextCheckpointIndex >= checkpointsLap.size()) {
                     std::cout << "Tutti i checkpoint attraversati" << std::endl;
+                    // must be moved when we arrive at the finish line and not at the last checkpoint
+                    checkLapsSubject.notifyCheckLaps(1);
                     changeCircuit(sceneJson);
                     nextCheckpointIndex = 0; // Reset the index for the next lap
                 }
                 return 0;
             }
         }
+        return 0;
     }
 
     bool isCoin(const btCollisionObject* obj) {
