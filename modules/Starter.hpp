@@ -1625,9 +1625,9 @@ std::cout << "Starting createInstance()\n"  << std::flush;
         renderPassInfo.renderPass = renderPass;
         renderPassInfo.framebuffer = swapChainFramebuffers[currentImage];
         
-        float normalizedX = 0.35f;
+        float normalizedX = 0.33f;
         //float normalizedY = -0.8f;
-        float normalizedWidth = 0.31f;
+        float normalizedWidth = 0.32f;
         float normalizedHeight = 0.27f;
         
         // Convert normalized coordinates to pixel coordinates

@@ -9,10 +9,10 @@ struct UIManager: public Observer {
     
     // Text Positions
     glm::vec2 outStartTimerPosition = glm::vec2(0.0f, -0.9f);
-    glm::vec2 outTimerPosition = glm::vec2(0.4f, -0.8f);
-    glm::vec2 outLapsPosition = glm::vec2(0.4f, -0.9f);
-    glm::vec2 outSpeedPosition = glm::vec2(0.4f, -0.7f);
-    glm::vec2 outCoinsPosition = glm::vec2(0.4, -0.6f);
+    glm::vec2 outTimerPosition = glm::vec2(0.36f, -0.8f);
+    glm::vec2 outLapsPosition = glm::vec2(0.36f, -0.9f);
+    glm::vec2 outSpeedPosition = glm::vec2(0.36f, -0.7f);
+    glm::vec2 outCoinsPosition = glm::vec2(0.36f, -0.6f);
 
     
     // Text Vectors
@@ -118,6 +118,7 @@ struct UIManager: public Observer {
     
     // start-timer handle function
     void handleStartTimer(){
+        // Start timer will be deleted for semaphores
         if (countdownValue <= 0) {
             return; // Stop updating when countdown reaches zero
         }
