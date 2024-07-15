@@ -244,6 +244,8 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         vehicle->getRigidBody()->applyCentralForce(upwardForce);
     }
     
+    //printVehicleStatus(vehicle);
+    
 }
 
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold) {
