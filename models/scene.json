@@ -22,7 +22,8 @@
         {"id": "rainbow",           "model": "models/Rainbow.obj",          "format":"OBJ"},
         {"id": "dir_banners",       "model": "models/DirBanners.obj",       "format":"OBJ"},
         {"id": "rocket",            "model": "models/Rocket.obj",           "format":"OBJ"},
-        {"id": "traffic_lights",    "model": "models/TrafficLights.obj",    "format":"OBJ"}
+        {"id": "traffic_lights",    "model": "models/TrafficLights.obj",    "format":"OBJ"},
+        {"id": "earth",             "model": "models/Earth.obj",            "format":"OBJ"}
     ],
     "textures": [
         {"id": "car",               "texture": "textures/CarTexture.png"},
@@ -41,7 +42,8 @@
         {"id": "arrow",             "texture": "textures/Arrow.png"},
         {"id": "rocket",            "texture": "textures/Rocket.png"},
         {"id": "road",              "texture": "textures/RoadTexture.png"},
-        {"id": "traffic_lights",    "texture": "textures/TrafficLights.png"}
+        {"id": "traffic_lights",    "texture": "textures/TrafficLights.png"},
+        {"id": "earth",             "texture": "textures/Earth.png"}
     ],
     "instances": [
         {"id": "car",               "model": "car",                 "texture": "car",
@@ -113,6 +115,11 @@
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 0,
                        0, 0, 1, 0,
+                       0, 0, 0, 1]},
+        {"id": "earth",             "model": "earth",               "texture": "earth",
+         "transform": [1, 0, 0, -519,
+                       0, 1, 0, 0,
+                       0, 0, 1, 259,
                        0, 0, 0, 1]},
         {"id": "arcade_1",          "model": "arcade_1",            "texture": "entertainment",
          "transform": [-9, 0, -9, 40,
