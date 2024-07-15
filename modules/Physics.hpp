@@ -74,6 +74,7 @@ public:
     bool isCheckpointHit = false;
     std::string collectedCoinID;
     int nextCheckpointIndex = 0;
+    bool allCheckpointsCollected = false;
 
     GameObjectCollisionCallback(std::unordered_map<std::string, btRigidBody*>& coinMap,
         std::vector<btRigidBody*>& coinColliders,
@@ -99,10 +100,14 @@ public:
             if (isNextCheckpoint(obj0 == vehicle->getRigidBody() ? obj1 : obj0)) {
                 isCheckpointHit = true;
                 nextCheckpointIndex++;
+                if(allCheckpointsCollected){
+                    // check if a lap is compleated
+                    allCheckpointsCollected = false;
+                    checkLapsSubject.notifyCheckLaps(1);
+                }
                 if (nextCheckpointIndex >= checkpointsLap.size()) {
                     std::cout << "Tutti i checkpoint attraversati" << std::endl;
-                    // must be moved when we arrive at the finish line and not at the last checkpoint
-                    checkLapsSubject.notifyCheckLaps(1);
+                    allCheckpointsCollected = true;
                     changeCircuit(sceneJson);
                     nextCheckpointIndex = 0; // Reset the index for the next lap
                 }
@@ -548,7 +553,10 @@ std::vector<btRigidBody*> getCheckpointsForLap(bool firstLap, bool secondLap) {
         checkpointsLap.push_back(allCheckpointBodies[2]); // checkpoint 3
         checkpointsLap.push_back(allCheckpointBodies[3]); // checkpoint 4
     }
-    else checkpointsLap.clear();
+    else {
+        checkpointsLap.clear();
+        checkpointsLap.push_back(allCheckpointBodies[0]); // checkpoint 1
+    }
 
     return checkpointsLap;
 }

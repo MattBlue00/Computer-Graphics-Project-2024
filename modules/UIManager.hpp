@@ -59,6 +59,7 @@ struct UIManager: public Observer {
 
     int countdownValue = 3;
     bool isGameStarted = false;
+    bool isGameFinished = false;
     int lapsLabel = 1;
 
     // init UI
@@ -114,7 +115,7 @@ struct UIManager: public Observer {
     // update function
     void updateUI() {
         if(!isGameStarted) handleStartTimer();  // if start-timer changes update the UI
-        else handleTimer();                    // if real timer changes update UI
+        else if(!isGameFinished) handleTimer(); // if real timer changes update UI
     }
     
     // start-timer handle function
@@ -179,9 +180,20 @@ struct UIManager: public Observer {
     }
     
     void onCheckLaps(int lapsDone) override {
-        if(lapsLabel >=2) return;
-        
+        // update lap counter (starts from 1)
         lapsLabel += lapsDone;
+        
+        std:: cout << "this lap is the: " << lapsLabel << "\n";
+
+        // after the second lap stop the timer
+        if(lapsLabel == 3) {
+            std:: cout << "the game is finished lap: " << lapsLabel << "\n";
+            isGameFinished = true;
+            return;
+        }
+        // after the second lap do not update the UI anymore
+        else if(lapsLabel >= 3) return;
+        
         outLaps[0] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
         outLaps[1] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
         laps.changeText(&outLaps);
