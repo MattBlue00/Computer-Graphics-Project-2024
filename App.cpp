@@ -244,22 +244,6 @@ protected:
 
         checkCollisions(vehicle, SC.sceneJson);
 
-        // take position and yaw of car rigid body
-        btTransform transform;
-        vehicle->getRigidBody()->getMotionState()->getWorldTransform(transform);
-        glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-        btQuaternion rotation = transform.getRotation();
-        float bodyYaw = atan2(2.0 * (rotation.getY() * rotation.getW() + rotation.getX() * rotation.getZ()),
-            1.0 - 2.0 * (rotation.getY() * rotation.getY() + rotation.getX() * rotation.getX()));
-        // Calcolare pitch
-        float sinPitch = 2.0 * (rotation.getW() * rotation.getX() - rotation.getZ() * rotation.getY());
-        float bodyPitch;
-        if (std::abs(sinPitch) >= 1) {
-            bodyPitch = std::copysign(M_PI / 2, sinPitch); // Use 90 degrees if out of range
-        }
-        else {
-            bodyPitch = std::asin(sinPitch);
-        }
         // get poaition, yaw and pitch of car rigid body
         glm::vec3 bodyPosition = getVehiclePosition(vehicle);
         float bodyYaw = getVehicleYaw(vehicle);

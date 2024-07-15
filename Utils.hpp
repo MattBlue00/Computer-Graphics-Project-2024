@@ -95,6 +95,10 @@ struct Vertex {
     glm::vec3 norm;
 };
 
+// PROJECT-SPECIFIC VARIABLES
+
+int globalCoinCount = 0;
+
 // PROJECT-SPECIFIC FUNCTIONS
 
 json parseConfigFile() {

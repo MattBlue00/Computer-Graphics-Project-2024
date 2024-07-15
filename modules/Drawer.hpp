@@ -37,7 +37,7 @@ void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject*
     for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
 
-        float adjustedRoll = std::clamp(Roll, -0.01f, 0.01f);
+        float adjustedRoll = std::clamp(Roll, -0.005f, 0.005f);
         
         ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, adjustedRoll) * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
