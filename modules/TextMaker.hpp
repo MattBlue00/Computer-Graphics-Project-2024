@@ -1,7 +1,8 @@
 #ifndef TEXTMAKER_HPP
 #define TEXTMAKER_HPP
 
-#import "Utils.hpp"
+#include "Utils.hpp"
+
 
 struct SingleText
 {

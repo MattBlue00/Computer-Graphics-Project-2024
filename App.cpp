@@ -215,7 +215,7 @@ protected:
         SC.populateCommandBuffer(commandBuffer, currentImage, P);
     }
     
-    void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage){
+    void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
         uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
     }
 
@@ -269,7 +269,7 @@ protected:
         
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
-    
+
         // if so, rebuilds pipeline
         if(shouldRebuildPipeline){
             RebuildPipeline();
