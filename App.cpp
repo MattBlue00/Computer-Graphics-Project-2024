@@ -265,10 +265,11 @@ protected:
         glm::vec3 CamPos = Pos;
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
 
+        uiManager.updateUI();
         
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
-        bool shouldRebuildPipelineUI = uiManager.shouldUpdateUI();
+    
         // if so, rebuilds pipeline
         if(shouldRebuildPipeline){
             RebuildPipeline();

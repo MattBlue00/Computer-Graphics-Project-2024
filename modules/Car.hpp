@@ -5,15 +5,13 @@
 #include "Physics.hpp"
 #include "Subject.hpp"
 
-
-
 const float maxEngineForce = 6000.0f; // Maximum force applied to wheels
 const float maxBrakeForce = 200.0f; // Maximum brake force
 const float steeringIncrement = 0.08f;
-const float steeringDegradationExponent = 0.5f;
-const float speedStartSteeringDegradation = 8.0f;
+const float steeringDegradationExponent = 0.25f;
+const float speedStartSteeringDegradation = 10.0f;
 const float steeringMax = 0.3f;
-const float steeringMin = 0.01f;
+const float steeringMin = 0.001f;
 const float maxSpeed = 50.0f;
 
 const float raycastDistance = 2.0f;
@@ -186,8 +184,13 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
 
     // Fattore di riduzione della sterzata basato sulla velocità
-    float speedFactor = currentSpeed < speedStartSteeringDegradation ? 1.0f : glm::clamp(1.0f - glm::pow(currentSpeed / maxSpeed, steeringDegradationExponent), steeringMin, 1.0f);
-    float dynamicSteeringIncrement = steeringIncrement * speedFactor;
+    float speedFactor = currentSpeed < speedStartSteeringDegradation ?
+                        1.0f :
+                        glm::clamp(1.0f - glm::pow((currentSpeed - speedStartSteeringDegradation) / (maxSpeed - speedStartSteeringDegradation), steeringDegradationExponent),
+                                   0.0f,
+                                   1.0f);
+
+    float dynamicSteeringIncrement = glm::clamp(steeringIncrement * speedFactor, steeringMin, steeringMax);
 
     // Sterzata destra/sinistra
     if (carMovementInput.x > 0) {
@@ -252,8 +255,7 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         vehicle->getRigidBody()->applyCentralForce(upwardForce);
     }
     
-    // update Kmh Speed and notify UI only when necessaty
-    float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
+    // update Kmh Speed and notify UI only when necessary
     int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
     if(lastSpeedKmh != currentSpeedKmh){
         // fix the flickering speed number at maxspeed
@@ -261,9 +263,6 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         speedSubject.notifySpeedChanged(currentSpeedKmh);
         lastSpeedKmh = currentSpeedKmh;
     }
-    
-    // debug vehicle stats
-    printVehicleStatus(vehicle);
     
 }
 
@@ -330,19 +329,6 @@ void printVehicleStatus(btRaycastVehicle* vehicle) {
         << wheelPosition.getX() << ", "
         << wheelPosition.getY() << ", "
         << wheelPosition.getZ() << ")" << std::endl;*/
-}
-
-void setSuspensions(btRaycastVehicle* vehicle){
-    for (int i = 0; i < vehicle->getNumWheels(); i++) {
-        btWheelInfo& wheel = vehicle->getWheelInfo(i);
-        wheel.m_suspensionStiffness = 20.0f;        // old: 20.0f
-        wheel.m_wheelsDampingRelaxation = 2.5f;     // old: 2.3f    // semi-working: 2.5f
-        wheel.m_wheelsDampingCompression = 4.0f;    // old: 4.4f    // semi-working: 4.5f
-        wheel.m_frictionSlip = 1000.0f;             // old: 1000.0f
-        wheel.m_rollInfluence = 0.1f;               // old: 0.1f
-        wheel.m_maxSuspensionTravelCm = 20.0f;      // old: 20.0f
-        wheel.m_maxSuspensionForce = 1000000.0f;       // old: 6000.0f
-    }
 }
 
 // Funzione per limitare la rotazione del veicolo in aria

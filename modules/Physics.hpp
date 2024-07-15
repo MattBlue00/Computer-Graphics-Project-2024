@@ -25,7 +25,6 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     {"tires_pile_1",    {0.8f,      0.5f}}
 };
 
-int collectedCoins = 0;
 // subject to be observed by UI
 Subject collectedCoinsSubject;
 
