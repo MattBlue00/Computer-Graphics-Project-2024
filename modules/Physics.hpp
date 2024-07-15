@@ -2,7 +2,6 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
-#include "Drawer.hpp"
 
 // physics global properties
 btBroadphaseInterface* broadphase;
@@ -13,8 +12,8 @@ btDiscreteDynamicsWorld* dynamicsWorld;
 
 std::vector<btCollisionShape*> collisionShapes;
 
-std::vector<btCollisionObject*> coinColliders;
-std::unordered_map<std::string, btCollisionObject*> coinMap;
+std::vector<btRigidBody*> coinColliders;
+std::unordered_map<std::string, btRigidBody*> coinMap;
 
 std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     // id           friction    restitution
@@ -34,20 +33,20 @@ void setupCollisionProperties(btCollisionObject* obj);
 
 class CoinCollectorCallback : public btCollisionWorld::ContactResultCallback {
 public:
-    std::unordered_map<std::string, btCollisionObject*>& coinMap;
-    std::vector<btCollisionObject*>& coinColliders;
+    std::unordered_map<std::string, btRigidBody*>& coinMap;
+    std::vector<btRigidBody*>& coinColliders;
     nlohmann::json& sceneJson;
     btRaycastVehicle* vehicle;
     bool isCoinCollected = false;
     std::string collectedCoinID;
 
-    CoinCollectorCallback(std::unordered_map<std::string, btCollisionObject*>& coinMap,
-        std::vector<btCollisionObject*>& coins,
+    CoinCollectorCallback(std::unordered_map<std::string, btRigidBody*>& coinMap,
+        std::vector<btRigidBody*>& coins,
         nlohmann::json& sceneJson,
         btRaycastVehicle* vehicle)
         : coinMap(coinMap), coinColliders(coins), sceneJson(sceneJson), vehicle(vehicle) {}
 
-    virtual btScalar addSingleResult(btManifoldPoint& cp,
+    btScalar addSingleResult(btManifoldPoint& cp,
         const btCollisionObjectWrapper* colObj0Wrap,
         int partId0, int index0,
         const btCollisionObjectWrapper* colObj1Wrap,
@@ -57,7 +56,6 @@ public:
         if ((obj0 == vehicle->getRigidBody() && isCoin(obj1)) || (obj1 == vehicle->getRigidBody() && isCoin(obj0))) {
             isCoinCollected = true;
             collectedCoinID = getCoinID(obj0 == vehicle->getRigidBody() ? obj1 : obj0);
-            std::cout << "Collision detected with coin ID: " << collectedCoinID << std::endl;
             return 0;
         }
         return 1;
@@ -77,13 +75,6 @@ public:
             dynamicsWorld->removeCollisionObject(collectedCoin);
             coinColliders.erase(std::remove(coinColliders.begin(), coinColliders.end(), collectedCoin), coinColliders.end());
             coinMap.erase(coinID);
-
-            // Rimuovi l'elemento da sceneJson
-            auto& instances = sceneJson["instances"];
-            instances.erase(std::remove_if(instances.begin(), instances.end(),
-                [&](const nlohmann::json& instance) {
-                    return instance["id"] == coinID;
-                }), instances.end());
 
             delete collectedCoin->getCollisionShape();
             delete static_cast<std::string*>(collectedCoin->getUserPointer());
@@ -135,23 +126,12 @@ void initPhysics(json sceneJson) {
 
     for (const auto& instance : sceneJson["instances"]) {
         if (instance["model"] == "coin") {
-            //btTransform transform;
             // Converti i dati della trasformazione in btTransform
             auto& t = instance["transform"];
             float matrix[16];
             for (int i = 0; i < 16; ++i) {
                 matrix[i] = t[i];
-                //std::cout << "i: " << i << "matrix value: " << matrix[i] << std::endl;
             }
-
-            // Verifica la matrice letta dal JSON
-            /*
-            std::cout << "Loaded transform matrix from JSON for coin ID: " << instance["id"] << std::endl;
-            for (int i = 0; i < 16; ++i) {
-                if (i > 0 && i % 4 == 0) std::cout << "\n";
-                std::cout << matrix[i] << " ";
-            }
-            std::cout << std::endl;*/
 
             // Conversione della matrice row-major in column-major
             btMatrix3x3 basis(
@@ -162,46 +142,19 @@ void initPhysics(json sceneJson) {
             btVector3 origin(matrix[3], matrix[7], matrix[11]);
 
             btTransform transform(basis, origin);
-
-            // Debug: Stampa la trasformazione iniziale
-            /*std::cout << "Initial transform matrix set in btTransform for coin ID: " << instance["id"] << std::endl;
-            float initialTransformMatrix[16];
-            transform.getOpenGLMatrix(initialTransformMatrix);
-            for (int i = 0; i < 16; ++i) {
-                if (i > 0 && i % 4 == 0) std::cout << "\n";
-                std::cout << initialTransformMatrix[i] << " ";
-            }
-            std::cout << std::endl;*/
             
             std::string coinID = instance["id"];
-            btCollisionShape* coinShape = new btSphereShape(0.5f); // Assuming a small sphere collider for the coin
-            btCollisionObject* coin = new btCollisionObject();
-            coin->setCollisionShape(coinShape);
+            btCollisionShape* shape = new btSphereShape(0.5f);
+            btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+            btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0, 0, 0));
+            btRigidBody* coin = new btRigidBody(rigidBodyCI);
+            coin->setCollisionFlags(coin->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
 
             coin->setWorldTransform(transform);
             coin->setUserPointer(new std::string(coinID)); // Store the ID in the user pointer
 
-            // Debug: Stampa la trasformazione dopo aver impostato la world transform
-            /*
-            float postSetWorldTransformMatrix[16];
-            coin->getWorldTransform().getOpenGLMatrix(postSetWorldTransformMatrix);
-            std::cout << "Post-set world transform matrix: " << std::endl;
-            for (int i = 0; i < 16; ++i) {
-                if (i > 0 && i % 4 == 0) std::cout << "\n";
-                std::cout << postSetWorldTransformMatrix[i] << " ";
-            }
-            std::cout << std::endl;*/
-
-            dynamicsWorld->addCollisionObject(coin);
+            dynamicsWorld->addRigidBody(coin);
             coinColliders.push_back(coin);
-
-            //verifica per confrontare posizione della macchina con posizione delle monete
-            /*
-            btVector3 coinPosition = transform.getOrigin();
-            std::cout << "Coin Position: ("
-                << coinPosition.getX() << ", "
-                << coinPosition.getY() << ", "
-                << coinPosition.getZ() << ")" << std::endl;*/
 
             // Associare la moneta con il suo ID
             coinMap[coinID] = coin;
@@ -294,7 +247,6 @@ void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
     if (coinCallback == nullptr) {
         // Inizializza il callback delle collisioni la prima volta che viene chiamata checkCollisions
         coinCallback = new CoinCollectorCallback(coinMap, coinColliders, sceneJson, vehicle);
-        std::cout << "ho inizializzato il callback delle collisioni" << std::endl;
     }
 
     // Lista per accumulare le monete da rimuovere
@@ -305,7 +257,6 @@ void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
     if (coinCallback->isCoinCollected) {
         collectedCoins += 1;
         std::string collectedCoinID = coinCallback->collectedCoinID;
-        std::cout << "Collisione con coin: " << collectedCoinID << std::endl;
         coinsToRemove.push_back(collectedCoinID);
         coinCallback->isCoinCollected = false; // Resetta il flag
     }
@@ -313,25 +264,6 @@ void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
     // Rimuove le monete raccolte
     for (std::string& coinID : coinsToRemove) {
         coinCallback->removeCoin(coinID, dynamicsWorld);
-        removeInstanceToCoins(coinID);
-        
-        /*
-        //std::cout << "Elemento '" << coinID << "' rimosso con successo." << std::endl;
-        // Debug: Stampa coinMap, coinColliders e sceneJson dopo la rimozione
-        std::cout << "Stato di coinMap dopo la rimozione: ";
-        for (const auto& pair : coinMap) {
-            std::cout << pair.first << " ";
-        }
-        std::cout << std::endl;
-
-        std::cout << "Stato di coinColliders dopo la rimozione: ";
-        for (const auto& collider : coinColliders) {
-            std::cout << collider << " ";
-        }
-        std::cout << std::endl;
-
-        std::cout << "Stato di sceneJson dopo la rimozione: " << sceneJson.dump(2) << std::endl;
-        */
     }
 }
 

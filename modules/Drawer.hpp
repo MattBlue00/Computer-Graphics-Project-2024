@@ -4,6 +4,7 @@
 #include "Scene.hpp"
 #include "WVP.hpp"
 #include "Utils.hpp"
+#include "Physics.hpp"
 
 // instance IDs declaration
 std::vector<std::string> car = {"car"};
@@ -62,9 +63,15 @@ void drawWorld(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObjec
 void drawCoins(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     for (std::vector<std::string>::iterator it = coins.begin(); it != coins.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
-        
-        // updates coin's transform matrix
-        scene->I[i].Wm = glm::rotate(scene->I[i].Wm, DEG_5, Z_AXIS);
+       
+        if (coinMap.find(*it) != coinMap.end()) {
+            // Coin is present in the map, update its transform matrix
+            scene->I[i].Wm = glm::rotate(scene->I[i].Wm, DEG_5, Z_AXIS);
+        }
+        else {
+            // Coin is not present in the map, rescale it to zero
+            scene->I[i].Wm = glm::scale(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+        }
         
         ubo->mMat = scene->I[i].Wm * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
@@ -200,35 +207,6 @@ void addInstanceToWorld(std::string instance_id){
 
 void addInstanceToCoins(std::string instance_id){
     coins.push_back(instance_id);
-}
-
-void removeInstanceToCoins(std::string instance_id) {
-
-    /*std::cout << "Vettore coins prima della rimozione: ";
-    for (const auto& coin : coins) {
-        std::cout << coin << " ";
-    }
-    std::cout << std::endl;*/
-
-
-    // Trova l'elemento nell'array
-    auto it = std::find(coins.begin(), coins.end(), instance_id);
-
-    // Se l'elemento è trovato, rimuovilo
-    if (it != coins.end()) {
-        coins.erase(it);
-        std::cout << "Elemento '" << instance_id << "' rimosso con successo." << std::endl;
-    }
-    else {
-        std::cout << "Elemento '" << instance_id << "' non trovato." << std::endl;
-    }
-
-    /*// Stampa il vettore coins dopo la rimozione
-    std::cout << "Vettore coins dopo la rimozione: ";
-    for (const auto& coin : coins) {
-        std::cout << coin << " ";
-    }
-    std::cout << std::endl;*/
 }
 
 #endif
