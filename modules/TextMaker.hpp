@@ -1,11 +1,8 @@
 #ifndef TEXTMAKER_HPP
 #define TEXTMAKER_HPP
 
-<<<<<<< Updated upstream
-=======
 #include "Utils.hpp"
 
->>>>>>> Stashed changes
 struct SingleText
 {
     int usedLines;
