@@ -314,6 +314,53 @@ void buildMultipleInstances(json* instances){
         global_coin_count++;
     }
     
+    // two coins near the first tires pile
+    for(int i = 0; i < 2; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, i == 0 ? 7.75 : 2.5,
+                            0, 0, -0.03, 2.5,
+                            0, 0.03, 0, 600,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // coins on the first turn
+    for(int i = 0; i < 3; i++){
+        instances->push_back({
+            {"id", "coin_" + std::to_string(global_coin_count)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -14 - i * 3.5,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, 750 + i * 5,
+                            0, 0, 0, 1}}
+        });
+        addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+        global_coin_count++;
+    }
+    
+    // 25 coins in the hollow
+    for(int i = 0; i < 5; i++){
+        for(int j = 0; j < 5; j++){
+            instances->push_back({
+                {"id", "coin_" + std::to_string(global_coin_count)},
+                {"model", "coin"},
+                {"texture", "coin"},
+                {"transform",  {0.03, 0, 0, -340 - 5 * i,
+                                0, 0, -0.03, i <= 2 ? -40.5 - i * 0.5 : -41.5 + (i-2) * 0.75,
+                                0, 0.03, 0, 785 - 3.5 * j,
+                                0, 0, 0, 1}}
+            });
+            addInstanceToCoins("coin_" + std::to_string(global_coin_count));
+            global_coin_count++;
+        }
+    }
+    
 }
     
 #endif

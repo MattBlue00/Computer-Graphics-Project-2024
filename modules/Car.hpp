@@ -211,10 +211,10 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     if(!isVehicleInAir(dynamicsWorld, vehicle)){
         if(vehicle->getRigidBody()->getLinearVelocity().length() <= maxSpeed){
             if(engineForce != 0.0f && isVehicleBlocked(vehicle)){
-                vehicle->applyEngineForce(4*engineForce, 0);
-                vehicle->applyEngineForce(4*engineForce, 1);
-                vehicle->applyEngineForce(4*engineForce, 2);
-                vehicle->applyEngineForce(4*engineForce, 3);
+                vehicle->applyEngineForce(10*engineForce, 0);
+                vehicle->applyEngineForce(10*engineForce, 1);
+                vehicle->applyEngineForce(10*engineForce, 2);
+                vehicle->applyEngineForce(10*engineForce, 3);
             }
             else{
                 vehicle->applyEngineForce(0.0f, 0);
@@ -240,6 +240,8 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     if(engineForce == 0.0f && isVehicleStopped(vehicle, 0.5f)){
         vehicle->getRigidBody()->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
         vehicle->getRigidBody()->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        btVector3 upwardForce = -vehicle->getRigidBody()->getMass() * dynamicsWorld->getGravity();
+        vehicle->getRigidBody()->applyCentralForce(upwardForce);
     }
     
 }

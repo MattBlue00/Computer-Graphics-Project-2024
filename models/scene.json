@@ -18,7 +18,7 @@
         {"id": "ramps",             "model": "models/Ramps.obj",            "format":"OBJ"},
         {"id": "tower",             "model": "models/Tower.obj",            "format":"OBJ"},
         {"id": "banners",           "model": "models/Banners.obj",          "format":"OBJ"},
-        {"id": "big_star",          "model": "models/BigStar.obj",          "format":"OBJ"},
+        {"id": "big_stars",         "model": "models/BigStars.obj",         "format":"OBJ"},
         {"id": "rainbow",           "model": "models/Rainbow.obj",          "format":"OBJ"},
         {"id": "dir_banners",       "model": "models/DirBanners.obj",       "format":"OBJ"},
         {"id": "rocket",            "model": "models/Rocket.obj",           "format":"OBJ"}
@@ -92,7 +92,7 @@
                        0, 1, 0, 0,
                        0, 0, 1, 0,
                        0, 0, 0, 1]},
-        {"id": "big_star",          "model": "big_star",            "texture": "track",
+        {"id": "big_stars",         "model": "big_stars",           "texture": "track",
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 0,
                        0, 0, 1, 0,
