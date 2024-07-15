@@ -2948,7 +2948,6 @@ void Model::updateIndexBuffer() {
 }
 
 void Model::replaceIndexBuffer(VkDeviceSize newSize) {
-    //wdestroyPendingResources();
     // Create new buffer
     VkBuffer newIndexBuffer;
     VkDeviceMemory newIndexBufferMemory;
