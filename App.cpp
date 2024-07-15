@@ -123,7 +123,7 @@ protected:
         SC.init(this, &VD, DSL, P, "models/scene.json");
         
         // init the UI
-        uiManager.init(this);
+        //uiManager.init(this);
         
         // Init local variables
         Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
@@ -147,7 +147,7 @@ protected:
         initCar();
         
         // initializes the audio system and loads the sounds
-        initAudio(config["music"]);
+        //initAudio(config["music"]);
         
         // init lights
         //initLights();
@@ -155,7 +155,7 @@ protected:
         std::cout << "Initialization completed!\n";
         
         // plays the race music
-        playSound("RACE_MUSIC", 0.0f, 7);
+        //playSound("RACE_MUSIC", 0.0f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -165,7 +165,7 @@ protected:
 
         // Here you define the data set
         SC.pipelinesAndDescriptorSetsInit(DSL);
-        uiManager.pipelinesAndDescriptorSetsInit();
+        //uiManager.pipelinesAndDescriptorSetsInit();
     }
 
     // Here you destroy your pipelines and Descriptor Sets!
@@ -175,7 +175,7 @@ protected:
         P.cleanup();
 
         SC.pipelinesAndDescriptorSetsCleanup();
-        uiManager.pipelinesAndDescriptorSetsCleanup();
+        //uiManager.pipelinesAndDescriptorSetsCleanup();
     }
 
     // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -197,7 +197,7 @@ protected:
         P.destroy();
 
         SC.localCleanup();
-        uiManager.localCleanup();
+        //uiManager.localCleanup();
         cleanupPhysics();
     }
 
@@ -210,7 +210,7 @@ protected:
         P.bind(commandBuffer);
 
         SC.populateCommandBuffer(commandBuffer, currentImage, P);
-        uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
+        //uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
     }
 
     // Here is where you update the uniforms.
@@ -273,7 +273,7 @@ protected:
 
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
-        bool shouldRebuildPipelineUI = uiManager.shouldUpdateUI();
+        bool shouldRebuildPipelineUI = false; //uiManager.shouldUpdateUI();
         // if so, rebuilds pipeline
         if(shouldRebuildPipeline || shouldRebuildPipelineUI){
             RebuildPipeline();

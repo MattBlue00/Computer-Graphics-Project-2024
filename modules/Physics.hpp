@@ -2,6 +2,7 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
+#include "Utils.hpp"
 
 // physics global properties
 btBroadphaseInterface* broadphase;
@@ -19,32 +20,62 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     // id           friction    restitution
     {"track",       {0.9f,      0.0f}},
     {"barrier",     {0.8f,      0.5f}},
-    {"ramps",       {0.0f,      0.0f}}
+    {"ramps",       {0.0f,      0.0f}},
+    {"dir_barrier_oval",       {0.8f,      0.5f}}
 };
+std::unordered_map<std::string, btRigidBody*> rigidBodyMap;
 
-int collectedCoins = 0;
+// Struttura per le coordinate del checkpoint
+struct Checkpoint {
+    std::string id;
+    btVector3 position;
+    btVector3 halfExtents; // Dimensioni del checkpoint (mezze estensioni)
+};
+// Definizione dei checkpoint con posizione, dimensioni e rotazione
+std::vector<Checkpoint> checkpoints = {
+    { "checkpoint_1", btVector3(-0.25 + 2.5, -0.95 + 5.0, 0.0), btVector3(10, 5, 1)},
+    { "checkpoint_2", btVector3(-340.0, -40.0, 785.0 - 7.5), btVector3(1, 5, 10)},
+    { "checkpoint_3", btVector3(-693.5 - 7.5, -1 + 5.0, -100.0), btVector3(10, 5, 1)},
+    { "checkpoint_4", btVector3(-350.0, -1.0 + 5.0, -315.5 - 7.5), btVector3(1, 5, 10)},
+    { "checkpoint_5", btVector3(-221.0 - 7.5, 88.0 + 5.0, 585.0), btVector3(7.5, 5, 1)},
+};
+std::vector<btRigidBody*> allCheckpointBodies; //variabile che racchiude tutti i checkpoint
+std::vector<btRigidBody*> checkpointsLap; // variabile che racchiude solo i checpoint relativi al giro che si sta percorrendo
+
+int collectedCoins = 0; // Variabile per tenere traccia delle monete
+bool firstLap, secondLap; // Variabile indicare il giro corrente
+bool updateCheckpoints; // Variabile di stato per indicare se i checkpoint devono essere aggiornati
 
 // prototypes declaration
 btBvhTriangleMeshShape* getCollisionShape(std::string filepath);
-void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float friction, float restitution);
+void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, const std::string& id, float friction, float restitution);
+void removeRigidBodyFromDynamicsWorld(const std::string& id);
 void printWheelPositions(btRaycastVehicle* vehicle);
 void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson);
 void setupCollisionProperties(btCollisionObject* obj);
+void createCheckpoints();
+void checkCheckPoint(btRaycastVehicle* vehicle);
+std::vector<btRigidBody*> getCheckpointsForLap(bool firstLap, bool secondLap);
+void changeCircuit(nlohmann::json& sceneJson);
 
-class CoinCollectorCallback : public btCollisionWorld::ContactResultCallback {
+class GameObjectCollisionCallback : public btCollisionWorld::ContactResultCallback {
 public:
     std::unordered_map<std::string, btRigidBody*>& coinMap;
     std::vector<btRigidBody*>& coinColliders;
+    std::vector<btRigidBody*> checkpointsLap;
     nlohmann::json& sceneJson;
     btRaycastVehicle* vehicle;
     bool isCoinCollected = false;
+    bool isCheckpointHit = false;
     std::string collectedCoinID;
+    int nextCheckpointIndex = 0;
 
-    CoinCollectorCallback(std::unordered_map<std::string, btRigidBody*>& coinMap,
-        std::vector<btRigidBody*>& coins,
+    GameObjectCollisionCallback(std::unordered_map<std::string, btRigidBody*>& coinMap,
+        std::vector<btRigidBody*>& coinColliders,
+        std::vector<btRigidBody*>& checkpointsLap,
         nlohmann::json& sceneJson,
         btRaycastVehicle* vehicle)
-        : coinMap(coinMap), coinColliders(coins), sceneJson(sceneJson), vehicle(vehicle) {}
+        : coinMap(coinMap), coinColliders(coinColliders), checkpointsLap(checkpointsLap), sceneJson(sceneJson), vehicle(vehicle) {}
 
     btScalar addSingleResult(btManifoldPoint& cp,
         const btCollisionObjectWrapper* colObj0Wrap,
@@ -58,14 +89,44 @@ public:
             collectedCoinID = getCoinID(obj0 == vehicle->getRigidBody() ? obj1 : obj0);
             return 0;
         }
-        return 1;
+        else if ((obj0 == vehicle->getRigidBody() && isCheckpoint(obj1)) || (obj1 == vehicle->getRigidBody() && isCheckpoint(obj0))) {
+            std::cout << "collision" << std::endl;
+            if (isNextCheckpoint(obj0 == vehicle->getRigidBody() ? obj1 : obj0)) {
+                isCheckpointHit = true;
+                nextCheckpointIndex++;
+                if (nextCheckpointIndex >= checkpointsLap.size()) {
+                    std::cout << "Tutti i checkpoint attraversati" << std::endl;
+                    changeCircuit(sceneJson);
+                    nextCheckpointIndex = 0; // Reset the index for the next lap
+                }
+                return 0;
+            }
         }
+    }
 
     bool isCoin(const btCollisionObject* obj) {
+        return obj->getUserPointer() != nullptr && coinMap.find(*static_cast<std::string*>(obj->getUserPointer())) != coinMap.end();
+    }
+
+    bool isCheckpoint(const btCollisionObject* obj) {
         return obj->getUserPointer() != nullptr;
     }
 
+    bool isNextCheckpoint(const btCollisionObject* obj) {
+        if (nextCheckpointIndex < checkpointsLap.size()) {
+            return obj == checkpointsLap[nextCheckpointIndex];
+        }
+        else {
+            std::cerr << "nextCheckpointIndex is out of bounds!" << std::endl;
+            return false;
+        }
+    }
+
     std::string getCoinID(const btCollisionObject* obj) {
+        return *static_cast<std::string*>(obj->getUserPointer());
+    }
+
+    std::string getCheckpointID(const btCollisionObject* obj) {
         return *static_cast<std::string*>(obj->getUserPointer());
     }
 
@@ -79,8 +140,6 @@ public:
             delete collectedCoin->getCollisionShape();
             delete static_cast<std::string*>(collectedCoin->getUserPointer());
             delete collectedCoin;
-
-            std::cout << "Coin '" << coinID << "' removed successfully." << std::endl;
         }
         else {
             std::cout << "Coin '" << coinID << "' not found in coinMap." << std::endl;
@@ -88,7 +147,7 @@ public:
     }
 };
 
-CoinCollectorCallback* coinCallback = nullptr;
+GameObjectCollisionCallback* gameObjectCallback = nullptr;
 
 void initPhysics(json sceneJson) {
 
@@ -104,6 +163,9 @@ void initPhysics(json sceneJson) {
     dynamicsWorld->getSolverInfo().m_numIterations = 10;
 
     collectedCoins = 0;
+    firstLap = true;
+    secondLap = false;
+    updateCheckpoints = true;
     
     for (auto it = physicsObjectsMap.begin(); it != physicsObjectsMap.end(); ++it) {
         std::string id = it->first;
@@ -117,13 +179,14 @@ void initPhysics(json sceneJson) {
             std::string modelFilename = (*modelIt)["model"];
             btBvhTriangleMeshShape* collisionShape = getCollisionShape(modelFilename);
             collisionShapes.push_back(collisionShape);
-            addRigidBodyToDynamicsWorld(collisionShape, it->second[0], it->second[1]);
+            addRigidBodyToDynamicsWorld(collisionShape, id, it->second[0], it->second[1]);
         } else {
             std::cout << "Model for " << id << " not found!" << std::endl;
             exit(-1);
         }
     }
 
+    //initiate coins
     for (const auto& instance : sceneJson["instances"]) {
         if (instance["model"] == "coin") {
             // Converti i dati della trasformazione in btTransform
@@ -160,6 +223,9 @@ void initPhysics(json sceneJson) {
             coinMap[coinID] = coin;
         }
     }
+
+    //initiate checkpoint
+    createCheckpoints();
 }
 
 void updatePhysics(float deltaT) {
@@ -231,7 +297,7 @@ btBvhTriangleMeshShape* getCollisionShape(std::string filepath){
     return new btBvhTriangleMeshShape(mesh, true);
 }
 
-void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float friction, float restitution){
+void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, const std::string& id, float friction, float restitution){
     // Create circuit motion state
     btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
     btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, collisionShape, btVector3(0, 0, 0));
@@ -240,34 +306,140 @@ void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float f
     rigidBody->setRestitution(restitution);
     rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     dynamicsWorld->addRigidBody(rigidBody);
+    rigidBodyMap[id] = rigidBody;
+}
+
+void removeRigidBodyFromDynamicsWorld(const std::string& id) {
+    auto it = rigidBodyMap.find(id);
+    if (it != rigidBodyMap.end()) {
+        btRigidBody* body = it->second;
+        dynamicsWorld->removeRigidBody(body);
+
+        delete body->getMotionState();
+        delete body;
+        rigidBodyMap.erase(it);
+    }
 }
 
 void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
+    static GameObjectCollisionCallback* gameObjectCallback = nullptr;
 
-    if (coinCallback == nullptr) {
-        // Inizializza il callback delle collisioni la prima volta che viene chiamata checkCollisions
-        coinCallback = new CoinCollectorCallback(coinMap, coinColliders, sceneJson, vehicle);
+    if (updateCheckpoints) {
+        std::vector<btRigidBody*> checkpointsLap = getCheckpointsForLap(firstLap, secondLap);
+        if (gameObjectCallback == nullptr) {
+            // Inizializza il callback delle collisioni la prima volta che viene chiamata checkCollisions
+            gameObjectCallback = new GameObjectCollisionCallback(coinMap, coinColliders, checkpointsLap, sceneJson, vehicle);
+        }
+        else {
+            gameObjectCallback->checkpointsLap = checkpointsLap;
+            gameObjectCallback->nextCheckpointIndex = 0; // Reset nextCheckpointIndex at the beginning of each lap
+        }
+        updateCheckpoints = false; // Reset the flag after updating
     }
 
     // Lista per accumulare le monete da rimuovere
     std::vector<std::string> coinsToRemove;
 
     // Controlla le collisioni
-    dynamicsWorld->contactTest(vehicle->getRigidBody(), *coinCallback);
-    if (coinCallback->isCoinCollected) {
+    dynamicsWorld->contactTest(vehicle->getRigidBody(), *gameObjectCallback);
+    if (gameObjectCallback->isCoinCollected) {
         collectedCoins += 1;
-        std::string collectedCoinID = coinCallback->collectedCoinID;
+        std::string collectedCoinID = gameObjectCallback->collectedCoinID;
         coinsToRemove.push_back(collectedCoinID);
-        coinCallback->isCoinCollected = false; // Resetta il flag
+        gameObjectCallback->isCoinCollected = false; // Resetta il flag
+    }
+
+    if (gameObjectCallback->isCheckpointHit) {
+        std::cout << "Checkpoint attraversato: " << gameObjectCallback->nextCheckpointIndex << std::endl;
+        gameObjectCallback->isCheckpointHit = false; // Resetta il flag
     }
 
     // Rimuove le monete raccolte
     for (std::string& coinID : coinsToRemove) {
-        coinCallback->removeCoin(coinID, dynamicsWorld);
+        gameObjectCallback->removeCoin(coinID, dynamicsWorld);
     }
 }
 
+void createCheckpoints() {
+    for (const auto& checkpoint : checkpoints) {
+        // Creazione del collision shape (usiamo un box shape per semplicità)
+        btCollisionShape* checkpointShape = new btBoxShape(checkpoint.halfExtents);
 
+        // Creazione della trasformazione per il checkpoint
+        btTransform checkpointTransform;
+        checkpointTransform.setIdentity();
+        checkpointTransform.setOrigin(checkpoint.position);
+
+        // Creazione del motion state
+        btDefaultMotionState* motionState = new btDefaultMotionState(checkpointTransform);
+
+        // Creazione del rigid body senza massa (per oggetto cinematico)
+        btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, checkpointShape, btVector3(0, 0, 0));
+        btRigidBody* rigidBody = new btRigidBody(rigidBodyCI);
+
+        // Imposta il corpo rigido come cinematico
+        rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+        // Imposta l'ID del checkpoint come user pointer per identificazione
+        rigidBody->setUserPointer(new std::string(checkpoint.id));
+
+        // Aggiungi il rigid body al mondo fisico
+        dynamicsWorld->addRigidBody(rigidBody);
+
+        // Aggiungi il rigid body alla lista dei checkpoint
+        allCheckpointBodies.push_back(rigidBody);
+    }
+}
+
+std::vector<btRigidBody*> getCheckpointsForLap(bool firstLap, bool secondLap) {
+    if (firstLap && !secondLap) {
+        // Aggiungi i checkpoint per il primo giro
+        checkpointsLap.push_back(allCheckpointBodies[0]); // checkpoint 1
+        checkpointsLap.push_back(allCheckpointBodies[1]); // checkpoint 2
+        checkpointsLap.push_back(allCheckpointBodies[2]); // checkpoint 3
+        checkpointsLap.push_back(allCheckpointBodies[3]); // checkpoint 4
+    }
+    else if (secondLap && !firstLap) {
+        // Aggiungi i checkpoint per il secondo giro
+        checkpointsLap.push_back(allCheckpointBodies[0]); // checkpoint 1
+        checkpointsLap.push_back(allCheckpointBodies[4]); // checkpoint 5
+        checkpointsLap.push_back(allCheckpointBodies[2]); // checkpoint 3
+        checkpointsLap.push_back(allCheckpointBodies[3]); // checkpoint 4
+    }
+    else checkpointsLap.clear();
+
+    return checkpointsLap;
+}
+
+void changeCircuit(nlohmann::json& sceneJson) {
+    checkpointsLap.clear();
+    updateCheckpoints = true;
+    if (firstLap && !secondLap) {
+        firstLap = false;
+        secondLap = true;
+        removeRigidBodyFromDynamicsWorld("dir_barrier_oval");
+        // Aggiungere il corpo rigido per dir_barrier_inner
+        auto modelIt = std::find_if(sceneJson["models"].begin(), sceneJson["models"].end(), [](const json& model) {
+            return model["id"] == "dir_barrier_inner";
+            });
+
+        if (modelIt != sceneJson["models"].end()) {
+            std::string modelFilename = (*modelIt)["model"];
+            btBvhTriangleMeshShape* collisionShape = getCollisionShape(modelFilename);
+            collisionShapes.push_back(collisionShape);
+            addRigidBodyToDynamicsWorld(collisionShape, "dir_barrier_inner", 0.8f, 0.5f);
+        }
+        else {
+            std::cout << "Model for dir_barrier_inner not found!" << std::endl;
+            exit(-1);
+        }
+    }
+    else if (!firstLap && secondLap) {
+        firstLap = false;
+        secondLap = false;
+        removeRigidBodyFromDynamicsWorld("dir_barrier_inner");
+    }
+}
 #endif
 
 
