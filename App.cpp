@@ -145,8 +145,10 @@ protected:
         initPhysics(SC.sceneJson);
         
         initCar();
-        // register the UI observer for speed
+        
+        // register the UI observers
         speedSubject.addObserver(&uiManager);
+        collectedCoinsSubject.addObserver(&uiManager);
         
         // initializes the audio system and loads the sounds
         initAudio(config["music"]);

@@ -2888,7 +2888,6 @@ void Model::updateVertexBuffer() {
 }
 
 void Model::replaceVertexBuffer(VkDeviceSize newSize) {
-    //destroyPendingResources();
     // Create new buffer
     VkBuffer newVertexBuffer;
     VkDeviceMemory newVertexBufferMemory;
@@ -2949,7 +2948,6 @@ void Model::updateIndexBuffer() {
 }
 
 void Model::replaceIndexBuffer(VkDeviceSize newSize) {
-    //destroyPendingResources();
     // Create new buffer
     VkBuffer newIndexBuffer;
     VkDeviceMemory newIndexBufferMemory;

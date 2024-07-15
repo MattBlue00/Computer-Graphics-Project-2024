@@ -117,10 +117,6 @@ struct UIManager: public Observer {
         if(!isGameStarted) shouldUpdate = handleStartTimer();  // if start-timer changes update the UI
         else shouldUpdate = handleTimer();                    // if real timer changes update UI
         
-        // TODO: to be implemented, laps and coins may be updated via "events"
-        // shouldUpdate = handleLaps();
-        // shouldUpdate = handleCoins();
-        
         return shouldUpdate; // UI has not been updated
     }
     
@@ -177,6 +173,12 @@ struct UIManager: public Observer {
         outSpeed[0] = {1, {"Speed: " + std::to_string(newSpeed) + " km/h"}, 0, 0, outSpeedPosition};
         outSpeed[1] = {1, {"Speed: " + std::to_string(newSpeed) + " km/h"}, 0, 0, outSpeedPosition};
         speed.changeText(&outSpeed);
+    }
+    
+    void onCoinCollected(int collectedCoins) override {
+        outCoins[0] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
+        outCoins[1] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
+        coins.changeText(&outCoins);
     }
 };
 

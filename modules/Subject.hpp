@@ -22,6 +22,12 @@ struct Subject {
             observer->onSpeedChanged(newSpeed);
         }
     }
+    
+    void notifyCoinCollected(int collectedCoins){
+        for (Observer* observer : observers) {
+            observer->onCoinCollected(collectedCoins);
+        }
+    }
 };
 
 #endif
