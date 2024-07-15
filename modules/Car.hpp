@@ -3,6 +3,9 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "Physics.hpp"
+#include "Subject.hpp"
+
+
 
 const float maxEngineForce = 6000.0f; // Maximum force applied to wheels
 const float maxBrakeForce = 200.0f; // Maximum brake force
@@ -16,6 +19,10 @@ const float maxSpeed = 50.0f;
 const float raycastDistance = 2.0f;
 
 btRaycastVehicle* vehicle;
+
+// subject to be observed by UI
+Subject speedSubject;
+int lastSpeedKmh = 0;
 
 void printVehicleStatus(btRaycastVehicle* vehicle);
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold);
@@ -224,6 +231,7 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
             }
         }
         else{
+            // std::cout << "Max Speed Reached!" << std::endl;
             vehicle->applyEngineForce(0.0f, 2); // Ruote posteriori
             vehicle->applyEngineForce(0.0f, 3);
         }
@@ -244,7 +252,18 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         vehicle->getRigidBody()->applyCentralForce(upwardForce);
     }
     
-    //printVehicleStatus(vehicle);
+    // update Kmh Speed and notify UI only when necessaty
+    float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
+    int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
+    if(lastSpeedKmh != currentSpeedKmh){
+        // fix the flickering speed number at maxspeed
+        if(currentSpeedKmh == std::abs(std::floor(maxSpeed * 3.6))) return;
+        speedSubject.notifySpeedChanged(currentSpeedKmh);
+        lastSpeedKmh = currentSpeedKmh;
+    }
+    
+    // debug vehicle stats
+    printVehicleStatus(vehicle);
     
 }
 
@@ -282,6 +301,48 @@ bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRigidBody* carRigi
 
 bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRaycastVehicle* vehicle){
     return isVehicleInAir(vehicle) && isVehicleInAir(dynamicsWorld, vehicle->getRigidBody());
+}
+
+void printVehicleStatus(btRaycastVehicle* vehicle) {
+    // Stampa la posizione del telaio
+    btTransform chassisTransform = vehicle->getChassisWorldTransform();
+    btVector3 chassisPosition = chassisTransform.getOrigin();
+    /*std::cout << "Chassis Position: ("
+        << chassisPosition.getX() << ", "
+        << chassisPosition.getY() << ", "
+        << chassisPosition.getZ() << ")" << std::endl;*/
+    
+    /*std::cout << "Linear velocity: " << vehicle->getRigidBody()->getLinearVelocity().getX() <<
+        ", " << vehicle->getRigidBody()->getLinearVelocity().getY() <<
+        ", " << vehicle->getRigidBody()->getLinearVelocity().getZ() <<
+        "\nAngular velocity: " << vehicle->getRigidBody()->getAngularVelocity().getX() <<
+        ", " << vehicle->getRigidBody()->getAngularVelocity().getY() <<
+        ", " << vehicle->getRigidBody()->getAngularVelocity().getZ() << std::endl;*/
+    
+    //std::cout << "Speed: " << vehicle->getRigidBody()->getLinearVelocity().length() << std::endl;
+
+    // Stampa la posizione di una ruota (ad esempio, la ruota anteriore sinistra)
+    /*int wheelIndex = 0; // Indice della ruota da stampare
+    btWheelInfo& wheel = vehicle->getWheelInfo(wheelIndex);
+    btTransform wheelTransform = wheel.m_worldTransform;
+    btVector3 wheelPosition = wheelTransform.getOrigin();
+    std::cout << "Wheel " << wheelIndex << " Position: ("
+        << wheelPosition.getX() << ", "
+        << wheelPosition.getY() << ", "
+        << wheelPosition.getZ() << ")" << std::endl;*/
+}
+
+void setSuspensions(btRaycastVehicle* vehicle){
+    for (int i = 0; i < vehicle->getNumWheels(); i++) {
+        btWheelInfo& wheel = vehicle->getWheelInfo(i);
+        wheel.m_suspensionStiffness = 20.0f;        // old: 20.0f
+        wheel.m_wheelsDampingRelaxation = 2.5f;     // old: 2.3f    // semi-working: 2.5f
+        wheel.m_wheelsDampingCompression = 4.0f;    // old: 4.4f    // semi-working: 4.5f
+        wheel.m_frictionSlip = 1000.0f;             // old: 1000.0f
+        wheel.m_rollInfluence = 0.1f;               // old: 0.1f
+        wheel.m_maxSuspensionTravelCm = 20.0f;      // old: 20.0f
+        wheel.m_maxSuspensionForce = 1000000.0f;       // old: 6000.0f
+    }
 }
 
 // Funzione per limitare la rotazione del veicolo in aria

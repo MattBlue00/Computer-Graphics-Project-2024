@@ -2,6 +2,8 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
+#include "Subject.hpp"
+
 
 // physics global properties
 btBroadphaseInterface* broadphase;
@@ -22,6 +24,10 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     {"ramps",           {0.0f,      0.0f}},
     {"tires_pile_1",    {0.8f,      0.5f}}
 };
+
+int collectedCoins = 0;
+// subject to be observed by UI
+Subject collectedCoinsSubject;
 
 // prototypes declaration
 btBvhTriangleMeshShape* getCollisionShape(std::string filepath, std::string format, glm::mat4 TransformMatrix);
@@ -386,6 +392,7 @@ void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
     dynamicsWorld->contactTest(vehicle->getRigidBody(), *coinCallback);
     if (coinCallback->isCoinCollected) {
         collectedCoins += 1;
+        collectedCoinsSubject.notifyCoinCollected(collectedCoins);
         std::string collectedCoinID = coinCallback->collectedCoinID;
         coinsToRemove.push_back(collectedCoinID);
         coinCallback->isCoinCollected = false; // Resetta il flag
