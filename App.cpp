@@ -236,12 +236,11 @@ protected:
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
 
-        // accelerates or decelerates car according to user input
-        //updateCarMovement(carRigidBody, carMovementInput, deltaT, dynamicsWorld);
-
         updateVehicle(vehicle, carMovementInput, deltaT);
 
         updatePhysics(deltaT);
+
+        checkCollisions(vehicle, SC.sceneJson);
 
         // take position and yaw of car rigid body
         btTransform transform;
