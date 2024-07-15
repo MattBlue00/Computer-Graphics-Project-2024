@@ -9,7 +9,7 @@ typedef struct {
 } Instance;
 
 // WARNING: ADDED BY US
-void buildMultipleInstances(json* instances); // prototype
+void buildMultipleInstances(json* instances, json* sceneJson); // prototype
 
 class Scene {
 	public:
@@ -87,7 +87,7 @@ class Scene {
 			json is = js["instances"];
             
             // WARNING: ADDED BY US
-            buildMultipleInstances(&is);
+            buildMultipleInstances(&is, &sceneJson);
             
 			InstanceCount = (int)is.size();
 			std::cout << "Instances count: " << InstanceCount << "\n";
@@ -175,33 +175,38 @@ const int FIRST_BLEACHERS_COUNT = 29; // per side
 const int FIRST_BLEACHERS_START = -155;
 const int BLEACHERS_STEP = 10;
 
-void buildMultipleInstances(json* instances){
+void buildMultipleInstances(json* instances, json* sceneJson){
     
+    json instance;
     // bleachers on the first straight line
     for(int i = 1; i <= FIRST_BLEACHERS_COUNT; i++) {
         
         // left bleachers
-        instances->push_back({
+        instance = {
             {"id", "bleachers_l" + std::to_string(i)},
             {"model", "bleachers"},
             {"texture", "bleachers"},
             {"transform",  {0, 0, 1, 20,
                             0, 1, 0, 5,
-                            -1, 0, 0, FIRST_BLEACHERS_START + BLEACHERS_STEP * (i-1),
+                            -1, 0, 0, FIRST_BLEACHERS_START + BLEACHERS_STEP * (i - 1),
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToWorld("bleachers_l" + std::to_string(i));
         
         // right bleachers
-        instances->push_back({
+        instance = {
             {"id", "bleachers_r" + std::to_string(i)},
             {"model", "bleachers"},
             {"texture", "bleachers"},
             {"transform",  {0, 0, -1, -20,
                             0, 1, 0, 5,
-                            1, 0, 0, FIRST_BLEACHERS_START + BLEACHERS_STEP * (i-1),
+                            1, 0, 0, FIRST_BLEACHERS_START + BLEACHERS_STEP * (i - 1),
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToWorld("bleachers_r" + std::to_string(i));
         
     }
@@ -211,7 +216,7 @@ void buildMultipleInstances(json* instances){
     
     // first three coins
     for(int i = 0; i < 3; i++){
-        instances->push_back({
+        instance = {
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
@@ -219,14 +224,16 @@ void buildMultipleInstances(json* instances){
                             0, 0, -0.03, 2.5,
                             0, 0.03, 0, 42.5,
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     
     // three coins on the right
     for(int i = 0; i < 3; i++){
-        instances->push_back({
+        instance = {
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
@@ -234,14 +241,16 @@ void buildMultipleInstances(json* instances){
                             0, 0, -0.03, 0.5,
                             0, 0.03, 0, 90 + 7 * i,
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     
     // three coins on the left
     for(int i = 0; i < 3; i++){
-        instances->push_back({
+        instance = {
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
@@ -249,14 +258,16 @@ void buildMultipleInstances(json* instances){
                             0, 0, -0.03, 0.5,
                             0, 0.03, 0, 120 + 7 * i,
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     
     // three coins in the middle
     for(int i = 0; i < 3; i++){
-        instances->push_back({
+        instance = {
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
@@ -264,14 +275,16 @@ void buildMultipleInstances(json* instances){
                             0, 0, -0.03, 0.5,
                             0, 0.03, 0, 180 + 7 * i,
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     
     // three coins under the rainbow
     for(int i = 0; i < 3; i++){
-        instances->push_back({
+        instance = {
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
@@ -279,14 +292,16 @@ void buildMultipleInstances(json* instances){
                             0, 0, -0.03, 0.5,
                             0, 0.03, 0, 250,
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     
     // three coins after the crossroads
     for(int i = 0; i < 3; i++){
-        instances->push_back({
+        instance = {
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
@@ -294,22 +309,26 @@ void buildMultipleInstances(json* instances){
                             0, 0, -0.03, 2.5,
                             0, 0.03, 0, i != 1 ? 322.5 : 332.5,
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
     
     // ten coins near the star and the rocket
     for(int i = 0; i < 10; i++){
-        instances->push_back({
+        instance = {
             {"id", "coin_" + std::to_string(global_coin_count)},
             {"model", "coin"},
             {"texture", "coin"},
-            {"transform",  {0.03, 0, 0, i%2 == 0 ? -4.5 : 4.5,
+            {"transform",  {0.03, 0, 0, i % 2 == 0 ? -4.5 : 4.5,
                             0, 0, -0.03, 0.5,
                             0, 0.03, 0, 400 + 15 * i,
                             0, 0, 0, 1}}
-        });
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
         addInstanceToCoins("coin_" + std::to_string(global_coin_count));
         global_coin_count++;
     }
