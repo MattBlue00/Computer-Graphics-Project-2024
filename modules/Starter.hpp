@@ -396,6 +396,7 @@ protected:
     VkQueue presentQueue;
 	VkCommandPool commandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
+    VkCommandBuffer uiCommandBuffer;
 
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
@@ -430,6 +431,7 @@ protected:
     void initWindow() {
         glfwInit();
 
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, windowResizable);
 
@@ -471,8 +473,8 @@ protected:
 		localInit();
 		pipelinesAndDescriptorSetsInit();
 
-		createCommandBuffers();			
-		createSyncObjects();			 
+		createCommandBuffers();
+		createSyncObjects();
     }
 
     void createInstance() {
@@ -1144,7 +1146,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-		poolInfo.flags = 0; // Optional
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Allow command buffer reset
 		
 		VkResult result = vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
 		if (result != VK_SUCCESS) {
@@ -1535,6 +1537,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 	}
 	
 	virtual void populateCommandBuffer(VkCommandBuffer commandBuffer, int i) = 0;
+    virtual void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int i) = 0;
 
     void createCommandBuffers() {
     	commandBuffers.resize(swapChainFramebuffers.size());
@@ -1583,8 +1586,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 	
 
 			populateCommandBuffer(commandBuffers[i], i);
-			
-
+            
 			vkCmdEndRenderPass(commandBuffers[i]);
 
 			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
@@ -1593,6 +1595,70 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		}
 	}
     
+    void updateCommandBufferForUI(uint32_t currentImage) {
+        
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = commandPool;
+        allocInfo.commandBufferCount = 1;
+        
+        if (vkAllocateCommandBuffers(device, &allocInfo, &uiCommandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate UI command buffer!");
+        }
+
+        // Begin recording commands in the command buffer
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        if (vkBeginCommandBuffer(uiCommandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to begin recording command buffer!");
+        }
+
+        // Define the clear values for the render pass
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {{0.31f, 0.30f, 0.56f, 1.0f}};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        // Structure to begin the render pass
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[currentImage];
+        
+        float normalizedX = 0.35f;
+        //float normalizedY = -0.8f;
+        float normalizedWidth = 0.31f;
+        float normalizedHeight = 0.27f;
+        
+        // Convert normalized coordinates to pixel coordinates
+        int32_t startX = static_cast<int32_t>((normalizedX * 0.5f + 0.5f) * swapChainExtent.width);
+        int32_t startY = static_cast<int32_t>(20);
+        uint32_t renderWidth = static_cast<uint32_t>(normalizedWidth * swapChainExtent.width);
+        uint32_t renderHeight = static_cast<uint32_t>(normalizedHeight * swapChainExtent.height);
+        
+        renderPassInfo.renderArea.offset = {startX, startY}; // Set offset to (0, 0)
+        renderPassInfo.renderArea.extent = {renderWidth, renderHeight}; // Full extent of the swap chain
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+        
+
+        // Begin the render pass: the render Area is the UI Surface on the top left
+        vkCmdBeginRenderPass(uiCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // Redraw the UI
+        populateDynamicCommandBuffer(uiCommandBuffer, currentImage);
+
+        // End the render pass
+        vkCmdEndRenderPass(uiCommandBuffer);
+
+        // End the command buffer
+        if (vkEndCommandBuffer(uiCommandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to record command buffer!");
+        }
+        
+    }
+
+
     void createSyncObjects() {
     	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1634,72 +1700,79 @@ std::cout << "Starting createInstance()\n"  << std::flush;
     }
     
     void drawFrame() {
-		vkWaitForFences(device, 1, &inFlightFences[currentFrame],
-						VK_TRUE, UINT64_MAX);
-		
-		uint32_t imageIndex;
-		
-		VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX,
-				imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			recreateSwapChain();
-			return;
-		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-			throw std::runtime_error("failed to acquire swap chain image!");
-		}
+        uint32_t imageIndex;
 
-		if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-			vkWaitForFences(device, 1, &imagesInFlight[imageIndex],
-							VK_TRUE, UINT64_MAX);
-		}
-		imagesInFlight[imageIndex] = inFlightFences[currentFrame];
-		
-		updateUniformBuffer(imageIndex);
-		
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
-		VkPipelineStageFlags waitStages[] =
-			{VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
-		VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = signalSemaphores;
-		
-		vkResetFences(device, 1, &inFlightFences[currentFrame]);
+        VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX,
+                                                imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-		if (vkQueueSubmit(graphicsQueue, 1, &submitInfo,
-				inFlightFences[currentFrame]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to submit draw command buffer!");
-		}
-		
-		VkPresentInfoKHR presentInfo{};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = signalSemaphores;
-		
-		VkSwapchainKHR swapChains[] = {swapChain};
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = swapChains;
-		presentInfo.pImageIndices = &imageIndex;
-		presentInfo.pResults = nullptr; // Optional
-		
-		result = vkQueuePresentKHR(presentQueue, &presentInfo);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            recreateSwapChain();
+            return;
+        } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
 
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-			framebufferResized) {
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        }
+        imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
+        // Aggiorna il command buffer dell'UI
+        
+        updateUniformBuffer(imageIndex);
+        updateCommandBufferForUI(imageIndex);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+        VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+
+        // Usa un array per i command buffer
+        std::array<VkCommandBuffer, 2> submitCommandBuffers = {commandBuffers[imageIndex], uiCommandBuffer};
+
+        submitInfo.commandBufferCount = static_cast<uint32_t>(submitCommandBuffers.size());
+        submitInfo.pCommandBuffers = submitCommandBuffers.data();
+        
+        //submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+        //submitInfo.commandBufferCount = 1;
+
+        VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
+        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to submit draw command buffer!");
+        }
+
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        VkSwapchainKHR swapChains[] = {swapChain};
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pResults = nullptr; // Optional
+
+        result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;
             recreateSwapChain();
         } else if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
         }
-		
-		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
 	virtual void updateUniformBuffer(uint32_t currentImage) = 0;
@@ -2572,7 +2645,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 //}
 
 		decomp = calloc(size, 1);
-		int n = sinflate(decomp, (int)size, &decrypted[16], decrypted.size()-16);
+		sinflate(decomp, (int)size, &decrypted[16], decrypted.size()-16);
 		
 		if (!loader.LoadASCIIFromString(&model, &warn, &err, 
 						reinterpret_cast<const char *>(decomp), size, "/")) {
@@ -2796,6 +2869,8 @@ void Model::initMesh(BaseProject *bp, VertexDescriptor *vd) {
 }
 
 void Model::updateMesh(BaseProject *bp, VertexDescriptor *vd){
+    // destroy pending oldBuffers associated with the old vertices and indices
+    destroyPendingResources();
     updateVertexBuffer();
     updateIndexBuffer();
 }
@@ -2813,7 +2888,6 @@ void Model::updateVertexBuffer() {
 }
 
 void Model::replaceVertexBuffer(VkDeviceSize newSize) {
-    //destroyPendingResources();
     // Create new buffer
     VkBuffer newVertexBuffer;
     VkDeviceMemory newVertexBufferMemory;
@@ -2874,7 +2948,6 @@ void Model::updateIndexBuffer() {
 }
 
 void Model::replaceIndexBuffer(VkDeviceSize newSize) {
-    //destroyPendingResources();
     // Create new buffer
     VkBuffer newIndexBuffer;
     VkDeviceMemory newIndexBufferMemory;
@@ -3509,6 +3582,8 @@ void DescriptorSet::bind(VkCommandBuffer commandBuffer, Pipeline &P, int setId,
 
 void DescriptorSet::map(int currentImage, void *src, int size, int slot) {
 	void* data;
+    
+    //std::cout << "\n -----> UBF MEM: " << uniformBuffersMemory[slot][currentImage];
 
 	vkMapMemory(BP->device, uniformBuffersMemory[slot][currentImage], 0,
 						size, 0, &data);

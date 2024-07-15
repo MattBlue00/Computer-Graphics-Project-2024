@@ -76,7 +76,7 @@ protected:
         windowHeight = 600;
         windowTitle = "Rainbow Stadium: Time Attack!";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.1f, 0.1f, 0.3f, 1.0f}; // dark blue
+        initialBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f}; // black
         
         // Descriptor pool sizes
         uniformBlocksInPool = 300; // FIXME
@@ -146,6 +146,10 @@ protected:
         
         initCar();
         
+        // register the UI observers
+        speedSubject.addObserver(&uiManager);
+        collectedCoinsSubject.addObserver(&uiManager);
+        
         // initializes the audio system and loads the sounds
         //initAudio(config["music"]);
         
@@ -208,9 +212,15 @@ protected:
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
         // binds the pipeline
         P.bind(commandBuffer);
-
         SC.populateCommandBuffer(commandBuffer, currentImage, P);
+<<<<<<< HEAD
         //uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
+=======
+    }
+    
+    void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage){
+        uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
+>>>>>>> main
     }
 
     // Here is where you update the uniforms.
@@ -236,49 +246,42 @@ protected:
         // gets WASD and arrows input from user, and sets deltaT and fire
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
 
+        // updates vehicle movement
         updateVehicle(vehicle, carMovementInput, deltaT);
 
+        // applies a step in the physics simulation
         updatePhysics(deltaT);
 
         checkCollisions(vehicle, SC.sceneJson);
 
-        // take position and yaw of car rigid body
-        btTransform transform;
-        vehicle->getRigidBody()->getMotionState()->getWorldTransform(transform);
-        glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-        btQuaternion rotation = transform.getRotation();
-        float bodyYaw = atan2(2.0 * (rotation.getY() * rotation.getW() + rotation.getX() * rotation.getZ()),
-            1.0 - 2.0 * (rotation.getY() * rotation.getY() + rotation.getX() * rotation.getX()));
-        // Calcolare pitch
-        float sinPitch = 2.0 * (rotation.getW() * rotation.getX() - rotation.getZ() * rotation.getY());
-        float bodyPitch;
-        if (std::abs(sinPitch) >= 1) {
-            bodyPitch = std::copysign(M_PI / 2, sinPitch); // Use 90 degrees if out of range
-        }
-        else {
-            bodyPitch = std::asin(sinPitch);
-        }
+        // get poaition, yaw and pitch of car rigid body
+        glm::vec3 bodyPosition = getVehiclePosition(vehicle);
+        float bodyYaw = getVehicleYaw(vehicle);
+        float bodyPitch = getVehiclePitch(vehicle);
+        float bodyRoll = getVehicleRoll(vehicle);
 
         // inits the camera to third position view
         static CameraData cameraData = {};
         switchToThirdPersonCamera(&cameraData);
-
 
         // camera variables definition
         glm::mat4 M; // will be used as a return result when building view matrix
         glm::vec3 CamPos = Pos;
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
 
+        uiManager.updateUI();
         
-
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
+<<<<<<< HEAD
         bool shouldRebuildPipelineUI = false; //uiManager.shouldUpdateUI();
+=======
+    
+>>>>>>> main
         // if so, rebuilds pipeline
-        if(shouldRebuildPipeline || shouldRebuildPipelineUI){
+        if(shouldRebuildPipeline){
             RebuildPipeline();
         }
-        
 
         // checks if esc was pressed
         shouldQuit(window);
@@ -288,10 +291,10 @@ protected:
 
         // updates camera position
         if (currScene == THIRD_PERSON_SCENE) {
-            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, bodyYaw, bodyPitch, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
+            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, bodyYaw, bodyPitch, bodyRoll, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
         }
         else {
-            updateFirstPersonCamera(&cameraData, &M, bodyYaw, bodyPitch, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
+            updateFirstPersonCamera(&cameraData, &M, bodyYaw, bodyPitch, bodyRoll, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
         }
 
         glm::mat4 ViewPrj = M;
@@ -305,7 +308,7 @@ protected:
         updateGUBO(&gubo, dampedCamPos);
 
         // draws every object of this app
-        drawAll(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch, bodyPitch);
+        drawAll(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch, bodyPitch, bodyRoll);
     }
 };
 

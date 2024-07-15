@@ -5,7 +5,7 @@
 #include <chrono>         // for time tracking
 #include <glm/vec2.hpp>   // for glm::vec2
 
-struct UIManager {
+struct UIManager: public Observer {
     
     // Text Positions
     glm::vec2 outStartTimerPosition = glm::vec2(0.0f, -0.9f);
@@ -23,18 +23,18 @@ struct UIManager {
     };
     
     std::vector<SingleText> outTimer = {
-        {1, {"Time: 0"}, 0, 0, outTimerPosition},
-        {1, {"Time: 0"}, 0, 0, outTimerPosition}
+        {1, {"Time: 00:00"}, 0, 0, outTimerPosition},
+        {1, {"Time: 00:00"}, 0, 0, outTimerPosition}
     };
     
     std::vector<SingleText> outLapse = {
-        {1, {"Laps Done: 0"}, 0, 0, outLapsPosition},
-        {1, {"Laps Done: 0"}, 0, 0, outLapsPosition}
+        {1, {"Lap: 1/2"}, 0, 0, outLapsPosition},
+        {1, {"Lap: 1/2"}, 0, 0, outLapsPosition}
     };
     
     std::vector<SingleText> outSpeed = {
-        {1, {"Speed: 0 kmh"}, 0, 0, outSpeedPosition},
-        {1, {"Speed: 0 kmh"}, 0, 0, outSpeedPosition}
+        {1, {"Speed: 0 km/h"}, 0, 0, outSpeedPosition},
+        {1, {"Speed: 0 km/h"}, 0, 0, outSpeedPosition}
     };
     
     std::vector<SingleText> outCoins = {
@@ -111,24 +111,15 @@ struct UIManager {
     }
     
     // update function
-    bool shouldUpdateUI() {
-        bool shouldUpdate = false;
-        
-        if(!isGameStarted) shouldUpdate = handleStartTimer();  // if start-timer changes update the UI
-        else shouldUpdate = handleTimer();                    // if real timer changes update UI
-        
-        // TODO: to be implemented, laps and coins may be updated via "events"
-        // shouldUpdate = handleLaps();
-        // shouldUpdate = handleSpeed();
-        // shouldUpdate = handleCoins();
-        
-        return shouldUpdate; // UI has not been updated
+    void updateUI() {
+        if(!isGameStarted) handleStartTimer();  // if start-timer changes update the UI
+        else handleTimer();                    // if real timer changes update UI
     }
     
     // start-timer handle function
-    bool handleStartTimer(){
+    void handleStartTimer(){
         if (countdownValue <= 0) {
-            return false; // Stop updating when countdown reaches zero
+            return; // Stop updating when countdown reaches zero
         }
         auto now = std::chrono::high_resolution_clock::now();
         auto durationSinceLastUpdate = std::chrono::duration_cast<std::chrono::seconds>(now - lastUpdateTime);
@@ -152,26 +143,37 @@ struct UIManager {
                 startTimeAfterBegin = std::chrono::high_resolution_clock::now();
                 lastUpdateTimeAfterBegin = startTimeAfterBegin;
             }
-            return true; // UI has been updated
         }
-        return false;
     }
     
     // timer handle function
-    bool handleTimer(){
+    void handleTimer(){
         auto now = std::chrono::high_resolution_clock::now();
         auto durationSinceLastUpdate = std::chrono::duration_cast<std::chrono::seconds>(now - lastUpdateTimeAfterBegin);
         
         if (durationSinceLastUpdate.count() >= 1) {
             auto durationSinceStart = std::chrono::duration_cast<std::chrono::seconds>(now - startTimeAfterBegin);
-            int seconds = static_cast<int>(durationSinceStart.count());
-            outTimer[0] = {1, {"Time: " + std::to_string(seconds)}, 0, 0, outTimerPosition};
-            outTimer[1] = {1, {"Time: " + std::to_string(seconds)}, 0, 0, outTimerPosition};
+            int totalSeconds = static_cast<int>(durationSinceStart.count());
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            std::string timeString = (minutes < 10 ? "0" : "") + std::to_string(minutes) + ":" + (seconds < 10 ? "0" : "") + std::to_string(seconds);
+            outTimer[0] = {1, {"Time: " + timeString}, 0, 0, outTimerPosition};
+            outTimer[1] = {1, {"Time: " + timeString}, 0, 0, outTimerPosition};
             timer.changeText(&outTimer);
             lastUpdateTimeAfterBegin = now; // Update the last update time
-            return true; // UI has been updated
         }
-        return false; // UI has not been updated
+    }
+    
+    void onSpeedChanged(int newSpeed) override {
+        outSpeed[0] = {1, {"Speed: " + std::to_string(newSpeed) + " km/h"}, 0, 0, outSpeedPosition};
+        outSpeed[1] = {1, {"Speed: " + std::to_string(newSpeed) + " km/h"}, 0, 0, outSpeedPosition};
+        speed.changeText(&outSpeed);
+    }
+    
+    void onCoinCollected(int collectedCoins) override {
+        outCoins[0] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
+        outCoins[1] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
+        coins.changeText(&outCoins);
     }
 };
 

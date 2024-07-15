@@ -14,8 +14,14 @@ std::vector<std::string> airplane = {"airplane"};
 std::vector<std::string> airship = {"airship"};
 std::vector<std::string> world = {
     "track", "barrier", "finish_line_top", "finish_line_floor", "ramps", "tower", "banners",
+<<<<<<< HEAD
     "big_star", "rainbow", "arcade_1", "arcade_2", "dir_banners", "rocket",
     "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2"
+=======
+    "big_stars", "rainbow", "arcade_1", "arcade_2", "dir_barrier_oval", "dir_banners", "rocket",
+    "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "tires_pile_1",
+    "traffic_lights"
+>>>>>>> main
 };
 
 // utility airplane variables and constants
@@ -31,15 +37,16 @@ float airplaneAngle = 0;
 int airplaneActionsDone = 0;
 
 // utility airship variables and constants
-const float AIRSHIP_MOV_PER_FRAME = 0.02f;
+const float AIRSHIP_MOV_PER_FRAME = 0.04f;
 bool airshipGoingUp = true;
 
-
-void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch) {
+void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch, float Roll) {
     for (std::vector<std::string>::iterator it = car.begin(); it != car.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
+
+        float adjustedRoll = std::clamp(Roll, -0.005f, 0.005f);
         
-        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, 0) * baseCar;
+        ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, adjustedRoll) * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -213,9 +220,9 @@ void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObj
     }
 }
 
-void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch, float bodyPitch){
+void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch, float bodyPitch, float bodyRoll){
     // draws the car
-    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, bodyPitch);
+    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, bodyPitch, bodyRoll);
     
     // draws the circuit and its decorations
     drawWorld(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
