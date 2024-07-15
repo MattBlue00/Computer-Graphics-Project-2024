@@ -320,7 +320,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, i == 0 ? 7.75 : 2.5,
                             0, 0, -0.03, 2.5,
-                            0, 0.03, 0, 600,
+                            0, 0.03, 0, 602.5,
                             0, 0, 0, 1}}
         };
         addCoin(instance, instances, sceneJson);

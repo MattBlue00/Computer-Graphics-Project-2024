@@ -98,6 +98,7 @@ struct Vertex {
 // PROJECT-SPECIFIC VARIABLES
 
 int globalCoinCount = 0;
+int collectedCoins = 0;
 
 // PROJECT-SPECIFIC FUNCTIONS
 

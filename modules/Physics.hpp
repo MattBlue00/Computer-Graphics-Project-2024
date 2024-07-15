@@ -23,8 +23,6 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     {"tires_pile_1",    {0.8f,      0.5f}}
 };
 
-int collectedCoins = 0;
-
 // prototypes declaration
 btBvhTriangleMeshShape* getCollisionShape(std::string filepath, std::string format, glm::mat4 TransformMatrix);
 void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float friction, float restitution);
@@ -166,7 +164,7 @@ void initPhysics(json sceneJson) {
             btTransform transform(basis, origin);
             
             std::string coinID = instance["id"];
-            btCollisionShape* shape = new btSphereShape(0.5f);
+            btCollisionShape* shape = new btSphereShape(1.0f);
             btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
             btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0, 0, 0));
             btRigidBody* coin = new btRigidBody(rigidBodyCI);
