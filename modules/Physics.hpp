@@ -2,12 +2,8 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
-<<<<<<< HEAD
 #include "Utils.hpp"
-=======
 #include "Subject.hpp"
-
->>>>>>> main
 
 // physics global properties
 btBroadphaseInterface* broadphase;
@@ -22,23 +18,15 @@ std::vector<btRigidBody*> coinColliders;
 std::unordered_map<std::string, btRigidBody*> coinMap;
 
 std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
-<<<<<<< HEAD
     // id           friction    restitution
     {"track",       {0.9f,      0.0f}},
     {"barrier",     {0.8f,      0.5f}},
     {"ramps",       {0.0f,      0.0f}},
-    {"dir_barrier_oval",       {0.8f,      0.5f}}
-=======
-    // id               friction    restitution
-    {"track",           {0.0f,      0.0f}},
-    {"barrier",         {0.8f,      0.5f}},
-    {"ramps",           {0.0f,      0.0f}},
+    {"dir_barrier_oval",       {0.8f,      0.5f}},
     {"tires_pile_1",    {0.8f,      0.5f}}
->>>>>>> main
 };
 std::unordered_map<std::string, btRigidBody*> rigidBodyMap;
 
-<<<<<<< HEAD
 // Struttura per le coordinate del checkpoint
 struct Checkpoint {
     std::string id;
@@ -56,22 +44,16 @@ std::vector<Checkpoint> checkpoints = {
 std::vector<btRigidBody*> allCheckpointBodies; //variabile che racchiude tutti i checkpoint
 std::vector<btRigidBody*> checkpointsLap; // variabile che racchiude solo i checpoint relativi al giro che si sta percorrendo
 
-int collectedCoins = 0; // Variabile per tenere traccia delle monete
 bool firstLap, secondLap; // Variabile indicare il giro corrente
 bool updateCheckpoints; // Variabile di stato per indicare se i checkpoint devono essere aggiornati
 
-// prototypes declaration
-btBvhTriangleMeshShape* getCollisionShape(std::string filepath);
-void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, const std::string& id, float friction, float restitution);
-void removeRigidBodyFromDynamicsWorld(const std::string& id);
-=======
 // subject to be observed by UI
 Subject collectedCoinsSubject;
 
 // prototypes declaration
 btBvhTriangleMeshShape* getCollisionShape(std::string filepath, std::string format, glm::mat4 TransformMatrix);
-void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, float friction, float restitution);
->>>>>>> main
+void addRigidBodyToDynamicsWorld(btBvhTriangleMeshShape* collisionShape, const std::string& id, float friction, float restitution);
+void removeRigidBodyFromDynamicsWorld(const std::string& id);
 void printWheelPositions(btRaycastVehicle* vehicle);
 void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson);
 void setupCollisionProperties(btCollisionObject* obj);
@@ -112,7 +94,7 @@ public:
             return 0;
         }
         else if ((obj0 == vehicle->getRigidBody() && isCheckpoint(obj1)) || (obj1 == vehicle->getRigidBody() && isCheckpoint(obj0))) {
-            std::cout << "collision" << std::endl;
+            //std::cout << "collision" << std::endl;
             if (isNextCheckpoint(obj0 == vehicle->getRigidBody() ? obj1 : obj0)) {
                 isCheckpointHit = true;
                 nextCheckpointIndex++;
@@ -139,7 +121,7 @@ public:
             return obj == checkpointsLap[nextCheckpointIndex];
         }
         else {
-            std::cerr << "nextCheckpointIndex is out of bounds!" << std::endl;
+            //std::cerr << "nextCheckpointIndex is out of bounds!" << std::endl;
             return false;
         }
     }
@@ -191,93 +173,87 @@ void initPhysics(json sceneJson) {
     
     for (auto it = physicsObjectsMap.begin(); it != physicsObjectsMap.end(); ++it) {
         std::string id = it->first;
-        
+
         // Cercare l'istanza corrispondente nell'array "instances"
         auto instanceIt = std::find_if(sceneJson["instances"].begin(), sceneJson["instances"].end(), [&id](const json& instance) {
-               return instance["id"] == id;
-        });
-
-<<<<<<< HEAD
-        if (modelIt != sceneJson["models"].end()) {
-            std::string modelFilename = (*modelIt)["model"];
-            btBvhTriangleMeshShape* collisionShape = getCollisionShape(modelFilename);
-            collisionShapes.push_back(collisionShape);
-            addRigidBodyToDynamicsWorld(collisionShape, id, it->second[0], it->second[1]);
-=======
-        if (instanceIt != sceneJson["instances"].end()) {
-            std::string modelId = (*instanceIt)["model"];
-            
-            // Cercare il modello corrispondente nell'array "models" usando il modelId trovato nell'istanza
-            auto modelIt = std::find_if(sceneJson["models"].begin(), sceneJson["models"].end(), [&modelId](const json& model) {
-                   return model["id"] == modelId;
+            return instance["id"] == id;
             });
 
+        if (instanceIt != sceneJson["instances"].end()) {
+            std::string modelId = (*instanceIt)["model"];
+
+            // Cercare il modello corrispondente nell'array "models" usando il modelId trovato nell'istanza
+            auto modelIt = std::find_if(sceneJson["models"].begin(), sceneJson["models"].end(), [&modelId](const json& model) {
+                return model["id"] == modelId;
+                });
+
             if (modelIt != sceneJson["models"].end()) {
-                
+
                 std::string modelFilename = (*modelIt)["model"];
                 std::string format = (*modelIt)["format"];
                 json TMjson = (*instanceIt)["transform"];
-                
+
                 float TMj[16];
-                for(int l = 0; l < 16; l++) {TMj[l] = TMjson[l];}
-                glm::mat4 TransformMatrix = glm::mat4(TMj[0],TMj[4],TMj[8],TMj[12],TMj[1],TMj[5],TMj[9],TMj[13],TMj[2],TMj[6],TMj[10],TMj[14],TMj[3],TMj[7],TMj[11],TMj[15]);
-                
+                for (int l = 0; l < 16; l++) { TMj[l] = TMjson[l]; }
+                glm::mat4 TransformMatrix = glm::mat4(TMj[0], TMj[4], TMj[8], TMj[12], TMj[1], TMj[5], TMj[9], TMj[13], TMj[2], TMj[6], TMj[10], TMj[14], TMj[3], TMj[7], TMj[11], TMj[15]);
+
                 btBvhTriangleMeshShape* collisionShape = getCollisionShape(modelFilename, format, TransformMatrix);
                 collisionShapes.push_back(collisionShape);
-                addRigidBodyToDynamicsWorld(collisionShape, it->second[0], it->second[1]);
-                
-            } else {
+                addRigidBodyToDynamicsWorld(collisionShape, modelId, it->second[0], it->second[1]);
+
+            }
+            else {
                 std::cout << "Model for " << modelId << " not found!" << std::endl;
                 exit(-1);
             }
->>>>>>> main
-        } else {
+        }
+        else {
             std::cout << "Instance for " << id << " not found!" << std::endl;
             exit(-1);
         }
     }
 
-    //initiate coins
-    for (const auto& instance : sceneJson["instances"]) {
-        if (instance["model"] == "coin") {
-            // Converti i dati della trasformazione in btTransform
-            auto& t = instance["transform"];
-            float matrix[16];
-            for (int i = 0; i < 16; ++i) {
-                matrix[i] = t[i];
+        //initiate coins
+        for (const auto& instance : sceneJson["instances"]) {
+            if (instance["model"] == "coin") {
+                // Converti i dati della trasformazione in btTransform
+                auto& t = instance["transform"];
+                float matrix[16];
+                for (int i = 0; i < 16; ++i) {
+                    matrix[i] = t[i];
+                }
+
+                // Conversione della matrice row-major in column-major
+                btMatrix3x3 basis(
+                    matrix[0], matrix[1], matrix[2],
+                    matrix[4], matrix[5], matrix[6],
+                    matrix[8], matrix[9], matrix[10]
+                );
+                btVector3 origin(matrix[3], matrix[7], matrix[11]);
+
+                btTransform transform(basis, origin);
+
+                std::string coinID = instance["id"];
+                btCollisionShape* shape = new btSphereShape(1.0f);
+                btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+                btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0, 0, 0));
+                btRigidBody* coin = new btRigidBody(rigidBodyCI);
+                coin->setCollisionFlags(coin->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+
+                coin->setWorldTransform(transform);
+                coin->setUserPointer(new std::string(coinID)); // Store the ID in the user pointer
+
+                dynamicsWorld->addRigidBody(coin);
+                coinColliders.push_back(coin);
+
+                // Associare la moneta con il suo ID
+                coinMap[coinID] = coin;
             }
-
-            // Conversione della matrice row-major in column-major
-            btMatrix3x3 basis(
-                matrix[0], matrix[1], matrix[2],
-                matrix[4], matrix[5], matrix[6],
-                matrix[8], matrix[9], matrix[10]
-            );
-            btVector3 origin(matrix[3], matrix[7], matrix[11]);
-
-            btTransform transform(basis, origin);
-            
-            std::string coinID = instance["id"];
-            btCollisionShape* shape = new btSphereShape(1.0f);
-            btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
-            btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, shape, btVector3(0, 0, 0));
-            btRigidBody* coin = new btRigidBody(rigidBodyCI);
-            coin->setCollisionFlags(coin->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-
-            coin->setWorldTransform(transform);
-            coin->setUserPointer(new std::string(coinID)); // Store the ID in the user pointer
-
-            dynamicsWorld->addRigidBody(coin);
-            coinColliders.push_back(coin);
-
-            // Associare la moneta con il suo ID
-            coinMap[coinID] = coin;
         }
-    }
 
-    //initiate checkpoint
-    createCheckpoints();
-}
+        //initiate checkpoint
+        createCheckpoints();
+    }
 
 void updatePhysics(float deltaT) {
     dynamicsWorld->stepSimulation(deltaT, 60);
@@ -505,18 +481,14 @@ void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
     dynamicsWorld->contactTest(vehicle->getRigidBody(), *gameObjectCallback);
     if (gameObjectCallback->isCoinCollected) {
         collectedCoins += 1;
-<<<<<<< HEAD
         std::string collectedCoinID = gameObjectCallback->collectedCoinID;
-=======
         collectedCoinsSubject.notifyCoinCollected(collectedCoins);
-        std::string collectedCoinID = coinCallback->collectedCoinID;
->>>>>>> main
         coinsToRemove.push_back(collectedCoinID);
         gameObjectCallback->isCoinCollected = false; // Resetta il flag
     }
 
     if (gameObjectCallback->isCheckpointHit) {
-        std::cout << "Checkpoint attraversato: " << gameObjectCallback->nextCheckpointIndex << std::endl;
+        //std::cout << "Checkpoint attraversato: " << gameObjectCallback->nextCheckpointIndex << std::endl;
         gameObjectCallback->isCheckpointHit = false; // Resetta il flag
     }
 
@@ -585,15 +557,29 @@ void changeCircuit(nlohmann::json& sceneJson) {
         secondLap = true;
         removeRigidBodyFromDynamicsWorld("dir_barrier_oval");
         // Aggiungere il corpo rigido per dir_barrier_inner
+        // Cercare l'istanza corrispondente nell'array "instances"
+        std::string targetId = "dir_barrier_inner";
+        auto instanceIt = std::find_if(sceneJson["instances"].begin(), sceneJson["instances"].end(), [&targetId](const json& instance) {
+            return instance["id"] == "dir_barrier_inner";
+            });
         auto modelIt = std::find_if(sceneJson["models"].begin(), sceneJson["models"].end(), [](const json& model) {
             return model["id"] == "dir_barrier_inner";
             });
 
         if (modelIt != sceneJson["models"].end()) {
+
             std::string modelFilename = (*modelIt)["model"];
-            btBvhTriangleMeshShape* collisionShape = getCollisionShape(modelFilename);
+            std::string format = (*modelIt)["format"];
+            json TMjson = (*instanceIt)["transform"];
+
+            float TMj[16];
+            for (int l = 0; l < 16; l++) { TMj[l] = TMjson[l]; }
+            glm::mat4 TransformMatrix = glm::mat4(TMj[0], TMj[4], TMj[8], TMj[12], TMj[1], TMj[5], TMj[9], TMj[13], TMj[2], TMj[6], TMj[10], TMj[14], TMj[3], TMj[7], TMj[11], TMj[15]);
+
+            btBvhTriangleMeshShape* collisionShape = getCollisionShape(modelFilename, format, TransformMatrix);
             collisionShapes.push_back(collisionShape);
-            addRigidBodyToDynamicsWorld(collisionShape, "dir_barrier_inner", 0.8f, 0.5f);
+            addRigidBodyToDynamicsWorld(collisionShape, "dir_barrier_inner", 0.8, 0.5);
+
         }
         else {
             std::cout << "Model for dir_barrier_inner not found!" << std::endl;
