@@ -162,7 +162,7 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
             }
         }
         else{
-            std::cout << "Max Speed Reached!" << std::endl;
+            // std::cout << "Max Speed Reached!" << std::endl;
             vehicle->applyEngineForce(0.0f, 2); // Ruote posteriori
             vehicle->applyEngineForce(0.0f, 3);
         }
@@ -185,6 +185,8 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
     int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
     if(lastSpeedKmh != currentSpeedKmh){
+        // fix the flickering speed number at maxspeed
+        if(currentSpeedKmh == std::abs(std::floor(maxSpeed * 3.6))) return;
         speedSubject.notifySpeedChanged(currentSpeedKmh);
         lastSpeedKmh = currentSpeedKmh;
     }
@@ -234,10 +236,10 @@ void printVehicleStatus(btRaycastVehicle* vehicle) {
     // Stampa la posizione del telaio
     btTransform chassisTransform = vehicle->getChassisWorldTransform();
     btVector3 chassisPosition = chassisTransform.getOrigin();
-    std::cout << "Chassis Position: ("
+    /*std::cout << "Chassis Position: ("
         << chassisPosition.getX() << ", "
         << chassisPosition.getY() << ", "
-        << chassisPosition.getZ() << ")" << std::endl;
+        << chassisPosition.getZ() << ")" << std::endl;*/
     
     /*std::cout << "Linear velocity: " << vehicle->getRigidBody()->getLinearVelocity().getX() <<
         ", " << vehicle->getRigidBody()->getLinearVelocity().getY() <<
@@ -246,7 +248,7 @@ void printVehicleStatus(btRaycastVehicle* vehicle) {
         ", " << vehicle->getRigidBody()->getAngularVelocity().getY() <<
         ", " << vehicle->getRigidBody()->getAngularVelocity().getZ() << std::endl;*/
     
-    std::cout << "Speed: " << vehicle->getRigidBody()->getLinearVelocity().length() << std::endl;
+    //std::cout << "Speed: " << vehicle->getRigidBody()->getLinearVelocity().length() << std::endl;
 
     // Stampa la posizione di una ruota (ad esempio, la ruota anteriore sinistra)
     /*int wheelIndex = 0; // Indice della ruota da stampare

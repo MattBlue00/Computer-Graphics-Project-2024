@@ -210,8 +210,10 @@ protected:
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
         // binds the pipeline
         P.bind(commandBuffer);
-
         SC.populateCommandBuffer(commandBuffer, currentImage, P);
+    }
+    
+    void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage){
         uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
     }
 
@@ -273,13 +275,16 @@ protected:
         static glm::vec3 dampedCamPos = CamPos; // MUST stay here
 
         
-
         // checks if space was pressed
         bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
         bool shouldRebuildPipelineUI = uiManager.shouldUpdateUI();
         // if so, rebuilds pipeline
-        if(shouldRebuildPipeline || shouldRebuildPipelineUI){
+        if(shouldRebuildPipeline){
             RebuildPipeline();
+        }
+        if(shouldRebuildPipelineUI){
+            //uiManager.draw(currentImage);
+            //RebuildPipeline();
         }
         
         // checks if esc was pressed
