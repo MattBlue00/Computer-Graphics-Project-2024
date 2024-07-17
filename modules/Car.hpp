@@ -8,13 +8,15 @@
 const float maxEngineForce = 6000.0f; // Maximum force applied to wheels
 const float maxBrakeForce = 200.0f; // Maximum brake force
 const float steeringIncrement = 0.08f;
-const float steeringDegradationExponent = 0.25f;
+const float steeringDegradationExponent = 0.15f;
 const float speedStartSteeringDegradation = 10.0f;
 const float steeringMax = 0.3f;
 const float steeringMin = 0.001f;
 const float maxSpeed = 50.0f;
 
 const float raycastDistance = 2.0f;
+
+bool goingOnwards = true;
 
 btRaycastVehicle* vehicle;
 
@@ -86,12 +88,12 @@ void initCar() {
     vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Rear left wheel
-    connectionPointCS0 = btVector3(-1, 0.5, -2);
+    connectionPointCS0 = btVector3(-1, 0.5, -1.88);
     isFrontWheel = false;
     vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Rear right wheel
-    connectionPointCS0 = btVector3(1, 0.5, -2);
+    connectionPointCS0 = btVector3(1, 0.5, -1.88);
     isFrontWheel = false;
     vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
@@ -160,28 +162,45 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     float engineForce = 0.0f;
     float brakeForce = 0.0f;
     float steering = vehicle->getSteeringValue(0); // Assumi che le ruote anteriori siano a indice 0 e 1
+    
+    // Calcolo della velocità attuale
+    float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
 
     // Movimento avanti/indietro
     if (carMovementInput.z < 0) { // W premuto
         engineForce = maxEngineForce;
         brakeForce = 0.0f;
+        if(isVehicleStopped(vehicle, 0.5f) && !goingOnwards){
+            goingOnwards = true;
+        }
     }
-    else if (carMovementInput.z > 0) { // S premuto
+    else if (carMovementInput.z > 0 && goingOnwards) { // S premuto
+        engineForce = 0.0f; // Forza negativa per andare in retro
+        brakeForce = maxBrakeForce;
+        if(isVehicleStopped(vehicle, 0.5f)){
+            goingOnwards = false;
+        }
+    }
+    else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
         engineForce = -maxEngineForce; // Forza negativa per andare in retro
         brakeForce = 0.0f;
+        
     }
     else { // Nessun input
-        engineForce = 0.0f;
         if (isVehicleStopped(vehicle, 0.5f)){
             brakeForce = maxBrakeForce;
+            engineForce = 0.0f;
         }
         else {
+            if(isVehicleStopped(vehicle, 3.0f)){
+                engineForce = 0.0f;
+            }
+            else{
+                engineForce = maxEngineForce * 0.75f * glm::clamp(currentSpeed / maxSpeed, 0.0f, 1.0f);
+            }
             brakeForce = 0.0f;
         }
     }
-
-    // Calcolo della velocità attuale
-    float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
 
     // Fattore di riduzione della sterzata basato sulla velocità
     float speedFactor = currentSpeed < speedStartSteeringDegradation ?
