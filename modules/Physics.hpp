@@ -276,7 +276,7 @@ btTriangleMesh* loadMeshFromMGCG(const std::string& filePath, glm::mat4 Transfor
 
     sscanf(reinterpret_cast<char* const>(&decrypted[0]), "%d", &size);
     decomp = calloc(size, 1);
-    sinflate(decomp, (int)size, &decrypted[16], decrypted.size() - 16);
+    sinflate(decomp, (int)size, &decrypted[16], (int)decrypted.size() - 16);
 
     if (!loader.LoadASCIIFromString(&model, &warn, &err, reinterpret_cast<const char*>(decomp), size, "/")) {
         throw std::runtime_error(warn + err);

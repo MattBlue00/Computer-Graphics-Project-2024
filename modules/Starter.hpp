@@ -46,20 +46,45 @@
 #include <sinfl.h>
 
 // For compile compatibility issues
+#ifndef M_E
 #define M_E			2.7182818284590452354	/* e */
+#endif
+#ifndef M_LOG2E
 #define M_LOG2E		1.4426950408889634074	/* log_2 e */
+#endif
+#ifndef M_LOG10E
 #define M_LOG10E	0.43429448190325182765	/* log_10 e */
+#endif
+#ifndef M_LN2
 #define M_LN2		0.69314718055994530942	/* log_e 2 */
+#endif
+#ifndef M_LN10
 #define M_LN10		2.30258509299404568402	/* log_e 10 */
+#endif
+#ifndef M_PI
 #define M_PI		3.14159265358979323846	/* pi */
+#endif
+#ifndef M_PI_2
 #define M_PI_2		1.57079632679489661923	/* pi/2 */
+#endif
+#ifndef M_PI_4
 #define M_PI_4		0.78539816339744830962	/* pi/4 */
+#endif
+#ifndef M_1_PI
 #define M_1_PI		0.31830988618379067154	/* 1/pi */
+#endif
+#ifndef M_2_PI
 #define M_2_PI		0.63661977236758134308	/* 2/pi */
+#endif
+#ifndef M_2_SQRTPI
 #define M_2_SQRTPI	1.12837916709551257390	/* 2/sqrt(pi) */
+#endif
+#ifndef M_SQRT2
 #define M_SQRT2		1.41421356237309504880	/* sqrt(2) */
+#endif
+#ifndef M_SQRT1_2
 #define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
-
+#endif
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -1585,7 +1610,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 					VK_SUBPASS_CONTENTS_INLINE);			
 	
 
-			populateCommandBuffer(commandBuffers[i], i);
+			populateCommandBuffer(commandBuffers[i], (int)i);
             
 			vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -2606,7 +2631,7 @@ void Model::loadModelOBJ(std::string file) {
 			}
 			
 			vertices.insert(vertices.end(), vertex.begin(), vertex.end());
-			indices.push_back((vertices.size()/mainStride)-1);
+			indices.push_back((int)(vertices.size()/mainStride)-1);
 		}
 	}
 	std::cout << "[OBJ] Vertices: "<< vertices.size() << "\n";
@@ -2645,7 +2670,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 //}
 
 		decomp = calloc(size, 1);
-		sinflate(decomp, (int)size, &decrypted[16], decrypted.size()-16);
+		sinflate(decomp, (int)size, &decrypted[16], (int)decrypted.size()-16);
 		
 		if (!loader.LoadASCIIFromString(&model, &warn, &err, 
 						reinterpret_cast<const char *>(decomp), size, "/")) {
@@ -2687,7 +2712,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 				const tinygltf::BufferView &posView = model.bufferViews[posAccessor.bufferView];
 				bufferPos = reinterpret_cast<const float *>(&(model.buffers[posView.buffer].data[posAccessor.byteOffset + posView.byteOffset]));
 				meshHasPos = true;
-				cntPos = posAccessor.count;
+				cntPos = (int)posAccessor.count;
 				if(cntPos > cntTot) cntTot = cntPos;
 			} else {
 				if(VD->Position.hasIt) {
@@ -2701,7 +2726,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 				const tinygltf::BufferView &normView = model.bufferViews[normAccessor.bufferView];
 				bufferNormals = reinterpret_cast<const float *>(&(model.buffers[normView.buffer].data[normAccessor.byteOffset + normView.byteOffset]));
 				meshHasNorm = true;
-				cntNorm = normAccessor.count;
+				cntNorm = (int)normAccessor.count;
 				if(cntNorm > cntTot) cntTot = cntNorm;
 			} else {
 				if(VD->Normal.hasIt) {
@@ -2715,7 +2740,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 				const tinygltf::BufferView &tanView = model.bufferViews[tanAccessor.bufferView];
 				bufferTangents = reinterpret_cast<const float *>(&(model.buffers[tanView.buffer].data[tanAccessor.byteOffset + tanView.byteOffset]));
 				meshHasTan = true;
-				cntTan = tanAccessor.count;
+				cntTan = (int)tanAccessor.count;
 				if(cntTan > cntTot) cntTot = cntTan;
 			} else {
 				if(VD->Tangent.hasIt) {
@@ -2729,7 +2754,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 				const tinygltf::BufferView &uvView = model.bufferViews[uvAccessor.bufferView];
 				bufferTexCoords = reinterpret_cast<const float *>(&(model.buffers[uvView.buffer].data[uvAccessor.byteOffset + uvView.byteOffset]));
 				meshHasUV = true;
-				cntUV = uvAccessor.count;
+				cntUV = (int)uvAccessor.count;
 				if(cntUV > cntTot) cntTot = cntUV;
 			} else {
 				if(VD->UV.hasIt) {
@@ -3065,7 +3090,7 @@ void Model::bind(VkCommandBuffer commandBuffer) {
 
 
 void Texture::createTextureImage(std::string files[], VkFormat Fmt = VK_FORMAT_R8G8B8A8_SRGB) {
-	int texWidth, texHeight, texChannels;
+    int texWidth = 0, texHeight = 0, texChannels;
 	int curWidth = -1, curHeight = -1, curChannels = -1;
 	stbi_uc* pixels[maxImgs];
 	
@@ -3363,7 +3388,7 @@ void Pipeline::create() {
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType =
 		VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = DSL.size();
+	pipelineLayoutInfo.setLayoutCount = (int)DSL.size();
 	pipelineLayoutInfo.pSetLayouts = DSL.data();
 	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
