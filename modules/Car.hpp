@@ -3,6 +3,7 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "Physics.hpp"
+#include "Audio.hpp"
 #include "Subject.hpp"
 
 const float maxEngineForce = 6000.0f; // Maximum force applied to wheels
@@ -184,7 +185,6 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
         engineForce = -maxEngineForce; // Forza negativa per andare in retro
         brakeForce = 0.0f;
-        
     }
     else { // Nessun input
         if (isVehicleStopped(vehicle, 0.5f)){

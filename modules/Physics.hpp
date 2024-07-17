@@ -2,8 +2,8 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
+#include "Audio.hpp"
 #include "Subject.hpp"
-
 
 // physics global properties
 btBroadphaseInterface* broadphase;
@@ -83,6 +83,8 @@ public:
             delete collectedCoin->getCollisionShape();
             delete static_cast<std::string*>(collectedCoin->getUserPointer());
             delete collectedCoin;
+            
+            playSound("COIN_SFX", 1.0f);
 
             std::cout << "Coin '" << coinID << "' removed successfully." << std::endl;
         }

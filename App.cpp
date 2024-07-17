@@ -151,7 +151,7 @@ protected:
         collectedCoinsSubject.addObserver(&uiManager);
         
         // initializes the audio system and loads the sounds
-        initAudio(config["music"]);
+        initAudio(config["audio"]);
         
         // init lights
         //initLights();
