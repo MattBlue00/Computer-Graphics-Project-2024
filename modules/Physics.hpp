@@ -19,21 +19,16 @@ std::vector<btRigidBody*> coinColliders;
 std::unordered_map<std::string, btRigidBody*> coinMap;
 
 std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
-    // id               friction    restitution
-    {"track",           {0.0f,      0.0f}},
-    {"barrier",         {0.8f,      0.5f}},
-    {"ramps",           {0.0f,      0.0f}},
-    {"tires_pile_1",    {0.8f,      0.5f}},
-    {"tires_pile_2",    {0.8f,      0.5f}},
-    {"tires_pile_3",    {0.8f,      0.5f}},
-    {"tires_pile_4",    {0.8f,      0.5f}},
-    {"tires_pile_5",    {0.8f,      0.5f}}
-    // id           friction    restitution
-    {"track",       {0.9f,      0.0f}},
-    {"barrier",     {0.8f,      0.5f}},
-    {"ramps",       {0.0f,      0.0f}},
-    {"dir_barrier_oval",       {0.8f,      0.5f}},
-    {"tires_pile_1",    {0.8f,      0.5f}}
+    // id                       friction    restitution
+    {"track",                   {0.0f,      0.0f}},
+    {"barrier",                 {0.8f,      0.5f}},
+    {"ramps",                   {0.0f,      0.0f}},
+    {"tires_pile_1",            {0.8f,      0.5f}},
+    {"tires_pile_2",            {0.8f,      0.5f}},
+    {"tires_pile_3",            {0.8f,      0.5f}},
+    {"tires_pile_4",            {0.8f,      0.5f}},
+    {"tires_pile_5",            {0.8f,      0.5f}},
+    {"dir_barrier_oval",        {0.8f,      0.5f}}
 };
 std::unordered_map<std::string, btRigidBody*> rigidBodyMap;
 

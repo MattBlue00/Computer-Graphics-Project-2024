@@ -11,13 +11,12 @@ std::string airplane = "airplane";
 std::string airship = "airship";
 std::string earth = "earth";
 std::string moon = "moon";
-std::vector<std::string> car = {"car"};
-std::vector<std::string> dir_barrier = { "dir_barrier_oval", "dir_barrier_inner", };
+std::vector<std::string> dir_barrier = { "dir_barrier_oval", "dir_barrier_inner" };
 std::vector<std::string> coins = {};
 std::vector<std::string> spaceShips = { "space_ship_1", "space_ship_2", "space_ship_3" };
 std::vector<std::string> world = {
     "track", "barrier", "finish_line_top", "finish_line_floor", "ramps", "towers", "banners",
-    "big_stars", "rainbows", "arcade_1", "arcade_2", "dir_barrier_oval", "dir_banners", "rocket",
+    "big_stars", "rainbows", "arcade_1", "arcade_2", "dir_banners", "rocket",
     "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "tires_pile_1",
     "tires_pile_2", "tires_pile_3", "tires_pile_4", "tires_pile_5",
     "traffic_lights", "sun", "asteroids", "gamepad", "police_car", "world", "clouds", "satellite",
