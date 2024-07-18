@@ -31,6 +31,7 @@ const glm::quat ONE_QUAT    = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 // notable angles
 const float DEG_0   = glm::radians(0.0f);
 const float DEG_0_2 = glm::radians(0.2f);
+const float DEG_0_5 = glm::radians(0.5f);
 const float DEG_2_5 = glm::radians(2.5f);
 const float DEG_5   = glm::radians(5.0f);
 const float DEG_20  = glm::radians(20.0f);

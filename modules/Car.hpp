@@ -18,6 +18,7 @@ const float maxSpeed = 50.0f;
 const float raycastDistance = 2.0f;
 
 bool goingOnwards = true;
+bool mayBeBlocked = false;
 
 btRaycastVehicle* vehicle;
 
@@ -25,7 +26,6 @@ btRaycastVehicle* vehicle;
 Subject speedSubject;
 int lastSpeedKmh = 0;
 
-void printVehicleStatus(btRaycastVehicle* vehicle);
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold);
 bool isVehicleBlocked(btRaycastVehicle* vehicle);
 bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRaycastVehicle* vehicle);
@@ -45,7 +45,7 @@ void initCar() {
     localTrans.setOrigin(btVector3(0, 0, 0)); // Chassis remains at the origin
     vehicleShape->addChildShape(localTrans, chassisShape);
 
-    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, -10)));
+    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -0.5, -10)));
     btScalar mass = 1000.0f;
     btVector3 carInertia(0, 0, 0);
     vehicleShape->calculateLocalInertia(mass, carInertia);
@@ -291,8 +291,20 @@ bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold) {
 }
 
 bool isVehicleBlocked(btRaycastVehicle* vehicle) {
-    btVector3 linearVelocity = vehicle->getRigidBody()->getLinearVelocity();
-    return linearVelocity.length() > 0.1f && linearVelocity.length() < 1.0f;
+    float linearVelocity = vehicle->getRigidBody()->getLinearVelocity().length();
+    if(linearVelocity > 0.1f && linearVelocity < 1.0f){
+        if(!mayBeBlocked){
+            mayBeBlocked = true;
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+    else{
+        mayBeBlocked = false;
+        return false;
+    }
 }
 
 bool isVehicleInAir(btRaycastVehicle* vehicle) {
@@ -319,35 +331,6 @@ bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRigidBody* carRigi
 
 bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRaycastVehicle* vehicle){
     return isVehicleInAir(vehicle) && isVehicleInAir(dynamicsWorld, vehicle->getRigidBody());
-}
-
-void printVehicleStatus(btRaycastVehicle* vehicle) {
-    // Stampa la posizione del telaio
-    btTransform chassisTransform = vehicle->getChassisWorldTransform();
-    btVector3 chassisPosition = chassisTransform.getOrigin();
-    /*std::cout << "Chassis Position: ("
-        << chassisPosition.getX() << ", "
-        << chassisPosition.getY() << ", "
-        << chassisPosition.getZ() << ")" << std::endl;*/
-    
-    /*std::cout << "Linear velocity: " << vehicle->getRigidBody()->getLinearVelocity().getX() <<
-        ", " << vehicle->getRigidBody()->getLinearVelocity().getY() <<
-        ", " << vehicle->getRigidBody()->getLinearVelocity().getZ() <<
-        "\nAngular velocity: " << vehicle->getRigidBody()->getAngularVelocity().getX() <<
-        ", " << vehicle->getRigidBody()->getAngularVelocity().getY() <<
-        ", " << vehicle->getRigidBody()->getAngularVelocity().getZ() << std::endl;*/
-    
-    //std::cout << "Speed: " << vehicle->getRigidBody()->getLinearVelocity().length() << std::endl;
-
-    // Stampa la posizione di una ruota (ad esempio, la ruota anteriore sinistra)
-    /*int wheelIndex = 0; // Indice della ruota da stampare
-    btWheelInfo& wheel = vehicle->getWheelInfo(wheelIndex);
-    btTransform wheelTransform = wheel.m_worldTransform;
-    btVector3 wheelPosition = wheelTransform.getOrigin();
-    std::cout << "Wheel " << wheelIndex << " Position: ("
-        << wheelPosition.getX() << ", "
-        << wheelPosition.getY() << ", "
-        << wheelPosition.getZ() << ")" << std::endl;*/
 }
 
 // Funzione per limitare la rotazione del veicolo in aria

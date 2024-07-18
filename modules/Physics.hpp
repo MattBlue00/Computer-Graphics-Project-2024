@@ -22,7 +22,11 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     {"track",           {0.0f,      0.0f}},
     {"barrier",         {0.8f,      0.5f}},
     {"ramps",           {0.0f,      0.0f}},
-    {"tires_pile_1",    {0.8f,      0.5f}}
+    {"tires_pile_1",    {0.8f,      0.5f}},
+    {"tires_pile_2",    {0.8f,      0.5f}},
+    {"tires_pile_3",    {0.8f,      0.5f}},
+    {"tires_pile_4",    {0.8f,      0.5f}},
+    {"tires_pile_5",    {0.8f,      0.5f}}
 };
 
 // subject to be observed by UI
@@ -85,8 +89,6 @@ public:
             delete collectedCoin;
             
             playSound("COIN_SFX", 1.0f);
-
-            std::cout << "Coin '" << coinID << "' removed successfully." << std::endl;
         }
         else {
             std::cout << "Coin '" << coinID << "' not found in coinMap." << std::endl;
