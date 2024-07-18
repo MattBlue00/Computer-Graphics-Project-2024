@@ -11,6 +11,8 @@ std::string airplane = "airplane";
 std::string airship = "airship";
 std::string earth = "earth";
 std::string moon = "moon";
+std::vector<std::string> car = {"car"};
+std::vector<std::string> dir_barrier = { "dir_barrier_oval", "dir_barrier_inner", };
 std::vector<std::string> coins = {};
 std::vector<std::string> spaceShips = { "space_ship_1", "space_ship_2", "space_ship_3" };
 std::vector<std::string> world = {
@@ -62,6 +64,34 @@ void drawWorld(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObjec
         ubo->mMat = scene->I[i].Wm * baseCar;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
+
+        scene->DS[i]->map(currentImage, ubo, sizeof(*ubo), 0);
+        scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
+    }
+}
+
+void drawDirBarrier(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float* usePitch) {
+    for (std::vector<std::string>::iterator it = dir_barrier.begin(); it != dir_barrier.end(); it++) {
+        int i = scene->InstanceIds[it->c_str()];
+
+        // Condizioni per disegnare o rescalare le barriere
+        bool drawOval = firstLap && !secondLap && *it == "dir_barrier_oval";
+        bool drawInner = !firstLap && secondLap && *it == "dir_barrier_inner";
+        bool rescale = (!firstLap && !secondLap) || (firstLap && !secondLap && *it == "dir_barrier_inner") || (!firstLap && secondLap && *it == "dir_barrier_oval");
+
+        if (drawOval || drawInner) {
+            // Disegna la barriera specificata in base al giro
+            ubo->mMat = scene->I[i].Wm * baseCar;
+            ubo->mvpMat = ViewPrj * ubo->mMat;
+            ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
+        }
+        else if (rescale) {
+            // Rescale other barriers to zero
+            glm::mat4 scaledWm = glm::scale(scene->I[i].Wm, glm::vec3(0.0f, 0.0f, 0.0f));
+            ubo->mMat = scaledWm * baseCar;
+            ubo->mvpMat = ViewPrj * ubo->mMat;
+            ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
+        }
 
         scene->DS[i]->map(currentImage, ubo, sizeof(*ubo), 0);
         scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
@@ -241,6 +271,9 @@ void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject*
     // draws the circuit and its fixed decorations
     drawWorld(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
     
+    // draws the dir_barrier that block some path
+    drawDirBarrier(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+
     // draws the coins
     drawCoins(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
     
