@@ -1,9 +1,6 @@
 #ifndef TEXTMAKER_HPP
 #define TEXTMAKER_HPP
 
-#include "Utils.hpp"
-
-
 struct SingleText
 {
     int usedLines;
