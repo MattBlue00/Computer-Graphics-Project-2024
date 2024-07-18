@@ -9,10 +9,10 @@ struct UIManager: public Observer {
     
     // Text Positions
     glm::vec2 outStartTimerPosition = glm::vec2(0.0f, -0.9f);
-    glm::vec2 outTimerPosition = glm::vec2(0.4f, -0.8f);
-    glm::vec2 outLapsPosition = glm::vec2(0.4f, -0.9f);
-    glm::vec2 outSpeedPosition = glm::vec2(0.4f, -0.7f);
-    glm::vec2 outCoinsPosition = glm::vec2(0.4, -0.6f);
+    glm::vec2 outTimerPosition = glm::vec2(0.36f, -0.8f);
+    glm::vec2 outLapsPosition = glm::vec2(0.36f, -0.9f);
+    glm::vec2 outSpeedPosition = glm::vec2(0.36f, -0.7f);
+    glm::vec2 outCoinsPosition = glm::vec2(0.36f, -0.6f);
 
     
     // Text Vectors
@@ -27,7 +27,7 @@ struct UIManager: public Observer {
         {1, {"Time: 00:00"}, 0, 0, outTimerPosition}
     };
     
-    std::vector<SingleText> outLapse = {
+    std::vector<SingleText> outLaps = {
         {1, {"Lap: 1/2"}, 0, 0, outLapsPosition},
         {1, {"Lap: 1/2"}, 0, 0, outLapsPosition}
     };
@@ -59,6 +59,8 @@ struct UIManager: public Observer {
 
     int countdownValue = 3;
     bool isGameStarted = false;
+    bool isGameFinished = false;
+    int lapsLabel = 1;
 
     // init UI
     void init(BaseProject *_BP) {
@@ -66,7 +68,7 @@ struct UIManager: public Observer {
         
         // init TextMakers
         startTimer.init(BP, &outStartTimer);
-        laps.init(BP, &outLapse);
+        laps.init(BP, &outLaps);
         timer.init(BP, &outTimer);
         speed.init(BP, &outSpeed);
         coins.init(BP, &outCoins);
@@ -113,11 +115,12 @@ struct UIManager: public Observer {
     // update function
     void updateUI() {
         if(!isGameStarted) handleStartTimer();  // if start-timer changes update the UI
-        else handleTimer();                    // if real timer changes update UI
+        else if(!isGameFinished) handleTimer(); // if real timer changes update UI
     }
     
     // start-timer handle function
     void handleStartTimer(){
+        // Start timer will be deleted for semaphores
         if (countdownValue <= 0) {
             return; // Stop updating when countdown reaches zero
         }
@@ -174,6 +177,26 @@ struct UIManager: public Observer {
         outCoins[0] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
         outCoins[1] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
         coins.changeText(&outCoins);
+    }
+    
+    void onCheckLaps(int lapsDone) override {
+        // update lap counter (starts from 1)
+        lapsLabel += lapsDone;
+        
+        std:: cout << "this lap is the: " << lapsLabel << "\n";
+
+        // after the second lap stop the timer
+        if(lapsLabel == 3) {
+            std:: cout << "the game is finished lap: " << lapsLabel << "\n";
+            isGameFinished = true;
+            return;
+        }
+        // after the second lap do not update the UI anymore
+        else if(lapsLabel >= 3) return;
+        
+        outLaps[0] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
+        outLaps[1] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
+        laps.changeText(&outLaps);
     }
 };
 

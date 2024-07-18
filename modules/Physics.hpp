@@ -54,6 +54,7 @@ bool updateCheckpoints; // Variabile di stato per indicare se i checkpoint devon
 
 // subject to be observed by UI
 Subject collectedCoinsSubject;
+Subject checkLapsSubject;
 
 // prototypes declaration
 btBvhTriangleMeshShape* getCollisionShape(std::string filepath, std::string format, glm::mat4 TransformMatrix);
@@ -78,6 +79,7 @@ public:
     bool isCheckpointHit = false;
     std::string collectedCoinID;
     int nextCheckpointIndex = 0;
+    bool allCheckpointsCollected = false;
 
     GameObjectCollisionCallback(std::unordered_map<std::string, btRigidBody*>& coinMap,
         std::vector<btRigidBody*>& coinColliders,
@@ -103,14 +105,21 @@ public:
             if (isNextCheckpoint(obj0 == vehicle->getRigidBody() ? obj1 : obj0)) {
                 isCheckpointHit = true;
                 nextCheckpointIndex++;
+                if(allCheckpointsCollected){
+                    // check if a lap is compleated
+                    allCheckpointsCollected = false;
+                    checkLapsSubject.notifyCheckLaps(1);
+                }
                 if (nextCheckpointIndex >= checkpointsLap.size()) {
                     std::cout << "Tutti i checkpoint attraversati" << std::endl;
+                    allCheckpointsCollected = true;
                     changeCircuit(sceneJson);
                     nextCheckpointIndex = 0; // Reset the index for the next lap
                 }
                 return 0;
             }
         }
+        return 0;
     }
 
     bool isCoin(const btCollisionObject* obj) {
@@ -551,7 +560,10 @@ std::vector<btRigidBody*> getCheckpointsForLap(bool firstLap, bool secondLap) {
         checkpointsLap.push_back(allCheckpointBodies[2]); // checkpoint 3
         checkpointsLap.push_back(allCheckpointBodies[3]); // checkpoint 4
     }
-    else checkpointsLap.clear();
+    else {
+        checkpointsLap.clear();
+        checkpointsLap.push_back(allCheckpointBodies[0]); // checkpoint 1
+    }
 
     return checkpointsLap;
 }

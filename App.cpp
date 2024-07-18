@@ -149,6 +149,7 @@ protected:
         // register the UI observers
         speedSubject.addObserver(&uiManager);
         collectedCoinsSubject.addObserver(&uiManager);
+        checkLapsSubject.addObserver(&uiManager);
         
         // initializes the audio system and loads the sounds
         initAudio(config["audio"]);

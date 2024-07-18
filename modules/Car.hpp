@@ -13,7 +13,7 @@ const float steeringDegradationExponent = 0.15f;
 const float speedStartSteeringDegradation = 10.0f;
 const float steeringMax = 0.3f;
 const float steeringMin = 0.001f;
-const float maxSpeed = 50.0f;
+const float maxSpeed = 50.52f; // 181kmh
 
 const float raycastDistance = 2.0f;
 
