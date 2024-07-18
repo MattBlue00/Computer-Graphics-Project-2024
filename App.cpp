@@ -76,12 +76,12 @@ protected:
         windowHeight = 600;
         windowTitle = "Rainbow Stadium: Time Attack!";
         windowResizable = GLFW_TRUE;
-        initialBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f}; // black
+        initialBackgroundColor = {0.01f, 0.01f, 0.08f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 300; // FIXME
-        texturesInPool = 300; // FIXME
-        setsInPool = 300; // FIXME
+        uniformBlocksInPool = 400; // FIXME
+        texturesInPool = 400; // FIXME
+        setsInPool = 400; // FIXME
 
         AspectRatio = 4.0f / 3.0f;
     }
@@ -152,7 +152,7 @@ protected:
         checkLapsSubject.addObserver(&uiManager);
         
         // initializes the audio system and loads the sounds
-        initAudio(config["music"]);
+        initAudio(config["audio"]);
         
         // init lights
         //initLights();

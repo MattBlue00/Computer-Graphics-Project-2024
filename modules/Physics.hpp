@@ -2,6 +2,7 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
+#include "Audio.hpp"
 #include "Utils.hpp"
 #include "Subject.hpp"
 
@@ -18,12 +19,16 @@ std::vector<btRigidBody*> coinColliders;
 std::unordered_map<std::string, btRigidBody*> coinMap;
 
 std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
-    // id           friction    restitution
-    {"track",       {0.9f,      0.0f}},
-    {"barrier",     {0.8f,      0.5f}},
-    {"ramps",       {0.0f,      0.0f}},
-    {"dir_barrier_oval",       {0.8f,      0.5f}},
-    {"tires_pile_1",    {0.8f,      0.5f}}
+    // id                       friction    restitution
+    {"track",                   {0.0f,      0.0f}},
+    {"barrier",                 {0.8f,      0.5f}},
+    {"ramps",                   {0.0f,      0.0f}},
+    {"tires_pile_1",            {0.8f,      0.5f}},
+    {"tires_pile_2",            {0.8f,      0.5f}},
+    {"tires_pile_3",            {0.8f,      0.5f}},
+    {"tires_pile_4",            {0.8f,      0.5f}},
+    {"tires_pile_5",            {0.8f,      0.5f}},
+    {"dir_barrier_oval",        {0.8f,      0.5f}}
 };
 std::unordered_map<std::string, btRigidBody*> rigidBodyMap;
 
@@ -153,6 +158,8 @@ public:
             delete collectedCoin->getCollisionShape();
             delete static_cast<std::string*>(collectedCoin->getUserPointer());
             delete collectedCoin;
+            
+            playSound("COIN_SFX", 1.0f);
         }
         else {
             std::cout << "Coin '" << coinID << "' not found in coinMap." << std::endl;
@@ -353,7 +360,7 @@ btTriangleMesh* loadMeshFromMGCG(const std::string& filePath, glm::mat4 Transfor
 
     sscanf(reinterpret_cast<char* const>(&decrypted[0]), "%d", &size);
     decomp = calloc(size, 1);
-    sinflate(decomp, (int)size, &decrypted[16], decrypted.size() - 16);
+    sinflate(decomp, (int)size, &decrypted[16], (int)decrypted.size() - 16);
 
     if (!loader.LoadASCIIFromString(&model, &warn, &err, reinterpret_cast<const char*>(decomp), size, "/")) {
         throw std::runtime_error(warn + err);
@@ -509,7 +516,7 @@ void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
 
 void createCheckpoints() {
     for (const auto& checkpoint : checkpoints) {
-        // Creazione del collision shape (usiamo un box shape per semplicità)
+        // Creazione del collision shape (usiamo un box shape per semplicitâ€¡)
         btCollisionShape* checkpointShape = new btBoxShape(checkpoint.halfExtents);
 
         // Creazione della trasformazione per il checkpoint

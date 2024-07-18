@@ -3,12 +3,13 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "Physics.hpp"
+#include "Audio.hpp"
 #include "Subject.hpp"
 
 const float maxEngineForce = 6000.0f; // Maximum force applied to wheels
 const float maxBrakeForce = 200.0f; // Maximum brake force
 const float steeringIncrement = 0.08f;
-const float steeringDegradationExponent = 0.25f;
+const float steeringDegradationExponent = 0.15f;
 const float speedStartSteeringDegradation = 10.0f;
 const float steeringMax = 0.3f;
 const float steeringMin = 0.001f;
@@ -16,13 +17,15 @@ const float maxSpeed = 50.52f; // 181kmh
 
 const float raycastDistance = 2.0f;
 
+bool goingOnwards = true;
+bool mayBeBlocked = false;
+
 btRaycastVehicle* vehicle;
 
 // subject to be observed by UI
 Subject speedSubject;
 int lastSpeedKmh = 0;
 
-void printVehicleStatus(btRaycastVehicle* vehicle);
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold);
 bool isVehicleBlocked(btRaycastVehicle* vehicle);
 bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRaycastVehicle* vehicle);
@@ -42,7 +45,7 @@ void initCar() {
     localTrans.setOrigin(btVector3(0, 0, 0)); // Chassis remains at the origin
     vehicleShape->addChildShape(localTrans, chassisShape);
 
-    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, -10)));
+    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -0.5, -10)));
     btScalar mass = 1000.0f;
     btVector3 carInertia(0, 0, 0);
     vehicleShape->calculateLocalInertia(mass, carInertia);
@@ -86,12 +89,12 @@ void initCar() {
     vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Rear left wheel
-    connectionPointCS0 = btVector3(-1, 0.5, -2);
+    connectionPointCS0 = btVector3(-1, 0.5, -1.88);
     isFrontWheel = false;
     vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
     // Rear right wheel
-    connectionPointCS0 = btVector3(1, 0.5, -2);
+    connectionPointCS0 = btVector3(1, 0.5, -1.88);
     isFrontWheel = false;
     vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, tuning, isFrontWheel);
 
@@ -160,28 +163,44 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     float engineForce = 0.0f;
     float brakeForce = 0.0f;
     float steering = vehicle->getSteeringValue(0); // Assumi che le ruote anteriori siano a indice 0 e 1
+    
+    // Calcolo della velocità attuale
+    float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
 
     // Movimento avanti/indietro
     if (carMovementInput.z < 0) { // W premuto
         engineForce = maxEngineForce;
         brakeForce = 0.0f;
+        if(isVehicleStopped(vehicle, 0.5f) && !goingOnwards){
+            goingOnwards = true;
+        }
     }
-    else if (carMovementInput.z > 0) { // S premuto
+    else if (carMovementInput.z > 0 && goingOnwards) { // S premuto
+        engineForce = 0.0f; // Forza negativa per andare in retro
+        brakeForce = maxBrakeForce;
+        if(isVehicleStopped(vehicle, 0.5f)){
+            goingOnwards = false;
+        }
+    }
+    else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
         engineForce = -maxEngineForce; // Forza negativa per andare in retro
         brakeForce = 0.0f;
     }
     else { // Nessun input
-        engineForce = 0.0f;
         if (isVehicleStopped(vehicle, 0.5f)){
             brakeForce = maxBrakeForce;
+            engineForce = 0.0f;
         }
         else {
+            if(isVehicleStopped(vehicle, 3.0f)){
+                engineForce = 0.0f;
+            }
+            else{
+                engineForce = maxEngineForce * 0.75f * glm::clamp(currentSpeed / maxSpeed, 0.0f, 1.0f);
+            }
             brakeForce = 0.0f;
         }
     }
-
-    // Calcolo della velocità attuale
-    float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
 
     // Fattore di riduzione della sterzata basato sulla velocità
     float speedFactor = currentSpeed < speedStartSteeringDegradation ?
@@ -272,8 +291,20 @@ bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold) {
 }
 
 bool isVehicleBlocked(btRaycastVehicle* vehicle) {
-    btVector3 linearVelocity = vehicle->getRigidBody()->getLinearVelocity();
-    return linearVelocity.length() > 0.1f && linearVelocity.length() < 1.0f;
+    float linearVelocity = vehicle->getRigidBody()->getLinearVelocity().length();
+    if(linearVelocity > 0.1f && linearVelocity < 1.0f){
+        if(!mayBeBlocked){
+            mayBeBlocked = true;
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+    else{
+        mayBeBlocked = false;
+        return false;
+    }
 }
 
 bool isVehicleInAir(btRaycastVehicle* vehicle) {
@@ -300,35 +331,6 @@ bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRigidBody* carRigi
 
 bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRaycastVehicle* vehicle){
     return isVehicleInAir(vehicle) && isVehicleInAir(dynamicsWorld, vehicle->getRigidBody());
-}
-
-void printVehicleStatus(btRaycastVehicle* vehicle) {
-    // Stampa la posizione del telaio
-    btTransform chassisTransform = vehicle->getChassisWorldTransform();
-    btVector3 chassisPosition = chassisTransform.getOrigin();
-    /*std::cout << "Chassis Position: ("
-        << chassisPosition.getX() << ", "
-        << chassisPosition.getY() << ", "
-        << chassisPosition.getZ() << ")" << std::endl;*/
-    
-    /*std::cout << "Linear velocity: " << vehicle->getRigidBody()->getLinearVelocity().getX() <<
-        ", " << vehicle->getRigidBody()->getLinearVelocity().getY() <<
-        ", " << vehicle->getRigidBody()->getLinearVelocity().getZ() <<
-        "\nAngular velocity: " << vehicle->getRigidBody()->getAngularVelocity().getX() <<
-        ", " << vehicle->getRigidBody()->getAngularVelocity().getY() <<
-        ", " << vehicle->getRigidBody()->getAngularVelocity().getZ() << std::endl;*/
-    
-    //std::cout << "Speed: " << vehicle->getRigidBody()->getLinearVelocity().length() << std::endl;
-
-    // Stampa la posizione di una ruota (ad esempio, la ruota anteriore sinistra)
-    /*int wheelIndex = 0; // Indice della ruota da stampare
-    btWheelInfo& wheel = vehicle->getWheelInfo(wheelIndex);
-    btTransform wheelTransform = wheel.m_worldTransform;
-    btVector3 wheelPosition = wheelTransform.getOrigin();
-    std::cout << "Wheel " << wheelIndex << " Position: ("
-        << wheelPosition.getX() << ", "
-        << wheelPosition.getY() << ", "
-        << wheelPosition.getZ() << ")" << std::endl;*/
 }
 
 // Funzione per limitare la rotazione del veicolo in aria
