@@ -79,9 +79,9 @@ protected:
         initialBackgroundColor = {0.01f, 0.01f, 0.08f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 500; // FIXME
-        texturesInPool = 500; // FIXME
-        setsInPool = 500; // FIXME
+        uniformBlocksInPool = 700; // FIXME
+        texturesInPool = 700; // FIXME
+        setsInPool = 700; // FIXME
 
         AspectRatio = 4.0f / 3.0f;
     }
@@ -160,7 +160,7 @@ protected:
         std::cout << "Initialization completed!\n";
         
         // plays the race music
-        playSound("RACE_MUSIC", 0.0f, 7);
+        playSound("RACE_MUSIC", 0.3f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -204,6 +204,7 @@ protected:
         SC.localCleanup();
         uiManager.localCleanup();
         cleanupPhysics();
+        cleanupAudio();
     }
 
     // Here it is the creation of the command buffer:
@@ -250,8 +251,10 @@ protected:
         updatePhysics(deltaT);
 
         checkCollisions(vehicle, SC.sceneJson);
+        
+        updateAudioSystem();
 
-        // get poaition, yaw and pitch of car rigid body
+        // get position, yaw and pitch of car rigid body
         glm::vec3 bodyPosition = getVehiclePosition(vehicle);
         float bodyYaw = getVehicleYaw(vehicle);
         float bodyPitch = getVehiclePitch(vehicle);

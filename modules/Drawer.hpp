@@ -20,7 +20,8 @@ std::vector<std::string> world = {
     "track", "barrier", "finish_line_top", "finish_line_floor", "ramps", "towers", "banners",
     "big_stars", "rainbows", "arcade_1", "arcade_2", "dir_banners", "rocket",
     "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "tires_pile_1",
-    "tires_pile_2", "tires_pile_3", "tires_pile_4", "tires_pile_5",
+    "tires_pile_2", "tires_pile_3", "tires_pile_4", "tires_pile_5", "tires_pile_6", "tires_pile_7",
+    "tires_pile_8", "tires_pile_9", "tires_pile_10",
     "traffic_lights", "sun", "asteroids", "gamepad", "police_car", "world", "clouds", "satellite",
     "astronaut", "building"
 };

@@ -448,7 +448,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
     }
     
     // rhombus coins (central)
-    for(int i = 0; i < 4; i++){
+    for(int i = 0; i < 6; i++){
         instance = {
             {"id", "coin_" + std::to_string(globalCoinCount)},
             {"model", "coin"},
@@ -462,7 +462,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
     }
     
     // rhombus coins (left)
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         instance = {
             {"id", "coin_" + std::to_string(globalCoinCount)},
             {"model", "coin"},
@@ -476,7 +476,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
     }
     
     // rhombus coins (right)
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         instance = {
             {"id", "coin_" + std::to_string(globalCoinCount)},
             {"model", "coin"},
@@ -484,6 +484,122 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"transform",  {0.03, 0, 0, -695,
                             0, 0, -0.03, 0.5,
                             0, 0.03, 0, 492.5 - 15 * i,
+                            0, 0, 0, 1}}
+        };
+        addCoin(instance, instances, sceneJson);
+    }
+    
+    // five coins after the landing track
+    for(int i = 0; i < 5; i++){
+        instance = {
+            {"id", "coin_" + std::to_string(globalCoinCount)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, i == 2 ? -702.3 : -695.3 - 13.95 * (i % 3),
+                            0, 0, -0.03, 2.5,
+                            0, 0.03, 0, i == 2 ? 247.5 : (i < 2 ? 297.5 : 197.5),
+                            0, 0, 0, 1}}
+        };
+        addCoin(instance, instances, sceneJson);
+    }
+    
+    // three coins on the last ramp before the tracks rejoin
+    for(int i = 0; i < 3; i++){
+        instance = {
+            {"id", "coin_" + std::to_string(globalCoinCount)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -695 - i * 7,
+                            0, 0, -0.03, 2.5,
+                            0, 0.03, 0, 97.5,
+                            0, 0, 0, 1}}
+        };
+        addCoin(instance, instances, sceneJson);
+    }
+    
+    // fifteen coins after the tracks rejoin
+    for(int i = 0; i < 5; i++){
+        for(int j = 0; j < 3; j++){
+            instance = {
+                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"model", "coin"},
+                {"texture", "coin"},
+                {"transform",  {0.03, 0, 0, -695 - j * 7,
+                                0, 0, -0.03, 0.5,
+                                0, 0.03, 0, -100 - 10 * i,
+                                0, 0, 0, 1}}
+            };
+            addCoin(instance, instances, sceneJson);
+        }
+    }
+    
+    // coins on the third turn
+    for(int i = 0; i < 3; i++){
+        instance = {
+            {"id", "coin_" + std::to_string(globalCoinCount)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -685 + i * 7,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, -294 - i * 4.5,
+                            0, 0, 0, 1}}
+        };
+        addCoin(instance, instances, sceneJson);
+    }
+    
+    // three coins after the third turn
+    for(int i = 0; i < 3; i++){
+        instance = {
+            {"id", "coin_" + std::to_string(globalCoinCount)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -582.8,
+                            0, 0, -0.03, 2.5,
+                            0, 0.03, 0, -314.5 - i * 7,
+                            0, 0, 0, 1}}
+        };
+        addCoin(instance, instances, sceneJson);
+    }
+    
+    // 15 coins near the big rainbow and before the shortcut
+    for(int i = 0; i < 5; i++){
+        for(int j = 0; j < 3; j++){
+            instance = {
+                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"model", "coin"},
+                {"texture", "coin"},
+                {"transform",  {0.03, 0, 0, -480 + i * 30,
+                                0, 0, -0.03, 0.5,
+                                0, 0.03, 0, -316.5 - 7 * j,
+                                0, 0, 0, 1}}
+            };
+            addCoin(instance, instances, sceneJson);
+        }
+    }
+    
+    // 5 coins before the fourth turn
+    for(int i = 0; i < 5; i++){
+        instance = {
+            {"id", "coin_" + std::to_string(globalCoinCount)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -270 + i * 30,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, -327,
+                            0, 0, 0, 1}}
+        };
+        addCoin(instance, instances, sceneJson);
+    }
+    
+    // coins on the fourth turn
+    for(int i = 0; i < 3; i++){
+        instance = {
+            {"id", "coin_" + std::to_string(globalCoinCount)},
+            {"model", "coin"},
+            {"texture", "coin"},
+            {"transform",  {0.03, 0, 0, -32.5 + i * 7,
+                            0, 0, -0.03, 0.5,
+                            0, 0.03, 0, -304.5 + i * 4.5,
                             0, 0, 0, 1}}
         };
         addCoin(instance, instances, sceneJson);
