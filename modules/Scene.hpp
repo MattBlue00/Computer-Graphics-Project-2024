@@ -247,6 +247,22 @@ void buildMultipleInstances(json* instances, json* sceneJson){
         
     }
     
+    // last bleachers
+    for(int i = 1; i <= 20; i++) {
+        instance = {
+            {"id", "bleachers_" + std::to_string(i)},
+            {"model", "bleachers"},
+            {"texture", "bleachers"},
+            {"transform",  {0, 0, -1, -730,
+                            0, 1, 0, 5,
+                            1, 0, 0, -60 - BLEACHERS_STEP * (i - 1),
+                            0, 0, 0, 1}}
+        };
+        instances->push_back(instance);
+        (*sceneJson)["instances"].push_back(instance);
+        addInstanceToWorld("bleachers_" + std::to_string(i));
+    }
+    
     // first three coins
     for(int i = 0; i < 3; i++){
         instance = {
