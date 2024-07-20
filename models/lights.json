@@ -44,15 +44,15 @@
         },
         {
             "color": [1.0, 0.0, 0.0],
-            "translation": [0.69, 0.1, -32.2],
-            "intensity": 2.0,
+            "translation": [0.69, 0.28, -32.1],
+            "intensity": 5.0,
             "type": "point",
             "name": "brake_light_left"
         },
         {
             "color": [1.0, 0.0, 0.0],
-            "translation": [-0.69, 0.1, -32.2],
-            "intensity": 2.0,
+            "translation": [-0.69, 0.28, -32.1],
+            "intensity": 5.0,
             "type": "point",
             "name": "brake_light_right"
         }
