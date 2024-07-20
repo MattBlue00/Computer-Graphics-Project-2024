@@ -22,7 +22,7 @@ std::vector<std::string> world = {
     "road_1", "road_2", "road_3", "road_4", "road_5", "road_end_1", "road_end_2", "tires_pile_1",
     "tires_pile_2", "tires_pile_3", "tires_pile_4", "tires_pile_5", "tires_pile_6", "tires_pile_7",
     "tires_pile_8", "tires_pile_9", "tires_pile_10",
-    "traffic_lights", "sun", "asteroids", "gamepad", "police_car", "world", "clouds", "satellite",
+    "traffic_lights", "sun", "asteroids", "gamepad", "police_car", "clouds", "satellite",
     "astronaut", "building"
 };
 

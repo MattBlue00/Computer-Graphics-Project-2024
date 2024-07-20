@@ -14,8 +14,6 @@ glm::vec3 LightColors[LIGHTS_COUNT];
 float LightIntensities[LIGHTS_COUNT];
 glm::vec4 lightOn;
 
-int totalNumberOfDynamicallyAddedLights = 0;
-
 // reads lights.json file, loads file istances and adds dynamically more instances
 void initLights(){
     
@@ -36,70 +34,10 @@ void initLights(){
         
         json lightArray = js["lights"];
         
-        // DYNAMICALLY ADDS LIGHTS
-        
-        /*
-        // bleachers point lights
-        for(int i = 0; i < POINT_LIGHTS_GOAL_BLEACHERS / 2; i++) {
-            totalNumberOfDynamicallyAddedLights++;
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { 11.75, 10, FIRST_BLEACHERS_START + BLEACHERS_STEP * 4 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_l" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { -12, 10, FIRST_BLEACHERS_START + BLEACHERS_STEP * 4 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_r" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-        }
-        
-        // pre-rainbow point lights
-        for(int i = 0; i < POINT_LIGHTS_PRE_RAINBOW / 2; i++) {
-            totalNumberOfDynamicallyAddedLights++;
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { 11.75, 10, 160 + 40 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_l" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { -12, 10, 160 + 40 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_r" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-        }
-        
-        // post-rainbow point lights
-        for(int i = 0; i < POINT_LIGHTS_POST_RAINBOW / 2; i++) {
-            totalNumberOfDynamicallyAddedLights++;
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { 11.75, 10, 270 + 60 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_l" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { -12, 10, 270 + 60 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_r" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-        }*/
-        
         // PREPARES LIGHTS FOR THE APPLICATION
         
-        for(int i = 1; i < LIGHTS_COUNT; i++){
-            json lightDescription = lightArray[i-1];
+        for(int i = 0; i < LIGHTS_COUNT; i++){
+            json lightDescription = lightArray[i];
             glm::vec3 LightTranslation;
             glm::vec3 LightScale;
             glm::quat Quaternion;

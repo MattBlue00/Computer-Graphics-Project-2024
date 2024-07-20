@@ -15,7 +15,6 @@
 #include "modules/Lights.hpp"           // adds lights management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
-// imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
 #include "modules/UIManager.hpp"
 
@@ -310,16 +309,13 @@ protected:
 
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
     // updates global uniforms
-    /*gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
-    gubo->lightColor = ONE_VEC4;
-    gubo->eyePos = dampedCamPos;
-    gubo->eyeDir = ZERO_VEC4;
-    gubo->eyeDir.w = 1.0;*/
     
     gubo->lightDir[0].v = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
     gubo->lightColor[0] = ONE_VEC4;
+    gubo->eyeDir = ZERO_VEC4;
+    gubo->eyeDir.w = 1.0;
     
-    for(int i = 1; i < LIGHTS_COUNT; i++) {
+    for(int i = 0; i < LIGHTS_COUNT; i++) {
         gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
         gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
         gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);

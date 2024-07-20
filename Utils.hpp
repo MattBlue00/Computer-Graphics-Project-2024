@@ -49,7 +49,7 @@ const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
 
-const int LIGHTS_COUNT = 2;
+const int LIGHTS_COUNT = 1;
 
 // GENERAL STRUCTS
 
@@ -62,6 +62,8 @@ struct UniformBufferObject {
 
 // gubo
 struct GlobalUniformBufferObject {
+    alignas(16) glm::vec3 ambientLightDir;
+    alignas(16) glm::vec4 ambientLightColor;
     struct {
         alignas(16) glm::vec3 v;
     } lightDir[LIGHTS_COUNT];
@@ -73,14 +75,6 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec4 eyeDir;
     alignas(16) glm::vec4 lightOn;
 };
-
-/*
-struct GlobalUniformBufferObject {
-    alignas(16) glm::vec3 lightDir;
-    alignas(16) glm::vec4 lightColor;
-    alignas(16) glm::vec3 eyePos;
-    alignas(16) glm::vec4 eyeDir;
-};*/
 
 // vertex
 struct Vertex {

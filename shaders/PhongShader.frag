@@ -1,6 +1,6 @@
 #version 450
 
-const int LIGHTS_COUNT = 2;
+const int LIGHTS_COUNT = 1;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
@@ -13,16 +13,9 @@ layout(binding = 0) uniform UniformBufferObject
 
 layout(binding = 1) uniform sampler2D texSampler;
 
-/*
-layout(binding = 2) uniform GlobalUniformBufferObject
-{
-    vec3 lightDir;
-    vec4 lightColor;
-    vec3 eyePos;
-    vec4 eyeDir;
-} gubo;*/
-
 layout(binding = 2) uniform GlobalUniformBufferObject {
+    vec3 ambientLightDir;
+    vec4 ambientLightColor;
     vec3 lightDir[LIGHTS_COUNT];
     vec3 lightPos[LIGHTS_COUNT];
     vec4 lightColor[LIGHTS_COUNT];
@@ -110,24 +103,23 @@ void main()
     vec3 Albedo = texture(texSampler, fragTexCoord).xyz;
     
     vec4 EyeDirection = gubo.eyeDir;
-    vec3 LightDirection = gubo.lightDir[0];
-    vec4 LightColor = gubo.lightColor[0];
+    vec3 LightDirection = gubo.ambientLightDir;
+    vec4 LightColor = gubo.ambientLightColor;
     
-    /*
     vec3 LD;    // light direction
     vec3 LC;    // light color
 
     vec3 RendEqSol = vec3(0);
     
-    for(int i = 1; i < LIGHTS_COUNT; i++){
+    for(int i = 0; i < LIGHTS_COUNT; i++){
         LD = point_light_dir(fragPos, i);
         LC = point_light_color(fragPos, i);
         RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC         * gubo.lightOn.x;
-    }*/
+    }
     
     vec3 Diffuse = Albedo * ((max(dot(Norm, LightDirection), 0.0) * 0.89999997615814208984375) + 0.100000001490116119384765625);
     vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(LightDirection, Norm)), 0.0), 64.0));
     vec3 Ambient = (((mix(vec3(0.180000007152557373046875, 0.119999997317790985107421875, 0.07999999821186065673828125), vec3(0.20000000298023223876953125, 0.100000001490116119384765625, 0.100000001490116119384765625), bvec3(Norm.x > 0.0)) * (Norm.x * Norm.x)) + (mix(vec3(0.100000001490116119384765625), vec3(0.0599999986588954925537109375, 0.20000000298023223876953125, 0.20000000298023223876953125), bvec3(Norm.y > 0.0)) * (Norm.y * Norm.y))) + (mix(vec3(0.0599999986588954925537109375, 0.119999997317790985107421875, 0.14000000059604644775390625), vec3(0.1599999964237213134765625, 0.039999999105930328369140625, 0.07999999821186065673828125), bvec3(Norm.z > 0.0)) * (Norm.z * Norm.z))) * Albedo;
-    outColor = vec4(((Diffuse + (Specular * (1.0 - EyeDirection.w))) * LightColor.xyz) + Ambient, 1.0) + vec4(RendEqSol, 1.0);
+    outColor = vec4(((Diffuse + (Specular * (1.0 - EyeDirection.w))) * LightColor.xyz) + Ambient, 1.0); /* + vec4(RendEqSol, 1.0);*/
 }
 
