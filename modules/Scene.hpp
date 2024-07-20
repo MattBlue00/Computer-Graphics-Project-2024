@@ -605,6 +605,22 @@ void buildMultipleInstances(json* instances, json* sceneJson){
         addCoin(instance, instances, sceneJson);
     }
     
+    // coins on the shortcut
+    for(int i = 0; i < 15; i++){
+        for(int j = 0; j < 2; j++){
+            instance = {
+                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"model", "coin"},
+                {"texture", "coin"},
+                {"transform",  {0.03, 0, 0, -130 + i * 7.5,
+                    0, 0, -0.03, 0.5,
+                    0, 0.03, 0, j == 0 ? -271 + i * 3 : -275 + i * 3,
+                    0, 0, 0, 1}}
+            };
+            addCoin(instance, instances, sceneJson);
+        }
+    }
+    
 }
 
 void addCoin(json coin, json* instances, json* sceneJson){
