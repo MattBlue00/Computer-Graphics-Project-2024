@@ -33,7 +33,7 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     {"tires_pile_8",            {0.8f,      0.5f}},
     {"tires_pile_9",            {0.8f,      0.5f}},
     {"tires_pile_10",           {0.8f,      0.5f}},
-    //{"dir_barrier_oval",        {0.8f,      0.5f}}
+    {"dir_barrier_oval",        {0.8f,      0.5f}}
 };
 std::unordered_map<std::string, btRigidBody*> rigidBodyMap;
 
