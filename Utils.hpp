@@ -49,14 +49,7 @@ const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
 
-/*
-const int POINT_LIGHTS_GOAL_BLEACHERS = 16;
-const int POINT_LIGHTS_PRE_RAINBOW = 4;
-const int POINT_LIGHTS_POST_RAINBOW = 18;
-const int POINT_LIGHTS_AIRSTRIP = 5;
-const int POINT_LIGHTS_COUNT = POINT_LIGHTS_GOAL_BLEACHERS + POINT_LIGHTS_PRE_RAINBOW + POINT_LIGHTS_POST_RAINBOW + POINT_LIGHTS_AIRSTRIP;
-
-const int LIGHTS_COUNT = POINT_LIGHTS_COUNT;*/
+const int LIGHTS_COUNT = 2;
 
 // GENERAL STRUCTS
 
@@ -68,7 +61,6 @@ struct UniformBufferObject {
 };
 
 // gubo
-/*
 struct GlobalUniformBufferObject {
     struct {
         alignas(16) glm::vec3 v;
@@ -80,14 +72,15 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec3 eyePos;
     alignas(16) glm::vec4 eyeDir;
     alignas(16) glm::vec4 lightOn;
-}; */
+};
 
+/*
 struct GlobalUniformBufferObject {
     alignas(16) glm::vec3 lightDir;
     alignas(16) glm::vec4 lightColor;
     alignas(16) glm::vec3 eyePos;
     alignas(16) glm::vec4 eyeDir;
-};
+};*/
 
 // vertex
 struct Vertex {

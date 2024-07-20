@@ -3,12 +3,9 @@
 
 #include "Utils.hpp"
 
-/*
-
 // lights constants
 
-const std::array<float, 3> POINT_LIGHT_COLOR = {0.681277871131897f, 1.0f, 0.9654425978660583f};
-const float POINT_LIGHT_INTENSITY = 12.0;
+const std::array<float, 3> LIGHT_COLOR = {0.681277871131897f, 1.0f, 0.9654425978660583f};
 
 // lights variables
 
@@ -37,10 +34,11 @@ void initLights(){
         ifs >> js;
         ifs.close();
         
-        // DYNAMICALLY ADDS LIGHTS
-        
         json lightArray = js["lights"];
         
+        // DYNAMICALLY ADDS LIGHTS
+        
+        /*
         // bleachers point lights
         for(int i = 0; i < POINT_LIGHTS_GOAL_BLEACHERS / 2; i++) {
             totalNumberOfDynamicallyAddedLights++;
@@ -96,12 +94,12 @@ void initLights(){
                 { "type", "point" },
                 { "name", "light_r" + std::to_string(totalNumberOfDynamicallyAddedLights) }
             });
-        }
+        }*/
         
         // PREPARES LIGHTS FOR THE APPLICATION
         
-        for(int i = 0; i < LIGHTS_COUNT; i++){
-            json lightDescription = lightArray[i];
+        for(int i = 1; i < LIGHTS_COUNT; i++){
+            json lightDescription = lightArray[i-1];
             glm::vec3 LightTranslation;
             glm::vec3 LightScale;
             glm::quat Quaternion;
@@ -145,7 +143,5 @@ void initLights(){
 
     lightOn = ONE_VEC4;
 }
- 
- */
 
 #endif

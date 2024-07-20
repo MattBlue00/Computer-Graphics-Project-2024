@@ -155,12 +155,12 @@ protected:
         initAudio(config["audio"]);
         
         // init lights
-        //initLights();
+        initLights();
         
         std::cout << "Initialization completed!\n";
         
         // plays the race music
-        playSound("RACE_MUSIC", 0.3f, 7);
+        playSound("RACE_MUSIC", 0.0f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -310,21 +310,23 @@ protected:
 
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
     // updates global uniforms
-    gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+    /*gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
     gubo->lightColor = ONE_VEC4;
     gubo->eyePos = dampedCamPos;
     gubo->eyeDir = ZERO_VEC4;
-    gubo->eyeDir.w = 1.0;
+    gubo->eyeDir.w = 1.0;*/
     
-    /*
-    for(int i = 0; i < LIGHTS_COUNT; i++) {
+    gubo->lightDir[0].v = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+    gubo->lightColor[0] = ONE_VEC4;
+    
+    for(int i = 1; i < LIGHTS_COUNT; i++) {
         gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
         gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
         gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);
     }
 
     gubo->eyePos = dampedCamPos;
-    gubo->lightOn = lightOn;*/
+    gubo->lightOn = lightOn;
 }
 
 // This is the main: probably you do not need to touch this!
