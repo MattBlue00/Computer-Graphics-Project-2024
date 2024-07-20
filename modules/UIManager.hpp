@@ -61,6 +61,7 @@ struct UIManager: public Observer {
     bool isGameStarted = false;
     bool isGameFinished = false;
     int lapsLabel = 1;
+    int collectedCoins = 0;
 
     // init UI
     void init(BaseProject *_BP) {
@@ -174,6 +175,7 @@ struct UIManager: public Observer {
     }
     
     void onCoinCollected(int collectedCoins) override {
+        this->collectedCoins = collectedCoins;
         outCoins[0] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
         outCoins[1] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
         coins.changeText(&outCoins);
@@ -183,12 +185,21 @@ struct UIManager: public Observer {
         // update lap counter (starts from 1)
         lapsLabel += lapsDone;
         
-        std:: cout << "this lap is the: " << lapsLabel << "\n";
+        // std:: cout << "this lap is the: " << lapsLabel << "\n";
 
         // after the second lap stop the timer
         if(lapsLabel == 3) {
-            std:: cout << "the game is finished lap: " << lapsLabel << "\n";
+            auto endTime = std::chrono::duration_cast<std::chrono::seconds>(lastUpdateTimeAfterBegin - startTimeAfterBegin);
+            
+            // std:: cout << "the game is finished lap: " << lapsLabel << "\n";
             isGameFinished = true;
+            int finalScore = computeFinalScore(endTime);
+            
+            // std::cout << "coins" <<  collectedCoins << "\n";
+
+            outLaps[0] = {1, {"Score: " + std::to_string(finalScore)}, 0, 0, outLapsPosition};
+            outLaps[1] = {1, {"Score: " + std::to_string(finalScore)}, 0, 0, outLapsPosition};
+            laps.changeText(&outLaps);
             return;
         }
         // after the second lap do not update the UI anymore
@@ -197,6 +208,11 @@ struct UIManager: public Observer {
         outLaps[0] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
         outLaps[1] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
         laps.changeText(&outLaps);
+    }
+    
+    int computeFinalScore(std::chrono::seconds endTime){
+        int remainingTime = 500 - static_cast<int>(endTime.count());
+        return std::max(remainingTime, 0) + collectedCoins;
     }
 };
 
