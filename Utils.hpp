@@ -31,7 +31,6 @@ const glm::quat ONE_QUAT    = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 // notable angles
 const float DEG_0   = glm::radians(0.0f);
 const float DEG_0_2 = glm::radians(0.2f);
-const float DEG_0_5 = glm::radians(0.5f);
 const float DEG_2_5 = glm::radians(2.5f);
 const float DEG_5   = glm::radians(5.0f);
 const float DEG_20  = glm::radians(20.0f);
@@ -50,14 +49,7 @@ const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
 
-/*
-const int POINT_LIGHTS_GOAL_BLEACHERS = 16;
-const int POINT_LIGHTS_PRE_RAINBOW = 4;
-const int POINT_LIGHTS_POST_RAINBOW = 18;
-const int POINT_LIGHTS_AIRSTRIP = 5;
-const int POINT_LIGHTS_COUNT = POINT_LIGHTS_GOAL_BLEACHERS + POINT_LIGHTS_PRE_RAINBOW + POINT_LIGHTS_POST_RAINBOW + POINT_LIGHTS_AIRSTRIP;
-
-const int LIGHTS_COUNT = POINT_LIGHTS_COUNT;*/
+const int LIGHTS_COUNT = 8;
 
 // GENERAL STRUCTS
 
@@ -69,8 +61,9 @@ struct UniformBufferObject {
 };
 
 // gubo
-/*
 struct GlobalUniformBufferObject {
+    alignas(16) glm::vec3 ambientLightDir;
+    alignas(16) glm::vec4 ambientLightColor;
     struct {
         alignas(16) glm::vec3 v;
     } lightDir[LIGHTS_COUNT];
@@ -80,14 +73,9 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec4 lightColor[LIGHTS_COUNT];
     alignas(16) glm::vec3 eyePos;
     alignas(16) glm::vec4 eyeDir;
-    alignas(16) glm::vec4 lightOn;
-}; */
-
-struct GlobalUniformBufferObject {
-    alignas(16) glm::vec3 lightDir;
-    alignas(16) glm::vec4 lightColor;
-    alignas(16) glm::vec3 eyePos;
-    alignas(16) glm::vec4 eyeDir;
+    struct {
+        alignas(16) glm::vec3 v;
+    } lightOn[LIGHTS_COUNT];
 };
 
 // vertex

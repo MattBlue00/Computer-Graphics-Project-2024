@@ -45,7 +45,7 @@ void initCar() {
     localTrans.setOrigin(btVector3(0, 0, 0)); // Chassis remains at the origin
     vehicleShape->addChildShape(localTrans, chassisShape);
 
-    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -0.5, -10)));
+    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -0.5, -30)));
     btScalar mass = 1000.0f;
     btVector3 carInertia(0, 0, 0);
     vehicleShape->calculateLocalInertia(mass, carInertia);

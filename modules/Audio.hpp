@@ -16,7 +16,7 @@ void removeChannel(const std::string& soundName, FMOD::Channel* channel);
 void initAudio(const json& audioMap) {
     result = FMOD::System_Create(&audio_system);
     checkFmodError(result);
-    result = audio_system->init(512, FMOD_INIT_NORMAL, 0);
+    result = audio_system->init(1024, FMOD_INIT_NORMAL, 0);  // Increased number of channels
     checkFmodError(result);
 
     for (const auto& music : audioMap) {
@@ -31,23 +31,9 @@ void initAudio(const json& audioMap) {
     }
 }
 
-void playSound(const std::string& soundName, float volume, float loopStartSecond = -1, bool allowOverlap = true) {
+void playSound(const std::string& soundName, float volume, float loopStartSecond = -1) {
     FMOD::Channel* channel = nullptr;
-    bool isPlaying = false;
-
-    // Check if the sound is already playing
-    if (!allowOverlap && channelMap.find(soundName) != channelMap.end()) {
-        for (auto& ch : channelMap[soundName]) {
-            if (ch) {
-                result = ch->isPlaying(&isPlaying);
-                checkFmodError(result);
-                if (isPlaying) {
-                    return;  // If any instance is playing and overlaps are not allowed, return
-                }
-            }
-        }
-    }
-
+    
     // Set loop mode and loop points before playing the sound
     if(loopStartSecond >= 0) {
         // Convert to milliseconds
@@ -64,6 +50,10 @@ void playSound(const std::string& soundName, float volume, float loopStartSecond
         result = soundMap[soundName]->setLoopPoints(loopStartMillis, FMOD_TIMEUNIT_MS, soundLength, FMOD_TIMEUNIT_MS);
         checkFmodError(result);
     }
+    else{
+        result = soundMap[soundName]->setMode(FMOD_LOOP_OFF);
+        checkFmodError(result);
+    }
 
     // Play the sound
     result = audio_system->playSound(soundMap[soundName], 0, false, &channel);
@@ -75,62 +65,51 @@ void playSound(const std::string& soundName, float volume, float loopStartSecond
 
     // Store the channel in the map
     channelMap[soundName].push_back(channel);
-
-    // Attach a callback to remove the channel from channelMap when sound finishes
-    result = channel->setCallback([](FMOD_CHANNELCONTROL* channelControl, FMOD_CHANNELCONTROL_TYPE controlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void* commandData1, void* commandData2) -> FMOD_RESULT {
-        if (callbackType == FMOD_CHANNELCONTROL_CALLBACK_END) {
-            FMOD::Channel* channel = (FMOD::Channel*)channelControl;
-            // Find and remove the channel from channelMap
-            for (auto& entry : channelMap) {
-                auto& channels = entry.second;
-                auto it = std::find(channels.begin(), channels.end(), channel);
-                if (it != channels.end()) {
-                    channels.erase(it);
-                    break;  // Exit loop after removing the channel
+    
+    if(loopStartSecond < 0){
+        // Attach a callback to remove the channel from channelMap when sound finishes
+        result = channel->setCallback([](FMOD_CHANNELCONTROL* channelControl, FMOD_CHANNELCONTROL_TYPE controlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void* commandData1, void* commandData2) -> FMOD_RESULT {
+            if (callbackType == FMOD_CHANNELCONTROL_CALLBACK_END) {
+                FMOD::Channel* channel = (FMOD::Channel*)channelControl;
+                // Find and remove the channel from channelMap
+                for (auto& entry : channelMap) {
+                    auto& channels = entry.second;
+                    auto it = std::find(channels.begin(), channels.end(), channel);
+                    if (it != channels.end()) {
+                        channels.erase(it);
+                        break;  // Exit loop after removing the channel
+                    }
                 }
             }
-        }
-        return FMOD_OK;
-    });
+            return FMOD_OK;
+        });
+        checkFmodError(result);
+    }
+}
+
+void updateAudioSystem() {
+    result = audio_system->update();
     checkFmodError(result);
-}
-
-void stopSound(const std::string& soundName) {
-    if (channelMap.find(soundName) != channelMap.end()) {
-        auto& channels = channelMap[soundName];
-        for (auto& channel : channels) {
-            if (channel) {
-                bool isPlaying = false;
-                result = channel->isPlaying(&isPlaying);
-                checkFmodError(result);
-                if (isPlaying) {
-                    result = channel->stop();
-                    checkFmodError(result);
-                }
-            }
-        }
-        // Clear the channels for the soundName
-        channels.clear();
-    }
-}
-
-void removeChannel(const std::string& soundName, FMOD::Channel* channel) {
-    if (channelMap.find(soundName) != channelMap.end()) {
-        auto& channels = channelMap[soundName];
-        auto it = std::find(channels.begin(), channels.end(), channel);
-        if (it != channels.end()) {
-            channels.erase(it);
-        }
-        if (channels.empty()) {
-            channelMap.erase(soundName);
-        }
-    }
 }
 
 void checkFmodError(FMOD_RESULT result) {
     if (result != FMOD_OK) {
         std::cerr << "FMOD error! (" << result << ") " << FMOD_ErrorString(result) << std::endl;
         exit(-1);
+    }
+}
+
+void cleanupAudio() {
+    for (auto& entry : soundMap) {
+        result = entry.second->release();
+        checkFmodError(result);
+    }
+    if (audio_system) {
+        result = audio_system->close();
+        checkFmodError(result);
+        result = audio_system->release();
+        checkFmodError(result);
+        audio_system = nullptr;
     }
 }
 

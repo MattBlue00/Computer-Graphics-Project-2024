@@ -15,7 +15,6 @@
 #include "modules/Lights.hpp"           // adds lights management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
-// imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
 #include "modules/UIManager.hpp"
 
@@ -79,9 +78,9 @@ protected:
         initialBackgroundColor = {0.01f, 0.01f, 0.08f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 400; // FIXME
-        texturesInPool = 400; // FIXME
-        setsInPool = 400; // FIXME
+        uniformBlocksInPool = 700; // FIXME
+        texturesInPool = 700; // FIXME
+        setsInPool = 700; // FIXME
 
         AspectRatio = 4.0f / 3.0f;
     }
@@ -115,7 +114,7 @@ protected:
             });
 
         // Pipelines [Shader couples]
-        P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", { &DSL });
+        P.init(this, &VD, "shaders/AmbientVert.spv", "shaders/AmbientFrag.spv", { &DSL });
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
 
@@ -155,7 +154,7 @@ protected:
         initAudio(config["audio"]);
         
         // init lights
-        //initLights();
+        initLights();
         
         std::cout << "Initialization completed!\n";
         
@@ -204,6 +203,7 @@ protected:
         SC.localCleanup();
         uiManager.localCleanup();
         cleanupPhysics();
+        cleanupAudio();
     }
 
     // Here it is the creation of the command buffer:
@@ -250,8 +250,10 @@ protected:
         updatePhysics(deltaT);
 
         checkCollisions(vehicle, SC.sceneJson);
+        
+        updateAudioSystem();
 
-        // get poaition, yaw and pitch of car rigid body
+        // get position, yaw and pitch of car rigid body
         glm::vec3 bodyPosition = getVehiclePosition(vehicle);
         float bodyYaw = getVehicleYaw(vehicle);
         float bodyPitch = getVehiclePitch(vehicle);
@@ -307,21 +309,19 @@ protected:
 
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
     // updates global uniforms
-    gubo->lightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
-    gubo->lightColor = ONE_VEC4;
-    gubo->eyePos = dampedCamPos;
+    gubo->ambientLightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+    gubo->ambientLightColor = ONE_VEC4;
     gubo->eyeDir = ZERO_VEC4;
     gubo->eyeDir.w = 1.0;
     
-    /*
     for(int i = 0; i < LIGHTS_COUNT; i++) {
         gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
         gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
         gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);
+        gubo->lightOn[i].v = LightOn[i];
     }
 
     gubo->eyePos = dampedCamPos;
-    gubo->lightOn = lightOn;*/
 }
 
 // This is the main: probably you do not need to touch this!

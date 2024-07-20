@@ -3,23 +3,14 @@
 
 #include "Utils.hpp"
 
-/*
-
-// lights constants
-
-const std::array<float, 3> POINT_LIGHT_COLOR = {0.681277871131897f, 1.0f, 0.9654425978660583f};
-const float POINT_LIGHT_INTENSITY = 12.0;
-
 // lights variables
 
 glm::mat4 LightWorldMatrices[LIGHTS_COUNT];
 glm::vec3 LightColors[LIGHTS_COUNT];
 float LightIntensities[LIGHTS_COUNT];
-glm::vec4 lightOn;
+glm::vec3 LightOn[LIGHTS_COUNT];
 
-int totalNumberOfDynamicallyAddedLights = 0;
-
-// reads lights.json file, loads file istances and adds dynamically more instances
+// inits light system
 void initLights(){
     
     // LOADS FILE
@@ -37,66 +28,7 @@ void initLights(){
         ifs >> js;
         ifs.close();
         
-        // DYNAMICALLY ADDS LIGHTS
-        
         json lightArray = js["lights"];
-        
-        // bleachers point lights
-        for(int i = 0; i < POINT_LIGHTS_GOAL_BLEACHERS / 2; i++) {
-            totalNumberOfDynamicallyAddedLights++;
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { 11.75, 10, FIRST_BLEACHERS_START + BLEACHERS_STEP * 4 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_l" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { -12, 10, FIRST_BLEACHERS_START + BLEACHERS_STEP * 4 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_r" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-        }
-        
-        // pre-rainbow point lights
-        for(int i = 0; i < POINT_LIGHTS_PRE_RAINBOW / 2; i++) {
-            totalNumberOfDynamicallyAddedLights++;
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { 11.75, 10, 160 + 40 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_l" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { -12, 10, 160 + 40 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_r" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-        }
-        
-        // post-rainbow point lights
-        for(int i = 0; i < POINT_LIGHTS_POST_RAINBOW / 2; i++) {
-            totalNumberOfDynamicallyAddedLights++;
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { 11.75, 10, 270 + 60 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_l" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-            lightArray.push_back({
-                { "color", { POINT_LIGHT_COLOR[0], POINT_LIGHT_COLOR[1], POINT_LIGHT_COLOR[2]} },
-                { "translation", { -12, 10, 270 + 60 * i} },
-                { "intensity", POINT_LIGHT_INTENSITY },
-                { "type", "point" },
-                { "name", "light_r" + std::to_string(totalNumberOfDynamicallyAddedLights) }
-            });
-        }
         
         // PREPARES LIGHTS FOR THE APPLICATION
         
@@ -137,15 +69,13 @@ void initLights(){
             LightColors[i] = glm::vec3(LightColor[0], LightColor[1], LightColor[2]);
 
             LightIntensities[i] = lightDescription["intensity"];
+            
+            LightOn[i] = ONE_VEC3;
         }
         
     } catch (const nlohmann::json::exception& e) {
         std::cout << e.what() << '\n';
     }
-
-    lightOn = ONE_VEC4;
 }
- 
- */
 
 #endif
