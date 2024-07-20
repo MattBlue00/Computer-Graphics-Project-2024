@@ -114,7 +114,7 @@ protected:
             });
 
         // Pipelines [Shader couples]
-        P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", { &DSL });
+        P.init(this, &VD, "shaders/AmbientVert.spv", "shaders/AmbientFrag.spv", { &DSL });
         P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
 
@@ -309,9 +309,8 @@ protected:
 
 void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
     // updates global uniforms
-    
-    gubo->lightDir[0].v = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
-    gubo->lightColor[0] = ONE_VEC4;
+    gubo->ambientLightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+    gubo->ambientLightColor = ONE_VEC4;
     gubo->eyeDir = ZERO_VEC4;
     gubo->eyeDir.w = 1.0;
     
@@ -319,10 +318,10 @@ void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
         gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
         gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
         gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);
+        gubo->lightOn[i].v = LightOn[i];
     }
 
     gubo->eyePos = dampedCamPos;
-    gubo->lightOn = lightOn;
 }
 
 // This is the main: probably you do not need to touch this!

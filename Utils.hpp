@@ -49,7 +49,7 @@ const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
 
-const int LIGHTS_COUNT = 1;
+const int LIGHTS_COUNT = 8;
 
 // GENERAL STRUCTS
 
@@ -73,7 +73,9 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec4 lightColor[LIGHTS_COUNT];
     alignas(16) glm::vec3 eyePos;
     alignas(16) glm::vec4 eyeDir;
-    alignas(16) glm::vec4 lightOn;
+    struct {
+        alignas(16) glm::vec3 v;
+    } lightOn[LIGHTS_COUNT];
 };
 
 // vertex

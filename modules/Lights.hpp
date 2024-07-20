@@ -3,18 +3,14 @@
 
 #include "Utils.hpp"
 
-// lights constants
-
-const std::array<float, 3> LIGHT_COLOR = {0.681277871131897f, 1.0f, 0.9654425978660583f};
-
 // lights variables
 
 glm::mat4 LightWorldMatrices[LIGHTS_COUNT];
 glm::vec3 LightColors[LIGHTS_COUNT];
 float LightIntensities[LIGHTS_COUNT];
-glm::vec4 lightOn;
+glm::vec3 LightOn[LIGHTS_COUNT];
 
-// reads lights.json file, loads file istances and adds dynamically more instances
+// inits light system
 void initLights(){
     
     // LOADS FILE
@@ -73,13 +69,13 @@ void initLights(){
             LightColors[i] = glm::vec3(LightColor[0], LightColor[1], LightColor[2]);
 
             LightIntensities[i] = lightDescription["intensity"];
+            
+            LightOn[i] = ONE_VEC3;
         }
         
     } catch (const nlohmann::json::exception& e) {
         std::cout << e.what() << '\n';
     }
-
-    lightOn = ONE_VEC4;
 }
 
 #endif
