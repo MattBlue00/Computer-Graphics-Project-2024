@@ -67,7 +67,7 @@ vec3 point_light_color(vec3 pos, int i) {
         attenuation = 0.0;
     }
     
-    if (i >= 6 && distance > 0.15) {
+    if (i >= 6 && distance > 0.1) {
         attenuation = 0.0;
     }
     

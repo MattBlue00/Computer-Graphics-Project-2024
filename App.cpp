@@ -50,8 +50,10 @@ protected:
     // ???
     float* usePitch;
 
-    // UI Manager
+    // Managers
     UIManager uiManager;
+    LightManager lightManager;
+    AudioManager audioManager;
     
     // current scene
     int currScene = THIRD_PERSON_SCENE;
@@ -150,16 +152,24 @@ protected:
         collectedCoinsSubject.addObserver(&uiManager);
         checkLapsSubject.addObserver(&uiManager);
         
-        // initializes the audio system and loads the sounds
-        initAudio(config["audio"]);
+        // register the Light Observers, the timers are in UiManager
+        uiManager.startTimerSubject.addObserver(&lightManager);
+        brakeSubject.addObserver(&lightManager);
         
-        // init lights
-        initLights();
+        // register the Audio Observers
+        collectedCoinsSubject.addObserver(&audioManager);
+        uiManager.startTimerSubject.addObserver(&audioManager);
+        checkLapsSubject.addObserver(&audioManager);
+        
+        // initializes the audio system and loads the sounds
+        audioManager.initAudio(config["audio"]);
+        
+        lightManager.initLights();
         
         std::cout << "Initialization completed!\n";
         
         // plays the race music
-        playSound("RACE_MUSIC", 0.0f, 7);
+        audioManager.playSound("RACE_MUSIC", 0.1f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -203,7 +213,7 @@ protected:
         SC.localCleanup();
         uiManager.localCleanup();
         cleanupPhysics();
-        cleanupAudio();
+        audioManager.cleanupAudio();
     }
 
     // Here it is the creation of the command buffer:
@@ -248,10 +258,13 @@ protected:
 
         // applies a step in the physics simulation
         updatePhysics(deltaT);
-
+        
+        // update lights
+        lightManager.updateLightPosition();
+        
         checkCollisions(vehicle, SC.sceneJson);
         
-        updateAudioSystem();
+        audioManager.updateAudioSystem();
 
         // get position, yaw and pitch of car rigid body
         glm::vec3 bodyPosition = getVehiclePosition(vehicle);
@@ -301,28 +314,33 @@ protected:
         GlobalUniformBufferObject gubo{};
         // sets lights, camera position and direction;
         updateGUBO(&gubo, dampedCamPos);
+        
+
 
         // draws every object of this app
         drawAll(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch, bodyPitch, bodyRoll);
+
+    }
+    
+    void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
+        // updates global uniforms
+        gubo->ambientLightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
+        gubo->ambientLightColor = ONE_VEC4;
+        gubo->eyeDir = ZERO_VEC4;
+        gubo->eyeDir.w = 1.0;
+
+        for (int i = 0; i < LIGHTS_COUNT; i++) {
+            gubo->lightColor[i] = glm::vec4(lightManager.LightColors[i], lightManager.LightIntensities[i]);
+            gubo->lightDir[i].v = lightManager.LightWorldMatrices[i] * glm::vec4(0, 0, 1, 0);
+            gubo->lightPos[i].v = lightManager.LightWorldMatrices[i] * glm::vec4(0, 0, 0, 1);
+            gubo->lightOn[i].v = lightManager.LightOn[i];
+        }
+
+        gubo->eyePos = dampedCamPos;
     }
 };
 
-void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
-    // updates global uniforms
-    gubo->ambientLightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
-    gubo->ambientLightColor = ONE_VEC4;
-    gubo->eyeDir = ZERO_VEC4;
-    gubo->eyeDir.w = 1.0;
-    
-    for(int i = 0; i < LIGHTS_COUNT; i++) {
-        gubo->lightColor[i] = glm::vec4(LightColors[i], LightIntensities[i]);
-        gubo->lightDir[i].v = LightWorldMatrices[i] * glm::vec4(0,0,1,0);
-        gubo->lightPos[i].v = LightWorldMatrices[i] * glm::vec4(0,0,0,1);
-        gubo->lightOn[i].v = LightOn[i];
-    }
 
-    gubo->eyePos = dampedCamPos;
-}
 
 // This is the main: probably you do not need to touch this!
 int main() {

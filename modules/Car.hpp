@@ -24,6 +24,7 @@ btRaycastVehicle* vehicle;
 
 // subject to be observed by UI
 Subject speedSubject;
+Subject brakeSubject;
 int lastSpeedKmh = 0;
 
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold);
@@ -159,6 +160,8 @@ float getVehicleRoll(btRaycastVehicle* vehicle){
 }
 
 void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput, float deltaT) {
+    brakeSubject.notifyBrake(false);
+    
     // Controlli del veicolo
     float engineForce = 0.0f;
     float brakeForce = 0.0f;
@@ -181,10 +184,14 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         if(isVehicleStopped(vehicle, 0.5f)){
             goingOnwards = false;
         }
+        // notify the brake lights
+        brakeSubject.notifyBrake(true);
     }
     else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
         engineForce = -maxEngineForce; // Forza negativa per andare in retro
         brakeForce = 0.0f;
+        // notify the brake lights
+        brakeSubject.notifyBrake(true);
     }
     else { // Nessun input
         if (isVehicleStopped(vehicle, 0.5f)){
