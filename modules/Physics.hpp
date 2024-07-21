@@ -2,7 +2,6 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
-#include "Audio.hpp"
 #include "Utils.hpp"
 #include "Subject.hpp"
 
@@ -503,7 +502,6 @@ void checkCollisions(btRaycastVehicle* vehicle, nlohmann::json& sceneJson) {
         std::string collectedCoinID = gameObjectCallback->collectedCoinID;
         collectedCoinsSubject.notifyCoinCollected(collectedCoins);
         coinsToRemove.push_back(collectedCoinID);
-        playSound("COIN_SFX", 1.0f);
         gameObjectCallback->isCoinCollected = false; // Resetta il flag
     }
 

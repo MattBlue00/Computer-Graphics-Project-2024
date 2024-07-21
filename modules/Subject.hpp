@@ -34,6 +34,12 @@ struct Subject {
             observer->onCheckLaps(lapsDone);
         }
     }
+    
+    void notifyStartSemaphore(int countDownValue){
+        for (Observer* observer : observers) {
+            observer->onStartSemaphore(countDownValue);
+        }
+    }
 };
 
 #endif

@@ -4,24 +4,20 @@
 #include "TextMaker.hpp"  // text header
 #include <chrono>         // for time tracking
 #include <glm/vec2.hpp>   // for glm::vec2
+#include "Subject.hpp"
 
 struct UIManager: public Observer {
     
     // Text Positions
-    glm::vec2 outStartTimerPosition = glm::vec2(0.0f, -0.9f);
     glm::vec2 outTimerPosition = glm::vec2(0.36f, -0.8f);
     glm::vec2 outLapsPosition = glm::vec2(0.36f, -0.9f);
     glm::vec2 outSpeedPosition = glm::vec2(0.36f, -0.7f);
     glm::vec2 outCoinsPosition = glm::vec2(0.36f, -0.6f);
 
     
-    // Text Vectors
     BaseProject *BP;
-    std::vector<SingleText> outStartTimer = {
-        {1, {"3"}, 0, 0, outStartTimerPosition},
-        {1, {"3"}, 0, 0, outStartTimerPosition}
-    };
     
+    // Text Vectors
     std::vector<SingleText> outTimer = {
         {1, {"Time: 00:00"}, 0, 0, outTimerPosition},
         {1, {"Time: 00:00"}, 0, 0, outTimerPosition}
@@ -43,7 +39,6 @@ struct UIManager: public Observer {
     };
     
     // Text Makers
-    TextMaker startTimer;
     TextMaker laps;
     TextMaker timer;
     TextMaker speed;
@@ -51,13 +46,14 @@ struct UIManager: public Observer {
     
     
     // Logic variables
+    Subject startTimerSubject;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdateTime;
     
     std::chrono::time_point<std::chrono::high_resolution_clock> startTimeAfterBegin;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdateTimeAfterBegin;
 
-    int countdownValue = 3;
+    int countdownValue = 4; // add 1 second for music coherence
     bool isGameStarted = false;
     bool isGameFinished = false;
     int lapsLabel = 1;
@@ -68,7 +64,6 @@ struct UIManager: public Observer {
         BP = _BP;
         
         // init TextMakers
-        startTimer.init(BP, &outStartTimer);
         laps.init(BP, &outLaps);
         timer.init(BP, &outTimer);
         speed.init(BP, &outSpeed);
@@ -80,7 +75,6 @@ struct UIManager: public Observer {
     
     // lifecycle methods
     void pipelinesAndDescriptorSetsInit() {
-        startTimer.pipelinesAndDescriptorSetsInit();
         laps.pipelinesAndDescriptorSetsInit();
         timer.pipelinesAndDescriptorSetsInit();
         speed.pipelinesAndDescriptorSetsInit();
@@ -89,7 +83,6 @@ struct UIManager: public Observer {
     }
     
     void pipelinesAndDescriptorSetsCleanup() {
-        startTimer.pipelinesAndDescriptorSetsCleanup();
         laps.pipelinesAndDescriptorSetsCleanup();
         timer.pipelinesAndDescriptorSetsCleanup();
         speed.pipelinesAndDescriptorSetsCleanup();
@@ -98,7 +91,6 @@ struct UIManager: public Observer {
     }
     
     void localCleanup() {
-        startTimer.localCleanup();
         laps.localCleanup();
         timer.localCleanup();
         speed.localCleanup();
@@ -106,7 +98,7 @@ struct UIManager: public Observer {
     }
     
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, int currScene) {
-        startTimer.populateCommandBuffer(commandBuffer, currentImage, currScene);
+        //startTimer.populateCommandBuffer(commandBuffer, currentImage, currScene);
         laps.populateCommandBuffer(commandBuffer, currentImage, currScene);
         timer.populateCommandBuffer(commandBuffer, currentImage, currScene);
         speed.populateCommandBuffer(commandBuffer, currentImage, currScene);
@@ -129,20 +121,12 @@ struct UIManager: public Observer {
         auto durationSinceLastUpdate = std::chrono::duration_cast<std::chrono::seconds>(now - lastUpdateTime);
 
         if (durationSinceLastUpdate.count() >= 1) {
+            startTimerSubject.notifyStartSemaphore(countdownValue);
             countdownValue--;
-            outStartTimer[0] = {1, {std::to_string(countdownValue)}, 0, 0, outStartTimerPosition};
-            outStartTimer[1] = {1, {std::to_string(countdownValue)}, 0, 0, outStartTimerPosition};
-            startTimer.changeText(&outStartTimer);
             lastUpdateTime = now; // Update the last update time
             
             // Start real game timer
             if(countdownValue <= 0){
-                // TODO: investigate
-                // this makes the text disappear after 0 seconds ?????????
-                // don't really know why but it is a nice effect ?????????
-                outStartTimer[0] = {1, {"0"}, 0, 0, outStartTimerPosition};
-                outStartTimer[1] = {1, {"0"}, 0, 0, outStartTimerPosition};
-
                 isGameStarted = true;
                 startTimeAfterBegin = std::chrono::high_resolution_clock::now();
                 lastUpdateTimeAfterBegin = startTimeAfterBegin;

@@ -4,9 +4,11 @@
 class Observer {
 public:
     // add all onXXhanged methods here
-    virtual void onSpeedChanged(int newSpeed) = 0;
-    virtual void onCoinCollected(int collectedCoins) = 0;
-    virtual void onCheckLaps(int lapsDone) = 0;
+    virtual void onSpeedChanged(int newSpeed){};
+    virtual void onCoinCollected(int collectedCoins){};
+    virtual void onCheckLaps(int lapsDone){};
+    virtual void onStartSemaphore(int countDownValue){};
+
     virtual ~Observer() = default;
 };
 
