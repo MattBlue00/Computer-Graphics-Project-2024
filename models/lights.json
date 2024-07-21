@@ -1,57 +1,57 @@
 {
-    "lights" : [
+    "lights": [
         {
-            "color": [1.0, 0.0, 0.0],
-            "translation": [10, 6.87, -3],
+            "color": [ 1.0, 0.0, 0.0 ],
+            "translation": [ 10, 6.87, -3 ],
             "intensity": 50.0,
             "type": "point",
             "name": "red_light_left"
         },
         {
-            "color": [1.0, 0.0, 0.0],
-            "translation": [-10.5, 6.87, -3],
+            "color": [ 1.0, 0.0, 0.0 ],
+            "translation": [ -10.5, 6.87, -3 ],
             "intensity": 50.0,
             "type": "point",
             "name": "red_light_right"
         },
         {
-            "color": [1.0, 1.0, 0.0],
-            "translation": [10, 5, -3],
+            "color": [ 1.0, 1.0, 0.0 ],
+            "translation": [ 10, 5, -3 ],
             "intensity": 50.0,
             "type": "point",
             "name": "yellow_light_left"
         },
         {
-            "color": [1.0, 1.0, 0.0],
-            "translation": [-10.5, 5, -3],
+            "color": [ 1.0, 1.0, 0.0 ],
+            "translation": [ -10.5, 5, -3 ],
             "intensity": 50.0,
             "type": "point",
             "name": "yellow_light_right"
         },
         {
-            "color": [0.0, 1.0, 0.0],
-            "translation": [10, 3.12, -3],
+            "color": [ 0.0, 1.0, 0.0 ],
+            "translation": [ 10, 3.12, -3 ],
             "intensity": 50.0,
             "type": "point",
             "name": "green_light_left"
         },
         {
-            "color": [0.0, 1.0, 0.0],
-            "translation": [-10.5, 3.12, -3],
+            "color": [ 0.0, 1.0, 0.0 ],
+            "translation": [ -10.5, 3.12, -3 ],
             "intensity": 50.0,
             "type": "point",
             "name": "green_light_right"
         },
         {
-            "color": [1.0, 0.0, 0.0],
-            "translation": [0.65, 0.56, -2.1],
+            "color": [ 1.0, 0.0, 0.0 ],
+            "translation": [ 0.65, 0.56, -2.1 ],
             "intensity": 5.0,
             "type": "point",
             "name": "brake_light_left"
         },
         {
-            "color": [1.0, 0.0, 0.0],
-            "translation": [-0.65, 0.56, -2.1],
+            "color": [ 1.0, 0.0, 0.0 ],
+            "translation": [ -0.65, 0.56, -2.1 ],
             "intensity": 5.0,
             "type": "point",
             "name": "brake_light_right"

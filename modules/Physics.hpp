@@ -42,7 +42,7 @@ struct Checkpoint {
     btVector3 position;
     btVector3 halfExtents; // Dimensioni del checkpoint (mezze estensioni)
 };
-// Definizione dei checkpoint con posizione, dimensioni e rotazione
+// Definizione dei checkpoint con posizione e dimensione
 std::vector<Checkpoint> checkpoints = {
     { "checkpoint_1", btVector3(-0.25 + 2.5, -0.95 + 5.0, 0.0), btVector3(10, 5, 1)},
     { "checkpoint_2", btVector3(-340.0, -40.0, 785.0 - 7.5), btVector3(1, 5, 10)},
@@ -52,6 +52,7 @@ std::vector<Checkpoint> checkpoints = {
 };
 std::vector<btRigidBody*> allCheckpointBodies; //variabile che racchiude tutti i checkpoint
 std::vector<btRigidBody*> checkpointsLap; // variabile che racchiude solo i checpoint relativi al giro che si sta percorrendo
+btTransform lastCheckpointTransform; // variabile per memorizzare l'ultimo checkpoint visitato e gestire i casi in cui la macchina esce dal circuito
 
 bool firstLap, secondLap; // Variabile indicare il giro corrente
 bool updateCheckpoints; // Variabile di stato per indicare se i checkpoint devono essere aggiornati
@@ -90,7 +91,11 @@ public:
         std::vector<btRigidBody*>& checkpointsLap,
         nlohmann::json& sceneJson,
         btRaycastVehicle* vehicle)
-        : coinMap(coinMap), coinColliders(coinColliders), checkpointsLap(checkpointsLap), sceneJson(sceneJson), vehicle(vehicle) {}
+        : coinMap(coinMap), coinColliders(coinColliders), checkpointsLap(checkpointsLap), sceneJson(sceneJson), vehicle(vehicle) {
+        btVector3 initialPosition(0, -0.5, -10); // Coordinate iniziali
+        lastCheckpointTransform.setIdentity(); // Inizializza la trasformazione a identità
+        lastCheckpointTransform.setOrigin(initialPosition); // Imposta la posizione iniziale
+    }
 
     btScalar addSingleResult(btManifoldPoint& cp,
         const btCollisionObjectWrapper* colObj0Wrap,
@@ -108,6 +113,8 @@ public:
             //std::cout << "collision" << std::endl;
             if (isNextCheckpoint(obj0 == vehicle->getRigidBody() ? obj1 : obj0)) {
                 isCheckpointHit = true;
+                lastCheckpointTransform.setOrigin(checkpoints[nextCheckpointIndex].position);
+                lastCheckpointTransform.setRotation(vehicle->getChassisWorldTransform().getRotation());
                 nextCheckpointIndex++;
                 if(allCheckpointsCollected){
                     // check if a lap is compleated
