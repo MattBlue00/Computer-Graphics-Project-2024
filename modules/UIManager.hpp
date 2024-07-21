@@ -4,24 +4,19 @@
 #include "TextMaker.hpp"  // text header
 #include <chrono>         // for time tracking
 #include <glm/vec2.hpp>   // for glm::vec2
+#include "Subject.hpp"
 
 struct UIManager: public Observer {
     
     // Text Positions
-    glm::vec2 outStartTimerPosition = glm::vec2(0.0f, -0.9f);
     glm::vec2 outTimerPosition = glm::vec2(0.36f, -0.8f);
     glm::vec2 outLapsPosition = glm::vec2(0.36f, -0.9f);
     glm::vec2 outSpeedPosition = glm::vec2(0.36f, -0.7f);
     glm::vec2 outCoinsPosition = glm::vec2(0.36f, -0.6f);
-
+    
+    BaseProject *BP;
     
     // Text Vectors
-    BaseProject *BP;
-    std::vector<SingleText> outStartTimer = {
-        {1, {"3"}, 0, 0, outStartTimerPosition},
-        {1, {"3"}, 0, 0, outStartTimerPosition}
-    };
-    
     std::vector<SingleText> outTimer = {
         {1, {"Time: 00:00"}, 0, 0, outTimerPosition},
         {1, {"Time: 00:00"}, 0, 0, outTimerPosition}
@@ -43,31 +38,30 @@ struct UIManager: public Observer {
     };
     
     // Text Makers
-    TextMaker startTimer;
     TextMaker laps;
     TextMaker timer;
     TextMaker speed;
     TextMaker coins;
     
-    
     // Logic variables
+    Subject startTimerSubject;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdateTime;
     
     std::chrono::time_point<std::chrono::high_resolution_clock> startTimeAfterBegin;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdateTimeAfterBegin;
 
-    int countdownValue = 3;
+    int countdownValue = 4; // add 1 second for music coherence
     bool isGameStarted = false;
     bool isGameFinished = false;
     int lapsLabel = 1;
+    int collectedCoins = 0;
 
     // init UI
     void init(BaseProject *_BP) {
         BP = _BP;
         
         // init TextMakers
-        startTimer.init(BP, &outStartTimer);
         laps.init(BP, &outLaps);
         timer.init(BP, &outTimer);
         speed.init(BP, &outSpeed);
@@ -79,7 +73,6 @@ struct UIManager: public Observer {
     
     // lifecycle methods
     void pipelinesAndDescriptorSetsInit() {
-        startTimer.pipelinesAndDescriptorSetsInit();
         laps.pipelinesAndDescriptorSetsInit();
         timer.pipelinesAndDescriptorSetsInit();
         speed.pipelinesAndDescriptorSetsInit();
@@ -88,7 +81,6 @@ struct UIManager: public Observer {
     }
     
     void pipelinesAndDescriptorSetsCleanup() {
-        startTimer.pipelinesAndDescriptorSetsCleanup();
         laps.pipelinesAndDescriptorSetsCleanup();
         timer.pipelinesAndDescriptorSetsCleanup();
         speed.pipelinesAndDescriptorSetsCleanup();
@@ -97,7 +89,6 @@ struct UIManager: public Observer {
     }
     
     void localCleanup() {
-        startTimer.localCleanup();
         laps.localCleanup();
         timer.localCleanup();
         speed.localCleanup();
@@ -105,7 +96,7 @@ struct UIManager: public Observer {
     }
     
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, int currScene) {
-        startTimer.populateCommandBuffer(commandBuffer, currentImage, currScene);
+        //startTimer.populateCommandBuffer(commandBuffer, currentImage, currScene);
         laps.populateCommandBuffer(commandBuffer, currentImage, currScene);
         timer.populateCommandBuffer(commandBuffer, currentImage, currScene);
         speed.populateCommandBuffer(commandBuffer, currentImage, currScene);
@@ -128,20 +119,12 @@ struct UIManager: public Observer {
         auto durationSinceLastUpdate = std::chrono::duration_cast<std::chrono::seconds>(now - lastUpdateTime);
 
         if (durationSinceLastUpdate.count() >= 1) {
+            startTimerSubject.notifyStartSemaphore(countdownValue);
             countdownValue--;
-            outStartTimer[0] = {1, {std::to_string(countdownValue)}, 0, 0, outStartTimerPosition};
-            outStartTimer[1] = {1, {std::to_string(countdownValue)}, 0, 0, outStartTimerPosition};
-            startTimer.changeText(&outStartTimer);
             lastUpdateTime = now; // Update the last update time
             
             // Start real game timer
             if(countdownValue <= 0){
-                // TODO: investigate
-                // this makes the text disappear after 0 seconds ?????????
-                // don't really know why but it is a nice effect ?????????
-                outStartTimer[0] = {1, {"0"}, 0, 0, outStartTimerPosition};
-                outStartTimer[1] = {1, {"0"}, 0, 0, outStartTimerPosition};
-
                 isGameStarted = true;
                 startTimeAfterBegin = std::chrono::high_resolution_clock::now();
                 lastUpdateTimeAfterBegin = startTimeAfterBegin;
@@ -174,6 +157,7 @@ struct UIManager: public Observer {
     }
     
     void onCoinCollected(int collectedCoins) override {
+        this->collectedCoins = collectedCoins;
         outCoins[0] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
         outCoins[1] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
         coins.changeText(&outCoins);
@@ -183,12 +167,21 @@ struct UIManager: public Observer {
         // update lap counter (starts from 1)
         lapsLabel += lapsDone;
         
-        std:: cout << "this lap is the: " << lapsLabel << "\n";
+        // std:: cout << "this lap is the: " << lapsLabel << "\n";
 
         // after the second lap stop the timer
         if(lapsLabel == 3) {
-            std:: cout << "the game is finished lap: " << lapsLabel << "\n";
+            auto endTime = std::chrono::duration_cast<std::chrono::seconds>(lastUpdateTimeAfterBegin - startTimeAfterBegin);
+            
+            // std:: cout << "the game is finished lap: " << lapsLabel << "\n";
             isGameFinished = true;
+            int finalScore = computeFinalScore(endTime);
+            
+            // std::cout << "coins" <<  collectedCoins << "\n";
+
+            outLaps[0] = {1, {"Score: " + std::to_string(finalScore)}, 0, 0, outLapsPosition};
+            outLaps[1] = {1, {"Score: " + std::to_string(finalScore)}, 0, 0, outLapsPosition};
+            laps.changeText(&outLaps);
             return;
         }
         // after the second lap do not update the UI anymore
@@ -197,6 +190,11 @@ struct UIManager: public Observer {
         outLaps[0] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
         outLaps[1] = {1, {"Lap: " + std::to_string(lapsLabel) + "/2"}, 0, 0, outLapsPosition};
         laps.changeText(&outLaps);
+    }
+    
+    int computeFinalScore(std::chrono::seconds endTime){
+        int remainingTime = 500 - static_cast<int>(endTime.count());
+        return std::max(remainingTime, 0) + collectedCoins;
     }
 };
 

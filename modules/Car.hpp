@@ -24,6 +24,7 @@ btRaycastVehicle* vehicle;
 
 // subject to be observed by UI
 Subject speedSubject;
+Subject brakeSubject;
 int lastSpeedKmh = 0;
 
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold);
@@ -47,7 +48,7 @@ void initCar() {
     localTrans.setOrigin(btVector3(0, 0, 0)); // Chassis remains at the origin
     vehicleShape->addChildShape(localTrans, chassisShape);
 
-    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -0.5, -10)));
+    btDefaultMotionState* carMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, -0.5, -30)));
     btScalar mass = 1000.0f;
     btVector3 carInertia(0, 0, 0);
     vehicleShape->calculateLocalInertia(mass, carInertia);
@@ -161,6 +162,8 @@ float getVehicleRoll(btRaycastVehicle* vehicle){
 }
 
 void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput, float deltaT) {
+    brakeSubject.notifyBrake(false);
+    
     // Controlli del veicolo
     float engineForce = 0.0f;
     float brakeForce = 0.0f;
@@ -183,10 +186,14 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         if(isVehicleStopped(vehicle, 0.5f)){
             goingOnwards = false;
         }
+        // notify the brake lights
+        brakeSubject.notifyBrake(true);
     }
     else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
         engineForce = -maxEngineForce; // Forza negativa per andare in retro
         brakeForce = 0.0f;
+        // notify the brake lights
+        brakeSubject.notifyBrake(true);
     }
     else { // Nessun input
         if (isVehicleStopped(vehicle, 0.5f)){

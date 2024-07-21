@@ -2,7 +2,6 @@
 #define PHYSICS_HPP
 
 #include <btBulletDynamicsCommon.h>
-#include "Audio.hpp"
 #include "Utils.hpp"
 #include "Subject.hpp"
 
@@ -28,6 +27,11 @@ std::unordered_map<std::string, std::vector<float>> physicsObjectsMap = {
     {"tires_pile_3",            {0.8f,      0.5f}},
     {"tires_pile_4",            {0.8f,      0.5f}},
     {"tires_pile_5",            {0.8f,      0.5f}},
+    {"tires_pile_6",            {0.8f,      0.5f}},
+    {"tires_pile_7",            {0.8f,      0.5f}},
+    {"tires_pile_8",            {0.8f,      0.5f}},
+    {"tires_pile_9",            {0.8f,      0.5f}},
+    {"tires_pile_10",           {0.8f,      0.5f}},
     {"dir_barrier_oval",        {0.8f,      0.5f}}
 };
 std::unordered_map<std::string, btRigidBody*> rigidBodyMap;
@@ -165,8 +169,6 @@ public:
             delete collectedCoin->getCollisionShape();
             delete static_cast<std::string*>(collectedCoin->getUserPointer());
             delete collectedCoin;
-            
-            playSound("COIN_SFX", 1.0f);
         }
         else {
             std::cout << "Coin '" << coinID << "' not found in coinMap." << std::endl;
