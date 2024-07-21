@@ -31,6 +31,8 @@ bool isVehicleBlocked(btRaycastVehicle* vehicle);
 bool isVehicleInAir(btDiscreteDynamicsWorld* dynamicsWorld, btRaycastVehicle* vehicle);
 void limitVehicleRotationInAir(btRaycastVehicle* vehicle);
 void setSuspensions(btRaycastVehicle* vehicle);
+void checkVehiclePosition();
+void respawnVehicle();
 
 void printVehicleState(btRaycastVehicle* vehicle);
 
@@ -282,7 +284,9 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         speedSubject.notifySpeedChanged(currentSpeedKmh);
         lastSpeedKmh = currentSpeedKmh;
     }
-    
+
+    checkVehiclePosition();
+
 }
 
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold) {
@@ -379,4 +383,19 @@ void printVehicleState(btRaycastVehicle* vehicle) {
               << origin.getZ() << ")" << std::endl;
 }
 
+void checkVehiclePosition() {
+    btVector3 vehiclePosition = vehicle->getChassisWorldTransform().getOrigin();
+    if (vehiclePosition.getY() < -50.0f) { // Soglia predefinita, ad esempio -10.0
+        respawnVehicle();
+    }
+}
+
+void respawnVehicle() {
+    btTransform transform = lastCheckpointTransform;
+    transform.setOrigin(transform.getOrigin());
+    vehicle->getRigidBody()->setWorldTransform(transform);
+    vehicle->getRigidBody()->setLinearVelocity(btVector3(0, 0, 0));
+    vehicle->getRigidBody()->setAngularVelocity(btVector3(0, 0, 0));
+    vehicle->getRigidBody()->clearForces();
+}
 #endif
