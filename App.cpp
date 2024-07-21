@@ -154,10 +154,12 @@ protected:
         
         // register the Light Observers, the timers are in UiManager
         uiManager.startTimerSubject.addObserver(&lightManager);
+        brakeSubject.addObserver(&lightManager);
         
         // register the Audio Observers
         collectedCoinsSubject.addObserver(&audioManager);
         uiManager.startTimerSubject.addObserver(&audioManager);
+        checkLapsSubject.addObserver(&audioManager);
         
         // initializes the audio system and loads the sounds
         audioManager.initAudio(config["audio"]);
@@ -167,7 +169,7 @@ protected:
         std::cout << "Initialization completed!\n";
         
         // plays the race music
-        audioManager.playSound("RACE_MUSIC", 0.0f, 7);
+        audioManager.playSound("RACE_MUSIC", 0.1f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!
@@ -256,7 +258,10 @@ protected:
 
         // applies a step in the physics simulation
         updatePhysics(deltaT);
-
+        
+        // update lights
+        lightManager.updateLightPosition();
+        
         checkCollisions(vehicle, SC.sceneJson);
         
         audioManager.updateAudioSystem();
@@ -309,12 +314,12 @@ protected:
         GlobalUniformBufferObject gubo{};
         // sets lights, camera position and direction;
         updateGUBO(&gubo, dampedCamPos);
+        
+
 
         // draws every object of this app
         drawAll(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch, bodyPitch, bodyRoll);
-        
-        // update lights
-        lightManager.updateLightPosition();
+
     }
     
     void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {

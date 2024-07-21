@@ -8,6 +8,7 @@ public:
     virtual void onCoinCollected(int collectedCoins){};
     virtual void onCheckLaps(int lapsDone){};
     virtual void onStartSemaphore(int countDownValue){};
+    virtual void onBrakeActive(bool isBrakeActive){};
 
     virtual ~Observer() = default;
 };

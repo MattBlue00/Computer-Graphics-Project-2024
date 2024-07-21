@@ -87,9 +87,44 @@ struct LightManager : public Observer {
     
     // update car light position based on car position
     void updateLightPosition() {
-        // TO BE IMPLEMENTED
+        if(!isLightInit) return;
+        
+        glm::vec3 carPosition = getVehiclePosition(vehicle);
+        btQuaternion carRotation = getVehicleRotation(vehicle);
+        glm::quat glmCarRotation = glm::quat(carRotation.getW(), carRotation.getX(), carRotation.getY(), carRotation.getZ());
+
+        // Update position for brake_light_left
+        int leftIndex = getLightIndexByName("brake_light_left");
+        if (leftIndex != -1) {
+            
+            glm::vec3 leftLocalTranslation = glm::vec3(lightArray[leftIndex]["translation"][0],
+                                                       lightArray[leftIndex]["translation"][1],
+                                                       lightArray[leftIndex]["translation"][2]);
+            glm::vec3 leftWorldTranslation = carPosition + glmCarRotation * leftLocalTranslation;
+
+            LightWorldMatrices[leftIndex] = glm::translate(ONE_MAT4, leftWorldTranslation) *
+                                            glm::mat4(glmCarRotation);
+        } else {
+            std::cout << "Light brake_light_left not found!" << std::endl;
+        }
+
+        // Update position for brake_light_right
+        int rightIndex = getLightIndexByName("brake_light_right");
+        
+        
+        if (rightIndex != -1) {
+            glm::vec3 rightLocalTranslation = glm::vec3(lightArray[rightIndex]["translation"][0],
+                                                        lightArray[rightIndex]["translation"][1],
+                                                        lightArray[rightIndex]["translation"][2]);
+            glm::vec3 rightWorldTranslation = carPosition + glmCarRotation * rightLocalTranslation;
+
+            LightWorldMatrices[rightIndex] = glm::translate(ONE_MAT4, rightWorldTranslation) *
+                                             glm::mat4(glmCarRotation);
+        } else {
+            std::cout << "Light brake_light_right not found!" << std::endl;
+        }
     }
-    
+
     void resetSemaphore(){
         int i1 =  getLightIndexByName("red_light_left");
         int i2 = getLightIndexByName("red_light_right");
@@ -105,8 +140,26 @@ struct LightManager : public Observer {
         LightOn[i6] = ZERO_VEC3;
     }
     
+    // Returns the index of the light with the specified name
+    int getLightIndexByName(const std::string& lightName) const {
+        auto findLightIndex = [lightName, this]() -> int {
+            auto it = std::find_if(lightArray.begin(), lightArray.end(), [&lightName](const json& light) {
+                return light["name"] == lightName;
+            });
+            
+            if (it != lightArray.end()) {
+                return std::distance(lightArray.begin(), it);
+            } else {
+                return -1; // Return -1 if light is not found
+            }
+        };
+
+        return findLightIndex();
+    }
+    
+    //------Observer methods--------
+    
     void onStartSemaphore(int countDownValue) override {
-        
         int idL, idR;
         resetSemaphore();
         
@@ -135,21 +188,13 @@ struct LightManager : public Observer {
         }
     }
     
-    // Returns the index of the light with the specified name
-    int getLightIndexByName(const std::string& lightName) const {
-        auto findLightIndex = [lightName, this]() -> int {
-            auto it = std::find_if(lightArray.begin(), lightArray.end(), [&lightName](const json& light) {
-                return light["name"] == lightName;
-            });
-            
-            if (it != lightArray.end()) {
-                return std::distance(lightArray.begin(), it);
-            } else {
-                return -1; // Return -1 if light is not found
-            }
-        };
-
-        return findLightIndex();
+    void onBrakeActive(bool isBrakeActive) override {
+        int leftIndex = getLightIndexByName("brake_light_left");
+        int rightIndex = getLightIndexByName("brake_light_right");
+        
+        LightOn[leftIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
+        LightOn[rightIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
+        
     }
 };
 

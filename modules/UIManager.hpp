@@ -13,7 +13,6 @@ struct UIManager: public Observer {
     glm::vec2 outLapsPosition = glm::vec2(0.36f, -0.9f);
     glm::vec2 outSpeedPosition = glm::vec2(0.36f, -0.7f);
     glm::vec2 outCoinsPosition = glm::vec2(0.36f, -0.6f);
-
     
     BaseProject *BP;
     
@@ -43,7 +42,6 @@ struct UIManager: public Observer {
     TextMaker timer;
     TextMaker speed;
     TextMaker coins;
-    
     
     // Logic variables
     Subject startTimerSubject;

@@ -119,11 +119,19 @@ struct AudioManager : public Observer {
     
     void onStartSemaphore(int countDownValue) override {
         if(countDownValue != 4) return;
-        playSound("START_SFX", 0.2f);
+        playSound("START_SFX", 0.15f);
     };
     
+    int lapsLabel = 1;
     void onCheckLaps(int lapsDone) override {
-        // TODO: implement x1.25 music and raceEndMusic
+        if(lapsLabel > 3) return;
+
+        lapsLabel += lapsDone;
+        if(lapsLabel == 2){
+            // TODO: should also x1.25 the bg music???
+            playSound("FINAL_SFX", 1.0f);
+        }
+        else if(lapsLabel == 3) playSound("END_SFX", 1.0f);
     }
 };
 

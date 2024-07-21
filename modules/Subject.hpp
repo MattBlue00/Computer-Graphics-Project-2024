@@ -40,6 +40,12 @@ struct Subject {
             observer->onStartSemaphore(countDownValue);
         }
     }
+    
+    void notifyBrake(bool isBrakeActive){
+        for (Observer* observer : observers) {
+            observer->onBrakeActive(isBrakeActive);
+        }
+    }
 };
 
 #endif
