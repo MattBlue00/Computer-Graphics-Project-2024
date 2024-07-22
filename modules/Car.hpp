@@ -39,7 +39,7 @@ void printVehicleState(btRaycastVehicle* vehicle);
 
 void initCar() {
     // Car initialization with btBoxShape and btCompoundShape
-    btBoxShape* chassisShape = new btBoxShape(btVector3(1.6, 0.5, 1.8));
+    btBoxShape* chassisShape = new btBoxShape(btVector3(1.6, 0.5, 1.95));
 
     // Create a compound shape and add the chassis shape at the origin
     btCompoundShape* vehicleShape = new btCompoundShape();
