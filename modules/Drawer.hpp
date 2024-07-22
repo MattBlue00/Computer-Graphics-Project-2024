@@ -339,10 +339,10 @@ void addInstanceToCoins(std::string instance_id){
     coins.push_back(instance_id);
 }
 
-glm::mat4 getCarTextureWorldMatrix(){
-    int i = SC.InstanceIds[car];
+glm::mat4 getCarTextureWorldMatrix(Scene* scene, glm::vec3 bodyPosition, float bodyPitch, float bodyYaw, float bodyRoll, float *deltaA){
+    int i = scene->InstanceIds[car];
     float adjustedRoll = std::clamp(bodyRoll, -0.005f, 0.005f);
-    return textureWm = MakeWorld(bodyPosition, bodyYaw + deltaA[i], bodyPitch, adjustedRoll) * ONE_MAT4;
+    return MakeWorld(bodyPosition, bodyYaw + deltaA[i], bodyPitch, adjustedRoll) * ONE_MAT4;
 }
 
 #endif

@@ -263,7 +263,7 @@ protected:
         float bodyRoll = getVehicleRoll(vehicle);
         
         // update lights
-        lightManager.updateLightPositions(getCarTextureWorldMatrix());
+        lightManager.updateLightPositions(getCarTextureWorldMatrix(&SC, bodyPosition, bodyPitch, bodyYaw, bodyRoll, deltaA));
         
         checkCollisions(vehicle, SC.sceneJson);
         
