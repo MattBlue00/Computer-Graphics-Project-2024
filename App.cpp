@@ -54,6 +54,7 @@ protected:
     UIManager uiManager;
     LightManager lightManager;
     AudioManager audioManager;
+    InputManager inputManager;
     
     // current scene
     int currScene = THIRD_PERSON_SCENE;
@@ -155,6 +156,7 @@ protected:
         // register the Light Observers, the timers are in UiManager
         uiManager.startTimerSubject.addObserver(&lightManager);
         brakeSubject.addObserver(&lightManager);
+        headlightsSubject.addObserver(&inputManager);
         
         // register the Audio Observers
         collectedCoinsSubject.addObserver(&audioManager);
@@ -244,7 +246,7 @@ protected:
         glm::vec3 carMovementInput = ZERO_VEC3;
         glm::vec3 cameraRotationInput = ZERO_VEC3;
 
-        // ???
+        // stores whether a specific input has been given
         bool fire = false;
 
         // gets WASD and arrows input from user, and sets deltaT and fire
@@ -281,7 +283,7 @@ protected:
         uiManager.updateUI();
         
         // checks if space was pressed
-        bool shouldRebuildPipeline = shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
+        bool shouldRebuildPipeline = inputManager.shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
 
         // if so, rebuilds pipeline
         if(shouldRebuildPipeline){
@@ -289,7 +291,7 @@ protected:
         }
 
         // checks if esc was pressed
-        shouldQuit(window);
+        inputManager.shouldQuit(window);
 
         // updates camera position
         if (currScene == THIRD_PERSON_SCENE) {

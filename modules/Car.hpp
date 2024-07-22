@@ -19,13 +19,16 @@ const float RAYCAST_DISTANCE = 2.0f;
 
 bool goingOnwards = true;
 int mayBeBlocked = 0;
+int lastSpeedKmh = 0;
 
 btRaycastVehicle* vehicle;
 
-// subject to be observed by UI
+// subjects observed by UI
 Subject speedSubject;
 Subject brakeSubject;
-int lastSpeedKmh = 0;
+
+// subject observed by Interaction
+Subject headlightsSubject;
 
 bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold);
 bool isVehicleBlocked(btRaycastVehicle* vehicle);

@@ -43,7 +43,7 @@ const float ROLL_FIRST = 0.0f;
 const glm::vec3 CamTargetDelta = glm::vec3(0.0f, 1.5f, 0.0f);
 
 // First person camera placement
-const glm::vec3 Cam1stPos = glm::vec3(0.5f, 2.0f, 0.4f);
+const glm::vec3 Cam1stPos = glm::vec3(0.0f, 2.0f, 0.3f);
 
 // CAMERA DATA STRUCTURES
 

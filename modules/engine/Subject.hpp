@@ -46,6 +46,13 @@ struct Subject {
             observer->onBrakeActive(isBrakeActive);
         }
     }
+    
+    void notifyHeadlights(){
+        for (Observer* observer : observers) {
+            observer->onHeadlightsChange();
+        }
+    }
+    
 };
 
 #endif

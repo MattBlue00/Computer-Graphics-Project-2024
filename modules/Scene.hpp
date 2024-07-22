@@ -524,7 +524,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
                 {"id", "coin_" + std::to_string(globalCoinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
-                {"transform",  {0.03, 0, 0, -695 - j * 7,
+                {"transform",  {0.03, 0, 0, -694.5 - j * 7,
                                 0, 0, -0.03, 0.5,
                                 0, 0.03, 0, -100 - 10 * i,
                                 0, 0, 0, 1}}

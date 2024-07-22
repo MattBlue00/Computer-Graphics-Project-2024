@@ -94,7 +94,7 @@ vec3 spot_light_color(vec3 pos, int i) {
     vec3 directionVector = lightPosition - pos;
     float dist = length(directionVector);
     float attenuationFactor = 2.0f;
-    float cosTheta = dot(normalize(lightDirection), directionVector);
+    float cosTheta = dot(normalize(lightDirection), -normalize(directionVector));
     float falloff = clamp((cosTheta - gubo.cosOut) / (gubo.cosIn - gubo.cosOut), 0.0f, 1.0f);
     return lightColor * pow(lightIntensity / dist, attenuationFactor) * falloff;
 }

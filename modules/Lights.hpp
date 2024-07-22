@@ -173,6 +173,18 @@ struct LightManager : public Observer {
         LightOn[rightIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
         
     }
+    
+    void onHeadlightsChange() override {
+        int leftIndex = getLightIndexByName("headlight_left");
+        int rightIndex = getLightIndexByName("headlight_right");
+        
+        glm::vec3 currentLeftLightStatus = LightOn[leftIndex];
+        glm::vec3 currentRightLightStatus = LightOn[leftIndex];
+        
+        LightOn[leftIndex] = currentLeftLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
+        LightOn[rightIndex] = currentRightLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
+    }
+
 };
 
 #endif
