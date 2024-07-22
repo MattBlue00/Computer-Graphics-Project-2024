@@ -342,7 +342,7 @@
         {"id": "tires_pile_10",       "model": "tires_pile",         "texture": "car",
          "transform": [5, 0, 0, -200,
                        0, 5, 0, -1,
-                       0, 0, 5, -314,
+                       0, 0, 5, -319,
                        0, 0, 0, 1]}
     ]
 }

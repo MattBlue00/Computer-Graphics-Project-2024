@@ -80,9 +80,9 @@ protected:
         initialBackgroundColor = {0.01f, 0.01f, 0.08f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 700; // FIXME
-        texturesInPool = 700; // FIXME
-        setsInPool = 700; // FIXME
+        uniformBlocksInPool = 800; // FIXME
+        texturesInPool = 800; // FIXME
+        setsInPool = 800; // FIXME
 
         AspectRatio = 4.0f / 3.0f;
     }

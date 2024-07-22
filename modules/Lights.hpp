@@ -4,6 +4,8 @@
 #include "Utils.hpp"
 #include "Car.hpp"
 
+glm::quat clampRoll(const glm::quat& rotation);
+
 // lights variables
 struct LightManager : public Observer {
     std::vector<glm::mat4> LightWorldMatrices;
@@ -91,7 +93,7 @@ struct LightManager : public Observer {
         
         glm::vec3 carPosition = getVehiclePosition(vehicle);
         btQuaternion carRotation = getVehicleRotation(vehicle);
-        glm::quat glmCarRotation = glm::quat(carRotation.getW(), carRotation.getX(), carRotation.getY(), carRotation.getZ());
+        glm::quat glmCarRotation = clampRoll(glm::quat(carRotation.getW(), carRotation.getX(), carRotation.getY(), carRotation.getZ()));
 
         // Update position for brake_light_left
         int leftIndex = getLightIndexByName("brake_light_left");
@@ -148,7 +150,7 @@ struct LightManager : public Observer {
             });
             
             if (it != lightArray.end()) {
-                return std::distance(lightArray.begin(), it);
+                return (int)std::distance(lightArray.begin(), it);
             } else {
                 return -1; // Return -1 if light is not found
             }
@@ -197,6 +199,17 @@ struct LightManager : public Observer {
         
     }
 };
+
+glm::quat clampRoll(const glm::quat& rotation) {
+    // Converti il quaternione in angoli di Eulero
+    glm::vec3 euler = glm::eulerAngles(rotation);
+
+    // Clamp dell'angolo di roll (che corrisponde a euler.z)
+    euler.z = glm::clamp(euler.z, -0.005f, 0.005f);
+
+    // Riconverti gli angoli di Eulero modificati in un quaternione
+    return glm::quat(euler);
+}
 
 #endif
 

@@ -6,19 +6,19 @@
 #include "Audio.hpp"
 #include "Subject.hpp"
 
-const float maxEngineForce = 6000.0f; // Maximum force applied to wheels
-const float maxBrakeForce = 200.0f; // Maximum brake force
-const float steeringIncrement = 0.08f;
-const float steeringDegradationExponent = 0.15f;
-const float speedStartSteeringDegradation = 10.0f;
-const float steeringMax = 0.3f;
-const float steeringMin = 0.001f;
-const float maxSpeed = 50.52f; // 181kmh
+const float ENGINE_FORCE = 6000.0f; // Maximum force applied to wheels
+const float BRAKE_FORCE = 250.0f; // Maximum brake force
+const float STEERING_INCREMENT_PER_FRAME = 0.08f;
+const float STEERING_DEGRADATION_EXP = 0.15f;
+const float SPEED_START_STEERING_DEGRADATION = 10.0f;
+const float MAX_STEERING = 0.3f;
+const float MIN_STEERING = 0.001f;
+const float MAX_SPEED = 50.52f; // 181kmh
 
-const float raycastDistance = 2.0f;
+const float RAYCAST_DISTANCE = 2.0f;
 
 bool goingOnwards = true;
-bool mayBeBlocked = false;
+int mayBeBlocked = 0;
 
 btRaycastVehicle* vehicle;
 
@@ -174,7 +174,7 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
 
     // Movimento avanti/indietro
     if (carMovementInput.z < 0) { // W premuto
-        engineForce = maxEngineForce;
+        engineForce = ENGINE_FORCE;
         brakeForce = 0.0f;
         if(isVehicleStopped(vehicle, 0.5f) && !goingOnwards){
             goingOnwards = true;
@@ -182,7 +182,7 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     }
     else if (carMovementInput.z > 0 && goingOnwards) { // S premuto
         engineForce = 0.0f; // Forza negativa per andare in retro
-        brakeForce = maxBrakeForce;
+        brakeForce = BRAKE_FORCE;
         if(isVehicleStopped(vehicle, 0.5f)){
             goingOnwards = false;
         }
@@ -190,14 +190,14 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         brakeSubject.notifyBrake(true);
     }
     else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
-        engineForce = -maxEngineForce; // Forza negativa per andare in retro
+        engineForce = -ENGINE_FORCE; // Forza negativa per andare in retro
         brakeForce = 0.0f;
         // notify the brake lights
         brakeSubject.notifyBrake(true);
     }
     else { // Nessun input
         if (isVehicleStopped(vehicle, 0.5f)){
-            brakeForce = maxBrakeForce;
+            brakeForce = BRAKE_FORCE;
             engineForce = 0.0f;
         }
         else {
@@ -205,54 +205,56 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
                 engineForce = 0.0f;
             }
             else{
-                engineForce = maxEngineForce * 0.75f * glm::clamp(currentSpeed / maxSpeed, 0.0f, 1.0f);
+                engineForce = ENGINE_FORCE * 0.75f * glm::clamp(currentSpeed / MAX_SPEED, 0.0f, 1.0f);
             }
             brakeForce = 0.0f;
         }
     }
 
     // Fattore di riduzione della sterzata basato sulla velocità
-    float speedFactor = currentSpeed < speedStartSteeringDegradation ?
+    float speedFactor = currentSpeed < SPEED_START_STEERING_DEGRADATION ?
                         1.0f :
-                        glm::clamp(1.0f - glm::pow((currentSpeed - speedStartSteeringDegradation) / (maxSpeed - speedStartSteeringDegradation), steeringDegradationExponent),
+                        glm::clamp(1.0f - glm::pow((currentSpeed - SPEED_START_STEERING_DEGRADATION) / (MAX_SPEED - SPEED_START_STEERING_DEGRADATION), STEERING_DEGRADATION_EXP),
                                    0.0f,
                                    1.0f);
 
-    float dynamicSteeringIncrement = glm::clamp(steeringIncrement * speedFactor, steeringMin, steeringMax);
+    float dynamicSteeringIncrement = glm::clamp(STEERING_INCREMENT_PER_FRAME * speedFactor, MIN_STEERING, MAX_STEERING);
 
     // Sterzata destra/sinistra
     if (carMovementInput.x > 0) {
         steering -= dynamicSteeringIncrement;
-        if (steering < -steeringMax) {
-            steering = -steeringMax;
+        if (steering < -MAX_STEERING) {
+            steering = -MAX_STEERING;
         }
     }
     else if (carMovementInput.x < 0) {
         steering += dynamicSteeringIncrement;
-        if (steering > steeringMax) {
-            steering = steeringMax;
+        if (steering > MAX_STEERING) {
+            steering = MAX_STEERING;
         }
     }
     else {
         // Se non ci sono input, ritorna gradualmente la sterzata a zero
         if (steering > 0) {
-            steering -= (steeringIncrement / 2.0f);
+            steering -= (STEERING_INCREMENT_PER_FRAME / 2.0f);
             if (steering < 0) steering = 0;
         }
         else if (steering < 0) {
-            steering += (steeringIncrement / 2.0f);
+            steering += (STEERING_INCREMENT_PER_FRAME / 2.0f);
             if (steering > 0) steering = 0;
         }
     }
     
     // Applicazione dei controlli
     if(!isVehicleInAir(dynamicsWorld, vehicle)){
-        if(vehicle->getRigidBody()->getLinearVelocity().length() <= maxSpeed){
+        if(vehicle->getRigidBody()->getLinearVelocity().length() <= MAX_SPEED){
             if(engineForce != 0.0f && isVehicleBlocked(vehicle)){
-                vehicle->applyEngineForce(10*engineForce, 0);
-                vehicle->applyEngineForce(10*engineForce, 1);
-                vehicle->applyEngineForce(10*engineForce, 2);
-                vehicle->applyEngineForce(10*engineForce, 3);
+                std::cout << mayBeBlocked << std::endl;
+                float bonusCoefficient = mayBeBlocked * 0.15f;
+                vehicle->applyEngineForce(bonusCoefficient * engineForce, 0);
+                vehicle->applyEngineForce(bonusCoefficient * engineForce, 1);
+                vehicle->applyEngineForce(bonusCoefficient * engineForce, 2);
+                vehicle->applyEngineForce(bonusCoefficient * engineForce, 3);
             }
             else{
                 vehicle->applyEngineForce(0.0f, 0);
@@ -271,8 +273,7 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         vehicle->setSteeringValue(steering, 0); // Ruote anteriori
         vehicle->setSteeringValue(steering, 1);
     }
-    
-    if(isVehicleInAir(dynamicsWorld, vehicle)){
+    else{
         limitVehicleRotationInAir(vehicle);
     }
 
@@ -287,7 +288,7 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
     if(lastSpeedKmh != currentSpeedKmh){
         // fix the flickering speed number at maxspeed
-        if(currentSpeedKmh == std::abs(std::floor(maxSpeed * 3.6))) return;
+        if(currentSpeedKmh == std::abs(std::floor(MAX_SPEED * 3.6))) return;
         speedSubject.notifySpeedChanged(currentSpeedKmh);
         lastSpeedKmh = currentSpeedKmh;
     }
@@ -303,17 +304,12 @@ bool isVehicleStopped(btRaycastVehicle* vehicle, float threshold) {
 
 bool isVehicleBlocked(btRaycastVehicle* vehicle) {
     float linearVelocity = vehicle->getRigidBody()->getLinearVelocity().length();
-    if(linearVelocity > 0.1f && linearVelocity < 1.0f){
-        if(!mayBeBlocked){
-            mayBeBlocked = true;
-            return false;
-        }
-        else{
-            return true;
-        }
+    if(linearVelocity > 0.1f && linearVelocity < 5.0f){
+        mayBeBlocked++;
+        return mayBeBlocked > 60;
     }
     else{
-        mayBeBlocked = false;
+        mayBeBlocked = 0;
         return false;
     }
 }
