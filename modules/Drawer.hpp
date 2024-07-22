@@ -50,12 +50,12 @@ const float SPACE_SHIP_MOV_PER_FRAME = 1.2f;
 const int MAX_FULL_FIREWORK_FRAMES = 40;
 std::vector<int> fullFireworkFrames = { 0, 50, 15, 0, 30 };
 
-void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch, float Roll) {
+void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float Pitch, float Roll) {
     int i = scene->InstanceIds[car];
 
     float adjustedRoll = std::clamp(Roll, -0.005f, 0.005f);
     
-    ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, adjustedRoll) * baseCar;
+    ubo->mMat = MakeWorld(Pos, Yaw + deltaA[i], Pitch, adjustedRoll);
     ubo->mvpMat = ViewPrj * ubo->mMat;
     ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -63,11 +63,11 @@ void drawCar(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject*
     scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
 }
 
-void drawWorld(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawWorld(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     for (std::vector<std::string>::iterator it = world.begin(); it != world.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
         
-        ubo->mMat = scene->I[i].Wm * baseCar;
+        ubo->mMat = scene->I[i].Wm;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -76,7 +76,7 @@ void drawWorld(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObjec
     }
 }
 
-void drawDirBarrier(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float* usePitch) {
+void drawDirBarrier(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3** deltaP, float* deltaA, float* usePitch) {
     for (std::vector<std::string>::iterator it = dir_barrier.begin(); it != dir_barrier.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
 
@@ -87,14 +87,14 @@ void drawDirBarrier(Scene* scene, GlobalUniformBufferObject* gubo, UniformBuffer
 
         if (drawOval || drawInner) {
             // Disegna la barriera specificata in base al giro
-            ubo->mMat = scene->I[i].Wm * baseCar;
+            ubo->mMat = scene->I[i].Wm;
             ubo->mvpMat = ViewPrj * ubo->mMat;
             ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
         }
         else if (rescale) {
             // Rescale other barriers to zero
             glm::mat4 scaledWm = glm::scale(scene->I[i].Wm, glm::vec3(0.0f, 0.0f, 0.0f));
-            ubo->mMat = scaledWm * baseCar;
+            ubo->mMat = scaledWm;
             ubo->mvpMat = ViewPrj * ubo->mMat;
             ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
         }
@@ -104,7 +104,7 @@ void drawDirBarrier(Scene* scene, GlobalUniformBufferObject* gubo, UniformBuffer
     }
 }
 
-void drawCoins(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawCoins(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     for (std::vector<std::string>::iterator it = coins.begin(); it != coins.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
        
@@ -117,7 +117,7 @@ void drawCoins(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObjec
             scene->I[i].Wm = glm::scale(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
         }
         
-        ubo->mMat = scene->I[i].Wm * baseCar;
+        ubo->mMat = scene->I[i].Wm;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -126,7 +126,7 @@ void drawCoins(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObjec
     }
 }
 
-void drawAirplane(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawAirplane(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     int i = scene->InstanceIds[airplane];
     
     // updates airplane's position
@@ -187,7 +187,7 @@ void drawAirplane(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferOb
                                                                   * brakingFactor));
     }
     
-    ubo->mMat = scene->I[i].Wm * baseCar;
+    ubo->mMat = scene->I[i].Wm;
     ubo->mvpMat = ViewPrj * ubo->mMat;
     ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -195,7 +195,7 @@ void drawAirplane(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferOb
     scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
 }
 
-void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     int i = scene->InstanceIds[airship];
     
     // updates airship's transform matrix
@@ -216,7 +216,7 @@ void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObj
         }
     }
     
-    ubo->mMat = scene->I[i].Wm * baseCar;
+    ubo->mMat = scene->I[i].Wm;
     ubo->mvpMat = ViewPrj * ubo->mMat;
     ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -224,12 +224,12 @@ void drawAirship(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObj
     scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
 }
 
-void drawEarth(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawEarth(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     int i = scene->InstanceIds[earth];
    
     scene->I[i].Wm = glm::rotate(scene->I[i].Wm, DEG_0_2, Y_AXIS);
     
-    ubo->mMat = scene->I[i].Wm * baseCar;
+    ubo->mMat = scene->I[i].Wm;
     ubo->mvpMat = ViewPrj * ubo->mMat;
     ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -237,12 +237,12 @@ void drawEarth(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObjec
     scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
 }
 
-void drawMoon(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawMoon(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     int i = scene->InstanceIds[moon];
    
     scene->I[i].Wm = glm::rotate(scene->I[i].Wm, -DEG_0_2, Y_AXIS);
     
-    ubo->mMat = scene->I[i].Wm * baseCar;
+    ubo->mMat = scene->I[i].Wm;
     ubo->mvpMat = ViewPrj * ubo->mMat;
     ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -250,7 +250,7 @@ void drawMoon(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject
     scene->DS[i]->map(currentImage, gubo, sizeof(*gubo), 2);
 }
 
-void drawSpaceShips(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawSpaceShips(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     for (std::vector<std::string>::iterator it = spaceShips.begin(); it != spaceShips.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
         
@@ -261,7 +261,7 @@ void drawSpaceShips(Scene* scene, GlobalUniformBufferObject* gubo, UniformBuffer
             scene->I[i].Wm = glm::translate(scene->I[i].Wm, glm::vec3(SPACE_SHIP_MOV_PER_FRAME, 0.0f, 0.0f));
         }
         
-        ubo->mMat = scene->I[i].Wm * baseCar;
+        ubo->mMat = scene->I[i].Wm;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -270,7 +270,7 @@ void drawSpaceShips(Scene* scene, GlobalUniformBufferObject* gubo, UniformBuffer
     }
 }
 
-void drawFireworks(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
+void drawFireworks(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch){
     int fireworkIndex = 0;
     for (std::vector<std::string>::iterator it = fireworks.begin(); it != fireworks.end(); it++) {
         int i = scene->InstanceIds[it->c_str()];
@@ -288,7 +288,7 @@ void drawFireworks(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferO
             scene->I[i].Wm = glm::scale(scene->I[i].Wm, glm::vec3(1.05f, 1.05f, 1.05f));
         }
         
-        ubo->mMat = scene->I[i].Wm * baseCar;
+        ubo->mMat = scene->I[i].Wm;
         ubo->mvpMat = ViewPrj * ubo->mMat;
         ubo->nMat = glm::inverse(glm::transpose(ubo->mMat));
 
@@ -299,36 +299,36 @@ void drawFireworks(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferO
     }
 }
 
-void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 baseCar, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch, float bodyPitch, float bodyRoll){
+void drawAll(Scene* scene, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo, int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj, glm::vec3 **deltaP, float *deltaA, float *usePitch, float bodyPitch, float bodyRoll){
     // draws the car
-    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, bodyPitch, bodyRoll);
+    drawCar(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, bodyPitch, bodyRoll);
     
     // draws the circuit and its fixed decorations
-    drawWorld(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawWorld(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
     
     // draws the dir_barrier that block some path
-    drawDirBarrier(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawDirBarrier(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
 
     // draws the coins
-    drawCoins(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawCoins(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
     
     // draws the airplane
-    drawAirplane(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawAirplane(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
     
     // draws the airship
-    drawAirship(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawAirship(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
     
     // draws the Earth
-    drawEarth(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawEarth(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
     
     // draws the Moon
-    drawMoon(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawMoon(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
     
     // draws the space ships
-    drawSpaceShips(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawSpaceShips(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
     
     // draws the fireworks
-    drawFireworks(scene, gubo, ubo, currentImage, Yaw, Pos, baseCar, ViewPrj, deltaP, deltaA, usePitch);
+    drawFireworks(scene, gubo, ubo, currentImage, Yaw, Pos, ViewPrj, deltaP, deltaA, usePitch);
 }
 
 void addInstanceToWorld(std::string instance_id){

@@ -1,13 +1,14 @@
-#ifndef UIMANAGER_HPP
-#define UIMANAGER_HPP
+#ifndef UI_MANAGER_HPP
+#define UI_MANAGER_HPP
 
 #include "TextMaker.hpp"  // text header
 #include <chrono>         // for time tracking
-#include <glm/vec2.hpp>   // for glm::vec2
-#include "Subject.hpp"
+#include "engine/Subject.hpp"
+#include "engine/Manager.hpp"
 
-struct UIManager: public Observer {
+struct UIManager: public Observer, public Manager {
     
+protected:
     // Text Positions
     glm::vec2 outTimerPosition = glm::vec2(0.36f, -0.8f);
     glm::vec2 outLapsPosition = glm::vec2(0.36f, -0.9f);
@@ -44,7 +45,6 @@ struct UIManager: public Observer {
     TextMaker coins;
     
     // Logic variables
-    Subject startTimerSubject;
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdateTime;
     
@@ -57,8 +57,19 @@ struct UIManager: public Observer {
     int lapsLabel = 1;
     int collectedCoins = 0;
 
-    // init UI
-    void init(BaseProject *_BP) {
+public:
+    
+    Subject startTimerSubject;
+
+    void init(std::vector<void*> params) override {
+        
+        BaseProject* _BP = nullptr;
+        if (params.size() == 1) {
+            _BP = static_cast<BaseProject*>(params[0]);
+        } else {
+            std::cout << "UIManager.init(): Wrong Parameters" << std::endl;
+            exit(-1);
+        }
         BP = _BP;
         
         // init TextMakers
@@ -88,13 +99,6 @@ struct UIManager: public Observer {
 
     }
     
-    void localCleanup() {
-        laps.localCleanup();
-        timer.localCleanup();
-        speed.localCleanup();
-        coins.localCleanup();
-    }
-    
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, int currScene) {
         //startTimer.populateCommandBuffer(commandBuffer, currentImage, currScene);
         laps.populateCommandBuffer(commandBuffer, currentImage, currScene);
@@ -104,9 +108,16 @@ struct UIManager: public Observer {
     }
     
     // update function
-    void updateUI() {
+    void update(std::vector<void*>) override {
         if(!isGameStarted) handleStartTimer();  // if start-timer changes update the UI
         else if(!isGameFinished) handleTimer(); // if real timer changes update UI
+    }
+    
+    void cleanup() override {
+        laps.localCleanup();
+        timer.localCleanup();
+        speed.localCleanup();
+        coins.localCleanup();
     }
     
     // start-timer handle function

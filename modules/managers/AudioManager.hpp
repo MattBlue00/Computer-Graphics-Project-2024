@@ -4,11 +4,15 @@
 #include <fmod.hpp>
 #include <fmod_errors.h>
 
-struct AudioManager : public Observer {
+struct AudioManager : public Observer, public Manager {
+    
+protected:
+    
     FMOD::System* audio_system = nullptr;
     FMOD_RESULT result;
     std::map<std::string, FMOD::Sound*> soundMap;
-    std::map<std::string, std::vector<FMOD::Channel*>> channelMap;  // Map to keep track of channels
+    std::map<std::string, std::vector<FMOD::Channel*>> channelMap;
+    std::map<FMOD::Channel*, std::function<void()>> endCallbacks;
     
     static FMOD_RESULT F_CALLBACK channelEndCallback(FMOD_CHANNELCONTROL* channelControl, FMOD_CHANNELCONTROL_TYPE controlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void* commandData1, void* commandData2) {
             if (callbackType == FMOD_CHANNELCONTROL_CALLBACK_END) {
@@ -34,30 +38,7 @@ struct AudioManager : public Observer {
             }
             return FMOD_OK;
         }
-
-        std::map<FMOD::Channel*, std::function<void()>> endCallbacks;
-
-public:
     
-    // Initialize the audio system
-    void initAudio(const json& audioMap) {
-        result = FMOD::System_Create(&audio_system);
-        checkFmodError(result);
-        result = audio_system->init(1024, FMOD_INIT_NORMAL, 0);  // Increased number of channels
-        checkFmodError(result);
-
-        for (const auto& music : audioMap) {
-            std::string name = music["name"];
-            std::string path = music["path"];
-
-            FMOD::Sound* sound;
-            result = audio_system->createSound(path.c_str(), FMOD_DEFAULT, 0, &sound);
-            checkFmodError(result);
-
-            soundMap[name] = sound;
-        }
-    }
-
     // plays a sound with various options
     void playSound(const std::string& soundName, float volume, float loopStartSecond = -1, float speed = 1, std::function<void()> onSoundEnd = nullptr) {
         FMOD::Channel* channel = nullptr;
@@ -131,8 +112,38 @@ public:
         }
     }
 
+public:
+    
+    // Initialize the audio system
+    void init(std::vector<void*> params) override {
+        
+        json audioMap = nullptr;
+        if (params.size() == 1) {
+            audioMap = *static_cast<json*>(params[0]);
+        } else {
+            std::cout << "AudioManager.init(): Wrong Parameters" << std::endl;
+            exit(-1);
+        }
+        
+        result = FMOD::System_Create(&audio_system);
+        checkFmodError(result);
+        result = audio_system->init(1024, FMOD_INIT_NORMAL, 0);  // Increased number of channels
+        checkFmodError(result);
+
+        for (const auto& music : audioMap) {
+            std::string name = music["name"];
+            std::string path = music["path"];
+
+            FMOD::Sound* sound;
+            result = audio_system->createSound(path.c_str(), FMOD_DEFAULT, 0, &sound);
+            checkFmodError(result);
+
+            soundMap[name] = sound;
+        }
+    }
+
     // Update the audio system
-    void updateAudioSystem() {
+    void update(std::vector<void*>) override {
         result = audio_system->update();
         checkFmodError(result);
     }
@@ -146,7 +157,7 @@ public:
     }
 
     // Clean up the audio system
-    void cleanupAudio() {
+    void cleanup() override {
         for (auto& entry : soundMap) {
             result = entry.second->release();
             checkFmodError(result);
@@ -177,19 +188,19 @@ public:
     
     int lapsLabel = 1;
     void onCheckLaps(int lapsDone) override {
-            if (lapsLabel > 3) return;
+        if (lapsLabel > 3) return;
 
-            lapsLabel += lapsDone;
-            if (lapsLabel == 2) {
-                stopSound("RACE_MUSIC");
-                playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
-                    playSound("RACE_MUSIC", 0.2f, 7, 1.25f);
-                });
-            } else if (lapsLabel == 3) {
-                stopSound("RACE_MUSIC");
-                playSound("END_SFX", 0.5f);
-            }
+        lapsLabel += lapsDone;
+        if (lapsLabel == 2) {
+            stopSound("RACE_MUSIC");
+            playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
+                playSound("RACE_MUSIC", 0.2f, 7, 1.25f);
+            });
+        } else if (lapsLabel == 3) {
+            stopSound("RACE_MUSIC");
+            playSound("END_SFX", 0.5f);
         }
+    }
 };
 
 #endif

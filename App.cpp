@@ -6,17 +6,18 @@
 
 // our headers
 #include "Utils.hpp"                    // constants and structs
-#include "modules/Interaction.hpp"      // responds to input
-#include "modules/Camera.hpp"           // handles camera movement
+#include "modules/managers/InputManager.hpp"      // responds to input
+#include "modules/managers/SceneManager.hpp"      // updates scene
+#include "modules/managers/CameraManager.hpp"           // handles camera movement
 #include "modules/Car.hpp"              // handles car movement
 #include "modules/Drawer.hpp"           // draws the objects
 #include "modules/Physics.hpp"          // adds physics
-#include "modules/Audio.hpp"            // adds audio management
-#include "modules/Lights.hpp"           // adds lights management
+#include "modules/managers/AudioManager.hpp"            // adds audio management
+#include "modules/managers/LightsManager.hpp"           // adds lights management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
 #include "modules/Scene.hpp"            // scene header (from professor)
-#include "modules/UIManager.hpp"
+#include "modules/managers/UIManager.hpp"
 
 // PROTOTYPES DECLARATION
 
@@ -52,24 +53,20 @@ protected:
 
     // Managers
     UIManager uiManager;
-    LightManager lightManager;
+    LightsManager lightsManager;
     AudioManager audioManager;
     InputManager inputManager;
+    SceneManager sceneManager;
+    CameraManager cameraManager;
     
     // current scene
     int currScene = THIRD_PERSON_SCENE;
 
     // aspect ratio
-    float AspectRatio;
-
-    // Position
-    glm::vec3 Pos;
-
-    // Yaw
-    float Yaw;
+    float aspectRatio;
 
     // Initial position
-    glm::vec3 InitialPos;
+    glm::vec3 initialCarPosition;
 
     // Here you set the main application parameters
     void setWindowParameters() {
@@ -85,13 +82,13 @@ protected:
         texturesInPool = 800; // FIXME
         setsInPool = 800; // FIXME
 
-        AspectRatio = 4.0f / 3.0f;
+        aspectRatio = 4.0f / 3.0f;
     }
 
     // What to do when the window changes size
     void onWindowResize(int w, int h) {
         std::cout << "Window resized to: " << w << " x " << h << "\n";
-        AspectRatio = (float)w / (float)h;
+        aspectRatio = (float)w / (float)h;
     }
 
     // Here you load and setup all your Vulkan Models and Textures.
@@ -124,13 +121,23 @@ protected:
         // Load Scene
         SC.init(this, &VD, DSL, P, "models/scene.json");
         
-        // init the UI
-        uiManager.init(this);
+        json config = parseConfigFile();
+        
+        // managers init
+        inputManager.init({window});
+        sceneManager.init({window});
+        cameraManager.init({});
+        uiManager.init({this});
+        lightsManager.init({});
+        audioManager.init({&config["audio"]});
+        
+        // add observers
+        inputManager.addObserversForSceneEvents({&sceneManager});
+        inputManager.addObserversForLightEvents({&lightsManager});
+        sceneManager.addObservers({&cameraManager});
         
         // Init local variables
-        Pos = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
-        InitialPos = Pos;
-        Yaw = 0;
+        initialCarPosition = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
 
         deltaP = (glm::vec3**)calloc(SC.InstanceCount, sizeof(glm::vec3*));
         deltaA = (float*)calloc(SC.InstanceCount, sizeof(float));
@@ -140,8 +147,6 @@ protected:
             deltaA[i] = 0.0f;
             usePitch[i] = 0.0f;
         }
-        
-        json config = parseConfigFile();
 
         // creates the physics world
         initPhysics(SC.sceneJson);
@@ -154,19 +159,13 @@ protected:
         checkLapsSubject.addObserver(&uiManager);
         
         // register the Light Observers, the timers are in UiManager
-        uiManager.startTimerSubject.addObserver(&lightManager);
-        brakeSubject.addObserver(&lightManager);
-        headlightsSubject.addObserver(&inputManager);
+        uiManager.startTimerSubject.addObserver(&lightsManager);
+        brakeSubject.addObserver(&lightsManager);
         
         // register the Audio Observers
         collectedCoinsSubject.addObserver(&audioManager);
         uiManager.startTimerSubject.addObserver(&audioManager);
         checkLapsSubject.addObserver(&audioManager);
-        
-        // initializes the audio system and loads the sounds
-        audioManager.initAudio(config["audio"]);
-        
-        lightManager.initLights();
         
         std::cout << "Initialization completed!\n";
     }
@@ -210,9 +209,10 @@ protected:
         P.destroy();
 
         SC.localCleanup();
-        uiManager.localCleanup();
+        
+        uiManager.cleanup();
         cleanupPhysics();
-        audioManager.cleanupAudio();
+        audioManager.cleanup();
     }
 
     // Here it is the creation of the command buffer:
@@ -232,12 +232,6 @@ protected:
     // Here is where you update the uniforms.
     // Very likely this will be where you will be writing the logic of your application.
     void updateUniformBuffer(uint32_t currentImage) {
-
-        // true if the scene is transitioning to another scene
-        static bool debounce = false;
-
-        // holds the pressed input key
-        static int curDebounce = 0;
 
         // small amount of time that passes at every "update"
         float deltaT;
@@ -259,64 +253,44 @@ protected:
         updatePhysics(deltaT);
         
         // get position, yaw and pitch of car rigid body
-        glm::vec3 bodyPosition = getVehiclePosition(vehicle);
-        float bodyYaw = getVehicleYaw(vehicle);
-        float bodyPitch = getVehiclePitch(vehicle);
-        float bodyRoll = getVehicleRoll(vehicle);
+        glm::vec3 carPosition = getVehiclePosition(vehicle);
+        float yaw = getVehicleYaw(vehicle);
+        float pitch = getVehiclePitch(vehicle);
+        float roll = getVehicleRoll(vehicle);
         
-        // update lights
-        lightManager.updateLightPositions(getCarTextureWorldMatrix(&SC, bodyPosition, bodyPitch, bodyYaw, bodyRoll, deltaA));
+        glm::mat4 textureWm = getCarTextureWorldMatrix(&SC, carPosition, pitch, yaw, roll, deltaA);
         
         checkCollisions(vehicle, SC.sceneJson);
         
-        audioManager.updateAudioSystem();
-
-        // inits the camera to third position view
-        static CameraData cameraData = {};
-        switchToThirdPersonCamera(&cameraData);
-
-        // camera variables definition
-        glm::mat4 M; // will be used as a return result when building view matrix
-        glm::vec3 CamPos = Pos;
-        static glm::vec3 dampedCamPos = CamPos; // MUST stay here
-
-        uiManager.updateUI();
-        
         // checks if space was pressed
-        bool shouldRebuildPipeline = inputManager.shouldChangeScene(window, &cameraData, &currScene, &debounce, &curDebounce, &dampedCamPos, Pos);
+        bool shouldRebuildPipeline;
+        
+        // manager updates
+        lightsManager.update({&textureWm});
+        inputManager.update({&shouldRebuildPipeline});
+        cameraManager.update({&pitch, &yaw, &roll, &aspectRatio, &deltaT, &cameraRotationInput, &carMovementInput, &carPosition});
+        uiManager.update({});
+        audioManager.update({});
 
         // if so, rebuilds pipeline
         if(shouldRebuildPipeline){
             RebuildPipeline();
         }
 
-        // checks if esc was pressed
-        inputManager.shouldQuit(window);
-
-        // updates camera position
-        if (currScene == THIRD_PERSON_SCENE) {
-            updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, bodyYaw, bodyPitch, bodyRoll, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
-        }
-        else {
-            updateFirstPersonCamera(&cameraData, &M, bodyYaw, bodyPitch, bodyRoll, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
-        }
-
-        glm::mat4 ViewPrj = M;
         UniformBufferObject ubo{};
-        glm::mat4 baseCar = ONE_MAT4;
                         
         // Here is where you actually update your uniforms
 
         GlobalUniformBufferObject gubo{};
         // sets lights, camera position and direction;
-        updateGUBO(&gubo, dampedCamPos);
+        updateGUBO(&gubo, cameraManager.getCameraPosition());
 
         // draws every object of this app
-        drawAll(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch, bodyPitch, bodyRoll);
+        drawAll(&SC, &gubo, &ubo, currentImage, yaw, carPosition, cameraManager.getViewProjection(), deltaP, deltaA, usePitch, pitch, roll);
 
     }
     
-    void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos) {
+    void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 cameraPosition) {
         // updates global uniforms
         gubo->ambientLightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
         gubo->ambientLightColor = ONE_VEC4;
@@ -324,15 +298,15 @@ protected:
         gubo->eyeDir.w = 1.0;
 
         for (int i = 0; i < LIGHTS_COUNT; i++) {
-            gubo->lightColor[i] = glm::vec4(lightManager.LightColors[i], lightManager.LightIntensities[i]);
-            gubo->lightDir[i].v = lightManager.LightWorldMatrices[i] * glm::vec4(0, 0, 1, 0);
-            gubo->lightPos[i].v = lightManager.LightWorldMatrices[i] * glm::vec4(0, 0, 0, 1);
-            gubo->lightOn[i].v = lightManager.LightOn[i];
+            gubo->lightColor[i] = glm::vec4(lightsManager.lightColors[i], lightsManager.lightIntensities[i]);
+            gubo->lightDir[i].v = lightsManager.lightWorldMatrices[i] * glm::vec4(0, 0, 1, 0);
+            gubo->lightPos[i].v = lightsManager.lightWorldMatrices[i] * glm::vec4(0, 0, 0, 1);
+            gubo->lightOn[i].v = lightsManager.lightOn[i];
         }
 
-        gubo->eyePos = dampedCamPos;
-        gubo->cosIn = lightManager.ScosIn;
-        gubo->cosOut = lightManager.ScosOut;
+        gubo->eyePos = cameraPosition;
+        gubo->cosIn = lightsManager.cosIn;
+        gubo->cosOut = lightsManager.cosOut;
     }
 };
 

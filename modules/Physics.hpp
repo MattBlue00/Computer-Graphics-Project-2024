@@ -3,7 +3,7 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "Utils.hpp"
-#include "Subject.hpp"
+#include "engine/Subject.hpp"
 
 // physics global properties
 btBroadphaseInterface* broadphase;

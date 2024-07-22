@@ -10,6 +10,13 @@ public:
     virtual void onStartSemaphore(int countDownValue){};
     virtual void onBrakeActive(bool isBrakeActive){};
     virtual void onHeadlightsChange(){};
+    
+    virtual void onQuit(){};
+    virtual void onChangeScene(){};
+    virtual void onUpdateDebounce(){};
+    
+    virtual void onChangeView(){};
+    virtual void onChangeHeadlightsStatus(){};
 
     virtual ~Observer() = default;
 };

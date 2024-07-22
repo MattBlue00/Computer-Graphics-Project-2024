@@ -47,9 +47,35 @@ struct Subject {
         }
     }
     
-    void notifyHeadlights(){
+    /*--------------------------------*/
+    
+    void notifyQuit(){
         for (Observer* observer : observers) {
-            observer->onHeadlightsChange();
+            observer->onQuit();
+        }
+    }
+    
+    void notifyChangeScene(){
+        for (Observer* observer : observers) {
+            observer->onChangeScene();
+        }
+    }
+    
+    void notifyUpdateDebounce(){
+        for (Observer* observer : observers) {
+            observer->onUpdateDebounce();
+        }
+    }
+    
+    void notifyChangeView(){
+        for (Observer* observer : observers) {
+            observer->onChangeView();
+        }
+    }
+    
+    void notifyChangeHeadlightsStatus(){
+        for (Observer* observer : observers) {
+            observer->onChangeHeadlightsStatus();
         }
     }
     

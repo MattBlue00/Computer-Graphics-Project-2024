@@ -3,8 +3,7 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "Physics.hpp"
-#include "Audio.hpp"
-#include "Subject.hpp"
+#include "engine/Subject.hpp"
 
 const float ENGINE_FORCE = 6000.0f; // Maximum force applied to wheels
 const float BRAKE_FORCE = 250.0f; // Maximum brake force
