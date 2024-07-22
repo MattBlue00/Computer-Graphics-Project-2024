@@ -166,6 +166,9 @@ struct LightManager : public Observer {
         resetSemaphore();
         
         switch (countDownValue) {
+            case 6:
+            case 5:
+            case 4:
             case 3:
                 idL =  getLightIndexByName("red_light_left");
                 idR = getLightIndexByName("red_light_right");
@@ -173,6 +176,10 @@ struct LightManager : public Observer {
                 LightOn[idR] = ONE_VEC3;
                 break;
             case 2:
+                idL =  getLightIndexByName("red_light_left");
+                idR = getLightIndexByName("red_light_right");
+                LightOn[idL] = ONE_VEC3;
+                LightOn[idR] = ONE_VEC3;
                 idL =  getLightIndexByName("yellow_light_left");
                 idR =  getLightIndexByName("yellow_light_right");
                 LightOn[idL] = ONE_VEC3;
