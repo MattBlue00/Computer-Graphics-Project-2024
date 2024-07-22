@@ -256,18 +256,18 @@ protected:
         // applies a step in the physics simulation
         updatePhysics(deltaT);
         
-        // update lights
-        lightManager.updateLightPositions();
-        
-        checkCollisions(vehicle, SC.sceneJson);
-        
-        audioManager.updateAudioSystem();
-
         // get position, yaw and pitch of car rigid body
         glm::vec3 bodyPosition = getVehiclePosition(vehicle);
         float bodyYaw = getVehicleYaw(vehicle);
         float bodyPitch = getVehiclePitch(vehicle);
         float bodyRoll = getVehicleRoll(vehicle);
+        
+        // update lights
+        lightManager.updateLightPositions(getCarTextureWorldMatrix());
+        
+        checkCollisions(vehicle, SC.sceneJson);
+        
+        audioManager.updateAudioSystem();
 
         // inits the camera to third position view
         static CameraData cameraData = {};

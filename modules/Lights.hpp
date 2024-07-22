@@ -4,8 +4,6 @@
 #include "Utils.hpp"
 #include "Car.hpp"
 
-glm::quat clampRoll(const glm::quat& rotation);
-
 // lights variables
 struct LightManager : public Observer {
     std::vector<glm::mat4> LightWorldMatrices;
@@ -89,16 +87,13 @@ struct LightManager : public Observer {
     }
     
     // update car light position based on car position
-    void updateLightPositions() {
+    void updateLightPositions(glm::mat4 textureWm) {
         if(!isLightInit) return;
-        
-        glm::vec3 carPosition = getVehiclePosition(vehicle);
-        glm::quat carRotation = getVehicleRotation(vehicle);
 
-        updateLightWorldMatrix(getLightIndexByName("brake_light_left"), carPosition, carRotation);
-        updateLightWorldMatrix(getLightIndexByName("brake_light_right"), carPosition, carRotation);
-        updateLightWorldMatrix(getLightIndexByName("headlight_left"), carPosition, carRotation);
-        updateLightWorldMatrix(getLightIndexByName("headlight_right"), carPosition, carRotation);
+        updateLightWorldMatrix(getLightIndexByName("brake_light_left"), textureWm);
+        updateLightWorldMatrix(getLightIndexByName("brake_light_right"), textureWm);
+        updateLightWorldMatrix(getLightIndexByName("headlight_left"), textureWm);
+        updateLightWorldMatrix(getLightIndexByName("headlight_right"), textureWm);
 
     }
 
@@ -128,15 +123,13 @@ struct LightManager : public Observer {
         return findLightIndex();
     }
     
-    void updateLightWorldMatrix(const int index, glm::vec3 carPosition, glm::quat carRotation){
+    void updateLightWorldMatrix(const int index, glm::mat4 textureWm){
         if (index != -1) {
             glm::vec3 rightLocalTranslation = glm::vec3(lightArray[index]["translation"][0],
                                                         lightArray[index]["translation"][1],
                                                         lightArray[index]["translation"][2]);
-            glm::vec3 rightWorldTranslation = carPosition + carRotation * rightLocalTranslation;
 
-            LightWorldMatrices[index] = glm::translate(ONE_MAT4, rightWorldTranslation) *
-                                             glm::mat4(carRotation);
+            LightWorldMatrices[index] = glm::translate(textureWm, rightLocalTranslation);
         } else {
             std::cout << "Light headlight_right not found!" << std::endl;
         }
@@ -181,17 +174,6 @@ struct LightManager : public Observer {
         
     }
 };
-
-glm::quat clampRoll(const glm::quat& rotation) {
-    // Converti il quaternione in angoli di Eulero
-    glm::vec3 euler = glm::eulerAngles(rotation);
-
-    // Clamp dell'angolo di roll (che corrisponde a euler.z)
-    euler.z = glm::clamp(euler.z, -0.005f, 0.005f);
-
-    // Riconverti gli angoli di Eulero modificati in un quaternione
-    return glm::quat(euler);
-}
 
 #endif
 
