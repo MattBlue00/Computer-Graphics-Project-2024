@@ -167,9 +167,6 @@ protected:
         lightManager.initLights();
         
         std::cout << "Initialization completed!\n";
-        
-        // plays the race music
-        audioManager.playSound("RACE_MUSIC", 0.1f, 7);
     }
 
     // Here you create your pipelines and Descriptor Sets!

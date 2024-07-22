@@ -51,7 +51,7 @@ struct UIManager: public Observer {
     std::chrono::time_point<std::chrono::high_resolution_clock> startTimeAfterBegin;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdateTimeAfterBegin;
 
-    int countdownValue = 4; // add 1 second for music coherence
+    int countdownValue = 6; // two seconds of nothing and then 4,3,2 at 1 start
     bool isGameStarted = false;
     bool isGameFinished = false;
     int lapsLabel = 1;
