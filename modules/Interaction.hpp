@@ -37,26 +37,4 @@ bool shouldChangeScene(GLFWwindow* window, CameraData* cameraData, int* currScen
     return false;
 }
 
-void shouldPrintDebugVariables(GLFWwindow* window, glm::vec3 Pos, float Yaw, CameraData cameraData, float SteeringAng, bool* debounce, int* curDebounce, std::function<void(const char*, glm::vec3)> printVec3){
-    if(glfwGetKey(window, GLFW_KEY_V)) {
-        if(!*debounce) {
-            *debounce = true;
-            *curDebounce = GLFW_KEY_V;
-
-            printVec3("Pos = ", Pos);
-            std::cout << "Yaw         = " << Yaw         << ";\n";
-            std::cout << "CamPitch    = " << cameraData.CamPitch    << ";\n";
-            std::cout << "CamYaw      = " << cameraData.CamYaw      << ";\n";
-            std::cout << "CamRoll     = " << cameraData.CamRoll     << ";\n";
-            std::cout << "CamDist     = " << cameraData.CamDist     << ";\n";
-            std::cout << "SteeringAng = " << SteeringAng << ";\n";
-        }
-    } else {
-        if((*curDebounce == GLFW_KEY_V) && *debounce) {
-            *debounce = false;
-            *curDebounce = 0;
-        }
-    }
-}
-
 #endif

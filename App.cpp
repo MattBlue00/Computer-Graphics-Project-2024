@@ -257,7 +257,7 @@ protected:
         updatePhysics(deltaT);
         
         // update lights
-        lightManager.updateLightPosition();
+        lightManager.updateLightPositions();
         
         checkCollisions(vehicle, SC.sceneJson);
         
@@ -291,9 +291,6 @@ protected:
         // checks if esc was pressed
         shouldQuit(window);
 
-        // checks if v was pressed
-        //shouldPrintDebugVariables(window, Pos, Yaw, cameraData, SteeringAng, &debounce, &curDebounce, std::bind(&App::printVec3, this, std::placeholders::_1, std::placeholders::_2));
-
         // updates camera position
         if (currScene == THIRD_PERSON_SCENE) {
             updateThirdPersonCamera(&cameraData, &CamPos, &dampedCamPos, &M, bodyYaw, bodyPitch, bodyRoll, AspectRatio, ROT_SPEED, deltaT, cameraRotationInput, carMovementInput, bodyPosition);
@@ -311,8 +308,6 @@ protected:
         GlobalUniformBufferObject gubo{};
         // sets lights, camera position and direction;
         updateGUBO(&gubo, dampedCamPos);
-        
-
 
         // draws every object of this app
         drawAll(&SC, &gubo, &ubo, currentImage, bodyYaw, bodyPosition, baseCar, ViewPrj, deltaP, deltaA, usePitch, bodyPitch, bodyRoll);
@@ -334,14 +329,13 @@ protected:
         }
 
         gubo->eyePos = dampedCamPos;
+        gubo->cosIn = lightManager.ScosIn;
+        gubo->cosOut = lightManager.ScosOut;
     }
 };
 
-
-
 // This is the main: probably you do not need to touch this!
 int main() {
-    //prova
     App app;
 
     try {

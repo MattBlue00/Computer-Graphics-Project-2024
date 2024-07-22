@@ -132,33 +132,33 @@ glm::vec3 getVehiclePosition(btRaycastVehicle* vehicle){
     return glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
 }
 
-btQuaternion getVehicleRotation(btRaycastVehicle* vehicle){
+glm::quat getVehicleRotation(btRaycastVehicle* vehicle){
     btTransform transform = getVehicleTransform(vehicle);
     glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-    return transform.getRotation();
+    btQuaternion rotationBt = transform.getRotation();
+    return glm::quat(rotationBt.getW(), rotationBt.getX(), rotationBt.getY(), rotationBt.getZ());
 }
 
-float getVehicleYaw(btRaycastVehicle* vehicle){
-    btQuaternion rotation = getVehicleRotation(vehicle);
-    return atan2(2.0 * (rotation.getY() * rotation.getW() + rotation.getX() * rotation.getZ()),
-                 1.0 - 2.0 * (rotation.getY() * rotation.getY() + rotation.getX() * rotation.getX()));
+float getVehicleYaw(btRaycastVehicle* vehicle) {
+    glm::quat rotation = getVehicleRotation(vehicle);
+    return atan2(2.0f * (rotation.y * rotation.w + rotation.x * rotation.z),
+                 1.0f - 2.0f * (rotation.y * rotation.y + rotation.x * rotation.x));
 }
 
-float getVehiclePitch(btRaycastVehicle* vehicle){
-    btQuaternion rotation = getVehicleRotation(vehicle);
-    float sinPitch = 2.0 * (rotation.getW() * rotation.getX() - rotation.getZ() * rotation.getY());
-    if (std::abs(sinPitch) >= 1) {
-        return std::copysign(M_PI / 2, sinPitch); // Use 90 degrees if out of range
-    }
-    else {
+float getVehiclePitch(btRaycastVehicle* vehicle) {
+    glm::quat rotation = getVehicleRotation(vehicle);
+    float sinPitch = 2.0f * (rotation.w * rotation.x - rotation.z * rotation.y);
+    if (std::abs(sinPitch) >= 1.0f) {
+        return std::copysign(glm::half_pi<float>(), sinPitch); // Usa 90 gradi se fuori range
+    } else {
         return std::asin(sinPitch);
     }
 }
 
-float getVehicleRoll(btRaycastVehicle* vehicle){
-    btQuaternion rotation = getVehicleRotation(vehicle);
-    return atan2(2.0 * (rotation.getW() * rotation.getZ() + rotation.getX() * rotation.getY()),
-                 1.0 - 2.0 * (rotation.getY() * rotation.getY() + rotation.getZ() * rotation.getZ()));
+float getVehicleRoll(btRaycastVehicle* vehicle) {
+    glm::quat rotation = getVehicleRotation(vehicle);
+    return atan2(2.0f * (rotation.w * rotation.z + rotation.x * rotation.y),
+                 1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
 }
 
 void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput, float deltaT) {
