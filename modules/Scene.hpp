@@ -270,7 +270,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, -7.25 + 7.25 * i,
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, 42.5,
                             0, 0, 0, 1}}
         };
@@ -340,7 +340,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, -6.5 + 7 * i,
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, i != 1 ? 322.5 : 332.5,
                             0, 0, 0, 1}}
         };
@@ -368,7 +368,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, i == 0 ? 7.75 : 2.25,
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, 602.5,
                             0, 0, 0, 1}}
         };
@@ -440,7 +440,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, -695 - 7.25 * i,
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, 547.5,
                             0, 0, 0, 1}}
         };
@@ -496,7 +496,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, i == 2 ? -702.3 : -695.3 - 13.95 * (i % 3),
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, i == 2 ? 247.5 : (i < 2 ? 297.5 : 197.5),
                             0, 0, 0, 1}}
         };
@@ -510,7 +510,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, -695 - i * 7,
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, 97.5,
                             0, 0, 0, 1}}
         };
@@ -554,7 +554,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, -582.8,
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, -314.5 - i * 7,
                             0, 0, 0, 1}}
         };
@@ -628,7 +628,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
             {"model", "coin"},
             {"texture", "coin"},
             {"transform",  {0.03, 0, 0, -196.5 - i * 1.5,
-                            0, 0, -0.03, 2.5,
+                            0, 0, -0.03, 2.2,
                             0, 0.03, 0, 375 - i * 7,
                             0, 0, 0, 1}}
         };

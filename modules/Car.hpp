@@ -249,7 +249,6 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
     if(!isVehicleInAir(dynamicsWorld, vehicle)){
         if(vehicle->getRigidBody()->getLinearVelocity().length() <= MAX_SPEED){
             if(engineForce != 0.0f && isVehicleBlocked(vehicle)){
-                std::cout << mayBeBlocked << std::endl;
                 float bonusCoefficient = mayBeBlocked * 0.15f;
                 vehicle->applyEngineForce(bonusCoefficient * engineForce, 0);
                 vehicle->applyEngineForce(bonusCoefficient * engineForce, 1);

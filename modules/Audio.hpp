@@ -9,7 +9,36 @@ struct AudioManager : public Observer {
     FMOD_RESULT result;
     std::map<std::string, FMOD::Sound*> soundMap;
     std::map<std::string, std::vector<FMOD::Channel*>> channelMap;  // Map to keep track of channels
+    
+    static FMOD_RESULT F_CALLBACK channelEndCallback(FMOD_CHANNELCONTROL* channelControl, FMOD_CHANNELCONTROL_TYPE controlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void* commandData1, void* commandData2) {
+            if (callbackType == FMOD_CHANNELCONTROL_CALLBACK_END) {
+                FMOD::Channel* channel = (FMOD::Channel*)channelControl;
+                AudioManager* audioManager;
+                channel->getUserData((void**)&audioManager);
 
+                // Find and remove the channel from channelMap
+                for (auto& entry : audioManager->channelMap) {
+                    auto& channels = entry.second;
+                    auto it = std::find(channels.begin(), channels.end(), channel);
+                    if (it != channels.end()) {
+                        channels.erase(it);
+                        break;  // Exit loop after removing the channel
+                    }
+                }
+
+                // If there's an end callback, call it
+                if (audioManager->endCallbacks.find(channel) != audioManager->endCallbacks.end()) {
+                    audioManager->endCallbacks[channel]();
+                    audioManager->endCallbacks.erase(channel);
+                }
+            }
+            return FMOD_OK;
+        }
+
+        std::map<FMOD::Channel*, std::function<void()>> endCallbacks;
+
+public:
+    
     // Initialize the audio system
     void initAudio(const json& audioMap) {
         result = FMOD::System_Create(&audio_system);
@@ -29,8 +58,8 @@ struct AudioManager : public Observer {
         }
     }
 
-    // Play a sound with optional looping
-    void playSound(const std::string& soundName, float volume, float loopStartSecond = -1, float speed = 1) {
+    // plays a sound with various options
+    void playSound(const std::string& soundName, float volume, float loopStartSecond = -1, float speed = 1, std::function<void()> onSoundEnd = nullptr) {
         FMOD::Channel* channel = nullptr;
 
         // Set loop mode and loop points before playing the sound
@@ -57,37 +86,36 @@ struct AudioManager : public Observer {
         // Set volume
         result = channel->setVolume(volume);
         checkFmodError(result);
-        
-        // Set playback speed using pitch
-        result = channel->setPitch(speed);
+
+        // Retrieve the default frequency of the sound
+        float defaultFrequency;
+        result = channel->getFrequency(&defaultFrequency);
+        checkFmodError(result);
+
+        // Set playback speed by modifying the frequency
+        result = channel->setFrequency(defaultFrequency * speed);
         checkFmodError(result);
 
         // Store the channel in the map
         channelMap[soundName].push_back(channel);
 
-        if (loopStartSecond < 0) {
-            // Attach a callback to remove the channel from channelMap when sound finishes
-            result = channel->setCallback([](FMOD_CHANNELCONTROL* channelControl, FMOD_CHANNELCONTROL_TYPE controlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void* commandData1, void* commandData2) -> FMOD_RESULT {
-                if (callbackType == FMOD_CHANNELCONTROL_CALLBACK_END) {
-                    FMOD::Channel* channel = (FMOD::Channel*)channelControl;
-                    // Find and remove the channel from channelMap
-                    for (auto& entry : AudioManager().channelMap) {
-                        auto& channels = entry.second;
-                        auto it = std::find(channels.begin(), channels.end(), channel);
-                        if (it != channels.end()) {
-                            channels.erase(it);
-                            break;  // Exit loop after removing the channel
-                        }
-                    }
-                }
-                return FMOD_OK;
-            });
+        // Attach the AudioManager instance to the channel's user data
+        result = channel->setUserData(this);
+        checkFmodError(result);
+
+        // Attach a callback to remove the channel from channelMap when sound finishes
+        if (loopStartSecond < 0 || onSoundEnd != nullptr) {
+            result = channel->setCallback(channelEndCallback);
             checkFmodError(result);
+
+            if (onSoundEnd) {
+                endCallbacks[channel] = onSoundEnd;
+            }
         }
     }
     
     // Stop a sound
-    void stopAudio(const std::string& soundName) {
+    void stopSound(const std::string& soundName) {
         auto it = channelMap.find(soundName);
         if (it != channelMap.end()) {
             for (FMOD::Channel* channel : it->second) {
@@ -132,7 +160,6 @@ struct AudioManager : public Observer {
         }
     }
     
-    
     // -------Observer methods--------
     void onCoinCollected(int collectedCoins) override {
         playSound("COIN_SFX", 1.0f);
@@ -144,26 +171,25 @@ struct AudioManager : public Observer {
         }else if (countDownValue == 1){
             playSound("START_SFX", 0.15f);
             // plays the race music
-            playSound("RACE_MUSIC", 0.1f, 7);
+            playSound("RACE_MUSIC", 0.2f, 7);
         }
     };
     
     int lapsLabel = 1;
     void onCheckLaps(int lapsDone) override {
-        if(lapsLabel > 3) return;
+            if (lapsLabel > 3) return;
 
-        lapsLabel += lapsDone;
-        if(lapsLabel == 2){
-            playSound("FINAL_SFX", 1.0f);
-            stopAudio("RACE_MUSIC");
-            playSound("RACE_MUSIC", 0.1f, 7, 2);
+            lapsLabel += lapsDone;
+            if (lapsLabel == 2) {
+                stopSound("RACE_MUSIC");
+                playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
+                    playSound("RACE_MUSIC", 0.2f, 7, 1.25f);
+                });
+            } else if (lapsLabel == 3) {
+                stopSound("RACE_MUSIC");
+                playSound("END_SFX", 0.5f);
+            }
         }
-        else if(lapsLabel == 3){
-            stopAudio("RACE_MUSIC");
-            playSound("END_SFX", 1.0f);
-        }
-    }
 };
 
 #endif
-
