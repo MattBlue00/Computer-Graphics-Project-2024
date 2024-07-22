@@ -1,6 +1,6 @@
 #version 450
 
-const int LIGHTS_COUNT = 8;
+const int LIGHTS_COUNT = 10;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
@@ -22,6 +22,8 @@ layout(binding = 2) uniform GlobalUniformBufferObject {
     vec3 eyePos;
     vec4 eyeDir;
     vec3 lightOn[LIGHTS_COUNT];
+    float cosIn;
+    float cosOut;
 } gubo;
 
 layout(location = 0) in vec3 fragPos;
@@ -74,6 +76,29 @@ vec3 point_light_color(vec3 pos, int i) {
     return lightColor * lightIntensity * attenuation;
 }
 
+// SPOT LIGHT DIRECTION
+
+vec3 spot_light_dir(vec3 pos, int i) {
+    vec3 lightPosition = gubo.lightPos[i];
+    vec3 directionVector = lightPosition - pos;
+    return normalize(directionVector);
+}
+
+// SPOT LIGHT COLOR
+
+vec3 spot_light_color(vec3 pos, int i) {
+    vec3 lightPosition = gubo.lightPos[i];
+    float lightIntensity = gubo.lightColor[i].a;
+    vec3 lightColor = gubo.lightColor[i].rgb;
+    vec3 lightDirection = gubo.lightDir[i];
+    vec3 directionVector = lightPosition - pos;
+    float dist = length(directionVector);
+    float attenuationFactor = 2.0f;
+    float cosTheta = dot(normalize(lightDirection), directionVector);
+    float falloff = clamp((cosTheta - gubo.cosOut) / (gubo.cosIn - gubo.cosOut), 0.0f, 1.0f);
+    return lightColor * pow(lightIntensity / dist, attenuationFactor) * falloff;
+}
+
 // BRDF
 
 vec3 BRDF(vec3 Albedo, vec3 Norm, vec3 EyeDir, vec3 LD) {
@@ -99,8 +124,14 @@ void main()
     vec3 RendEqSol = vec3(0);
     
     for(int i = 0; i < LIGHTS_COUNT; i++){
-        LD = point_light_dir(fragPos, i);
-        LC = point_light_color(fragPos, i);
+        if(i<8){
+            LD = point_light_dir(fragPos, i);
+            LC = point_light_color(fragPos, i);
+        }
+        else{
+            LD = spot_light_dir(fragPos, i);
+            LC = spot_light_color(fragPos, i);
+        }
         RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[i];
     }
     

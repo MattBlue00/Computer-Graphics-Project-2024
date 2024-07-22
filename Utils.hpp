@@ -49,7 +49,7 @@ const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
 
-const int LIGHTS_COUNT = 8;
+const int LIGHTS_COUNT = 10;
 
 // GENERAL STRUCTS
 
@@ -76,6 +76,8 @@ struct GlobalUniformBufferObject {
     struct {
         alignas(16) glm::vec3 v;
     } lightOn[LIGHTS_COUNT];
+    alignas(4) float cosIn;
+    alignas(4) float cosOut;
 };
 
 // vertex
