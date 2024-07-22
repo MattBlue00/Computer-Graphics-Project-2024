@@ -30,7 +30,7 @@ struct AudioManager : public Observer {
     }
 
     // Play a sound with optional looping
-    void playSound(const std::string& soundName, float volume, float loopStartSecond = -1) {
+    void playSound(const std::string& soundName, float volume, float loopStartSecond = -1, float speed = 1) {
         FMOD::Channel* channel = nullptr;
 
         // Set loop mode and loop points before playing the sound
@@ -57,6 +57,10 @@ struct AudioManager : public Observer {
         // Set volume
         result = channel->setVolume(volume);
         checkFmodError(result);
+        
+        // Set playback speed using pitch
+        result = channel->setPitch(speed);
+        checkFmodError(result);
 
         // Store the channel in the map
         channelMap[soundName].push_back(channel);
@@ -79,6 +83,23 @@ struct AudioManager : public Observer {
                 return FMOD_OK;
             });
             checkFmodError(result);
+        }
+    }
+    
+    // Stop a sound
+    void stopAudio(const std::string& soundName) {
+        auto it = channelMap.find(soundName);
+        if (it != channelMap.end()) {
+            for (FMOD::Channel* channel : it->second) {
+                bool isPlaying;
+                result = channel->isPlaying(&isPlaying);
+                checkFmodError(result);
+                if (isPlaying) {
+                    result = channel->stop();
+                    checkFmodError(result);
+                }
+            }
+            it->second.clear();  // Clear the channel list for this sound
         }
     }
 
@@ -118,8 +139,13 @@ struct AudioManager : public Observer {
     }
     
     void onStartSemaphore(int countDownValue) override {
-        if(countDownValue != 4) return;
-        playSound("START_SFX", 0.15f);
+        if(countDownValue > 1 && countDownValue < 5){
+            playSound("COUNTDOWN_SFX", 0.15f);
+        }else if (countDownValue == 1){
+            playSound("START_SFX", 0.15f);
+            // plays the race music
+            playSound("RACE_MUSIC", 0.1f, 7);
+        }
     };
     
     int lapsLabel = 1;
@@ -128,10 +154,14 @@ struct AudioManager : public Observer {
 
         lapsLabel += lapsDone;
         if(lapsLabel == 2){
-            // TODO: should also x1.25 the bg music???
             playSound("FINAL_SFX", 1.0f);
+            stopAudio("RACE_MUSIC");
+            playSound("RACE_MUSIC", 0.1f, 7, 2);
         }
-        else if(lapsLabel == 3) playSound("END_SFX", 1.0f);
+        else if(lapsLabel == 3){
+            stopAudio("RACE_MUSIC");
+            playSound("END_SFX", 1.0f);
+        }
     }
 };
 
