@@ -283,6 +283,11 @@ void updateVehicle(btRaycastVehicle* vehicle, const glm::vec3& carMovementInput,
         vehicle->getRigidBody()->applyCentralForce(upwardForce);
     }
     
+    // make micro-movements have no impact on displayed speed
+    if(currentSpeed < 0.4f){
+        currentSpeed = 0;
+    }
+    
     // update Kmh Speed and notify UI only when necessary
     int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
     if(lastSpeedKmh != currentSpeedKmh){
