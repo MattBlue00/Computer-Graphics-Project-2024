@@ -51,42 +51,6 @@ const int FIRST_PERSON_SCENE = 1;
 
 const int LIGHTS_COUNT = 10;
 
-// GENERAL STRUCTS
-
-// ubo
-struct UniformBufferObject {
-    alignas(16) glm::mat4 mvpMat;
-    alignas(16) glm::mat4 mMat;
-    alignas(16) glm::mat4 nMat;
-};
-
-// gubo
-struct GlobalUniformBufferObject {
-    alignas(16) glm::vec3 ambientLightDir;
-    alignas(16) glm::vec4 ambientLightColor;
-    struct {
-        alignas(16) glm::vec3 v;
-    } lightDir[LIGHTS_COUNT];
-    struct {
-        alignas(16) glm::vec3 v;
-    } lightPos[LIGHTS_COUNT];
-    alignas(16) glm::vec4 lightColor[LIGHTS_COUNT];
-    alignas(16) glm::vec3 eyePos;
-    alignas(16) glm::vec4 eyeDir;
-    struct {
-        alignas(16) glm::vec3 v;
-    } lightOn[LIGHTS_COUNT];
-    alignas(4) float cosIn;
-    alignas(4) float cosOut;
-};
-
-// vertex
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec2 UV;
-    glm::vec3 norm;
-};
-
 // PROJECT-SPECIFIC VARIABLES
 
 int globalCoinCount = 0;

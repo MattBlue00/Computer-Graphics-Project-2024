@@ -46,6 +46,57 @@ struct Subject {
             observer->onBrakeActive(isBrakeActive);
         }
     }
+    
+    /*--------------------------------*/
+    
+    void notifyQuit(){
+        for (Observer* observer : observers) {
+            observer->onQuit();
+        }
+    }
+    
+    void notifyChangeScene(){
+        for (Observer* observer : observers) {
+            observer->onChangeScene();
+        }
+    }
+    
+    void notifyUpdateDebounce(){
+        for (Observer* observer : observers) {
+            observer->onUpdateDebounce();
+        }
+    }
+    
+    void notifyChangeView(){
+        for (Observer* observer : observers) {
+            observer->onChangeView();
+        }
+    }
+    
+    void notifyChangeHeadlightsStatus(){
+        for (Observer* observer : observers) {
+            observer->onChangeHeadlightsStatus();
+        }
+    }
+    
+    void notifyChangeCircuit(){
+        for (Observer* observer : observers) {
+            observer->onChangeCircuit();
+        }
+    }
+    
+    void notifyStartTimer(){
+        for (Observer* observer : observers) {
+            observer->onStartTimer();
+        }
+    }
+    
+    void notifyResetView(){
+        for (Observer* observer : observers) {
+            observer->onResetView();
+        }
+    }
+    
 };
 
 #endif

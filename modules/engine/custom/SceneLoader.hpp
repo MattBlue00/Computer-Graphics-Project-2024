@@ -1,5 +1,7 @@
-#ifndef SCENE_HPP
-#define SCENE_HPP
+#ifndef SCENE_LOADER_HPP
+#define SCENE_LOADER_HPP
+
+#include "tools/Types.hpp"
 
 typedef struct {
 	std::string *id;
@@ -36,7 +38,7 @@ class Scene {
 	std::unordered_map<std::string, int> InstanceIds;
     
     // json file
-    nlohmann::json sceneJson;
+    json sceneJson;
 
 	void init(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL,
 			  Pipeline &P, std::string file) {
@@ -165,7 +167,7 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 
 // WARNING: ADDED BY US
 
-#include "Drawer.hpp"
+#include "managers/DrawManager.hpp"
 #include "Utils.hpp"
 
 void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
@@ -524,7 +526,7 @@ void buildMultipleInstances(json* instances, json* sceneJson){
                 {"id", "coin_" + std::to_string(globalCoinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
-                {"transform",  {0.03, 0, 0, -695 - j * 7,
+                {"transform",  {0.03, 0, 0, -694.5 - j * 7,
                                 0, 0, -0.03, 0.5,
                                 0, 0.03, 0, -100 - 10 * i,
                                 0, 0, 0, 1}}

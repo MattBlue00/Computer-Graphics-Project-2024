@@ -9,6 +9,19 @@ public:
     virtual void onCheckLaps(int lapsDone){};
     virtual void onStartSemaphore(int countDownValue){};
     virtual void onBrakeActive(bool isBrakeActive){};
+    virtual void onHeadlightsChange(){};
+    
+    virtual void onQuit(){};
+    virtual void onChangeScene(){};
+    virtual void onUpdateDebounce(){};
+    
+    virtual void onChangeView(){};
+    virtual void onResetView(){};
+    virtual void onChangeHeadlightsStatus(){};
+    
+    virtual void onChangeCircuit(){};
+    
+    virtual void onStartTimer(){};
 
     virtual ~Observer() = default;
 };
