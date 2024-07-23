@@ -170,8 +170,8 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 #include "managers/DrawManager.hpp"
 #include "Utils.hpp"
 
-void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
-void addInstanceToCoins(std::string instance_id); // external function ("Drawer.hpp")
+void addInstanceToWorld(std::string instance_id); // external function ("DrawManager.hpp")
+void addInstanceToCoins(std::string instance_id); // external function ("DrawManager.hpp")
 
 void addCoin(json coin, json* instances, json* sceneJson);
 

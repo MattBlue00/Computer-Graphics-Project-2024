@@ -3121,11 +3121,6 @@ void Model::bind(VkCommandBuffer commandBuffer) {
 							VK_INDEX_TYPE_UINT32);
 }
 
-
-
-
-
-
 void Texture::createTextureImage(std::string files[], VkFormat Fmt = VK_FORMAT_R8G8B8A8_SRGB) {
     int texWidth = 0, texHeight = 0, texChannels;
 	int curWidth = -1, curHeight = -1, curChannels = -1;
@@ -3644,8 +3639,6 @@ void DescriptorSet::bind(VkCommandBuffer commandBuffer, Pipeline &P, int setId,
 
 void DescriptorSet::map(int currentImage, void *src, int size, int slot) {
 	void* data;
-    
-    //std::cout << "\n -----> UBF MEM: " << uniformBuffersMemory[slot][currentImage];
 
 	vkMapMemory(BP->device, uniformBuffersMemory[slot][currentImage], 0,
 						size, 0, &data);

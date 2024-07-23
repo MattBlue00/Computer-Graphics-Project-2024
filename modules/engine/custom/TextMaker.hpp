@@ -67,8 +67,8 @@ struct TextMaker
         M.indices.clear();
         M.vertices.clear();
         Texts = _Texts;
-        createTextMesh(); // may be changed?
-        M.updateMesh(BP, &VD); // may be changed?
+        createTextMesh();
+        M.updateMesh(BP, &VD);
     }
 
     void createTextDescriptorSetAndVertexLayout()
@@ -87,11 +87,7 @@ struct TextMaker
 
     void createTextModelAndTexture()
     {
-        //        M.BP = BP;
-        //        M.VD = &VD;
         createTextMesh();
-        //        M.createVertexBuffer();
-        //        M.createIndexBuffer();
 
         M.initMesh(BP, &VD);
 
@@ -108,7 +104,6 @@ struct TextMaker
                 totLen += Txt.l[i].length();
             }
         }
-        // std::cout << "Total characters: " << totLen << "\n";
 
         M.indices.resize(6 * totLen);
 
@@ -193,7 +188,6 @@ struct TextMaker
             }
             Txt.len = ib - Txt.start;
         }
-        // std::cout << "Text: " << M.vertices.size() << ", I: " << M.indices.size() << "\n";
     }
 
     void createTextDescriptorSets()
@@ -218,8 +212,6 @@ struct TextMaker
         T.cleanup();
         M.cleanup();
         DSL.cleanup();
-        
-        std::cout << "size: " << M.vertices.size() << " ind:" << M.indices.size() << "\n";
 
         P.destroy();
     }

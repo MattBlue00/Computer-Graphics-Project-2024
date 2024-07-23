@@ -1,28 +1,18 @@
 // HEADERS
 
-// professor headers
-#include "modules/engine/custom/Starter.hpp"          // vulkan starter header
-#include "modules/engine/custom/TextMaker.hpp"        // text header
-
-// our headers
-#include "Utils.hpp"                    // constants and structs
-#include "modules/managers/InputManager.hpp"      // responds to input
-#include "modules/managers/SceneManager.hpp"      // updates scene
-#include "modules/managers/CameraManager.hpp"           // handles camera movement
-#include "modules/managers/CarManager.hpp"              // handles car movement
-#include "modules/managers/DrawManager.hpp"           // draws the objects
-#include "modules/managers/PhysicsManager.hpp"          // adds physics
-#include "modules/managers/AudioManager.hpp"            // adds audio management
-#include "modules/managers/LightsManager.hpp"           // adds lights management
-
-// imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
+#include "modules/engine/custom/Starter.hpp"                // vulkan starter header
+#include "modules/engine/custom/TextMaker.hpp"              // text header
+#include "Utils.hpp"                                        // constants and structs
+#include "modules/managers/InputManager.hpp"                // responds to input
+#include "modules/managers/SceneManager.hpp"                // updates scene
+#include "modules/managers/CameraManager.hpp"               // handles camera movement
+#include "modules/managers/CarManager.hpp"                  // handles car movement
+#include "modules/managers/DrawManager.hpp"                 // draws the objects
+#include "modules/managers/PhysicsManager.hpp"              // adds physics
+#include "modules/managers/AudioManager.hpp"                // adds audio management
+#include "modules/managers/LightsManager.hpp"               // adds lights management
 #include "modules/engine/custom/SceneLoader.hpp"            // scene header (from professor)
-#include "modules/managers/UIManager.hpp"
-
-// PROTOTYPES DECLARATION
-
-// used to set lights, camera position and direction
-void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 dampedCamPos);
+#include "modules/managers/UIManager.hpp"                   // manages UI
 
 // MAIN APP
 
@@ -71,9 +61,9 @@ protected:
         initialBackgroundColor = {0.01f, 0.01f, 0.08f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 800; // FIXME
-        texturesInPool = 800; // FIXME
-        setsInPool = 800; // FIXME
+        uniformBlocksInPool = 766;
+        texturesInPool = 387;
+        setsInPool = 387;
 
         aspectRatio = 4.0f / 3.0f;
     }

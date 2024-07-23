@@ -120,7 +120,7 @@ protected:
     
     void checkVehiclePosition() {
         btVector3 vehiclePosition = vehicle->getChassisWorldTransform().getOrigin();
-        if (vehiclePosition.getY() < -50.0f) { // Soglia predefinita, ad esempio -10.0
+        if (vehiclePosition.getY() < -50.0f) {
             respawnVehicle();
         }
     }

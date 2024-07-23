@@ -1,7 +1,7 @@
 #ifndef SCENE_MANAGER_HPP
 #define SCENE_MANAGER_HPP
 
-#import "Utils.hpp"
+#include "Utils.hpp"
 
 Subject shouldChangeView;
 
