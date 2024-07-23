@@ -85,6 +85,18 @@ struct Subject {
         }
     }
     
+    void notifyStartTimer(){
+        for (Observer* observer : observers) {
+            observer->onStartTimer();
+        }
+    }
+    
+    void notifyResetView(){
+        for (Observer* observer : observers) {
+            observer->onResetView();
+        }
+    }
+    
 };
 
 #endif

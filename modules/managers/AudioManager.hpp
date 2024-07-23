@@ -181,8 +181,8 @@ public:
             playSound("COUNTDOWN_SFX", 0.15f);
         }else if (countDownValue == 1){
             playSound("START_SFX", 0.15f);
-            // plays the race music
             playSound("RACE_MUSIC", 0.2f, 7);
+            
         }
     };
     

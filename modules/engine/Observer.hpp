@@ -16,9 +16,12 @@ public:
     virtual void onUpdateDebounce(){};
     
     virtual void onChangeView(){};
+    virtual void onResetView(){};
     virtual void onChangeHeadlightsStatus(){};
     
     virtual void onChangeCircuit(){};
+    
+    virtual void onStartTimer(){};
 
     virtual ~Observer() = default;
 };

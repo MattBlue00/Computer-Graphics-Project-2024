@@ -6,6 +6,8 @@
 #include "engine/Subject.hpp"
 #include "engine/Manager.hpp"
 
+Subject startTimerSubject;
+
 struct UIManager: public Observer, public Manager {
     
 protected:
@@ -58,8 +60,6 @@ protected:
     int collectedCoins = 0;
 
 public:
-    
-    Subject startTimerSubject;
 
     void init(std::vector<void*> params) override {
         
@@ -137,6 +137,7 @@ public:
             // Start real game timer
             if(countdownValue <= 0){
                 isGameStarted = true;
+                startTimerSubject.notifyStartTimer();
                 startTimeAfterBegin = std::chrono::high_resolution_clock::now();
                 lastUpdateTimeAfterBegin = startTimeAfterBegin;
             }

@@ -187,6 +187,15 @@ public:
         }
     }
     
+    void onResetView() override {
+        if(currentView == FIRST_PERSON_VIEW){
+            switchToFirstPersonCamera();
+        }
+        else{
+            switchToThirdPersonCamera();
+        }
+    }
+    
 };
 
 #endif

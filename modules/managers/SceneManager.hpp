@@ -3,6 +3,8 @@
 
 #import "Utils.hpp"
 
+Subject shouldChangeView;
+
 struct SceneManager : public Observer, public Manager {
     
 protected:
@@ -13,8 +15,6 @@ protected:
     int currentDebounce;
     
 public:
-    
-    Subject shouldChangeView;
     
     void init(std::vector<void*> params) override {
         GLFWwindow* window = nullptr;
@@ -29,12 +29,6 @@ public:
         currentScene = THIRD_PERSON_SCENE;
         debounce = false;
         currentDebounce = 0;
-    }
-    
-    void addObservers(std::vector<Observer*> observers) {
-        for (Observer* observer : observers) {
-            shouldChangeView.addObserver(observer);
-        }
     }
     
     int getCurrentScene(){

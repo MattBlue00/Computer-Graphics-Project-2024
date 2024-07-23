@@ -128,9 +128,12 @@ protected:
         drawManager.init({&SC, &lightsData});
         
         // add observers
-        inputManager.addObserversForSceneEvents({&sceneManager});
-        inputManager.addObserversForLightEvents({&lightsManager});
-        sceneManager.addObservers({&cameraManager});
+        shouldQuitSubject.addObserver(&sceneManager);
+        shouldChangeSceneSubject.addObserver(&sceneManager);
+        shouldUpdateDebounce.addObserver(&sceneManager);
+        
+        shouldChangeView.addObserver(&cameraManager);
+        resetViewSubject.addObserver(&cameraManager);
 
         // creates the physics world
         sceneJson = SC.sceneJson;
@@ -145,15 +148,18 @@ protected:
         checkLapsSubject.addObserver(&uiManager);
         
         // register the Light Observers, the timers are in UiManager
-        uiManager.startTimerSubject.addObserver(&lightsManager);
+        startTimerSubject.addObserver(&lightsManager);
         brakeSubject.addObserver(&lightsManager);
+        shouldChangeHeadlightsStatus.addObserver(&lightsManager);
         
         // register the Audio Observers
         collectedCoinsSubject.addObserver(&audioManager);
-        uiManager.startTimerSubject.addObserver(&audioManager);
+        startTimerSubject.addObserver(&audioManager);
         checkLapsSubject.addObserver(&audioManager);
         
         changeCircuitSubject.addObserver(&physicsManager);
+        
+        startTimerSubject.addObserver(&carManager);
         
         std::cout << "Initialization completed!\n";
     }
@@ -221,8 +227,13 @@ protected:
         glm::vec3 carMovementInput = ZERO_VEC3;
         glm::vec3 cameraRotationInput = ZERO_VEC3;
 
+        // gamepad controls triggers
+        bool sceneChanged = false;
+        bool headlightsChanged = false;
+        bool viewReset = false;
+        
         // gets WASD and arrows input from user and sets deltaT
-        getSixAxis(deltaT, carMovementInput, cameraRotationInput);
+        getSixAxis(deltaT, carMovementInput, cameraRotationInput, &headlightsChanged, &sceneChanged, &viewReset);
 
         // updates vehicle movement
         carManager.update({&carMovementInput, &deltaT});
@@ -244,7 +255,7 @@ protected:
         
         // manager updates
         lightsManager.update({&textureWm});
-        inputManager.update({&shouldRebuildPipeline});
+        inputManager.update({&shouldRebuildPipeline, &headlightsChanged, &sceneChanged, &viewReset});
         cameraManager.update({&pitch, &yaw, &roll, &aspectRatio, &deltaT, &cameraRotationInput, &carMovementInput, &carPosition});
         uiManager.update({});
         audioManager.update({});

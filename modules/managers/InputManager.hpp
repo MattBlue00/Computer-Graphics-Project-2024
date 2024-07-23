@@ -7,16 +7,20 @@
 #include "engine/Subject.hpp"
 #include "engine/Manager.hpp"
 
+Subject shouldQuitSubject;
+Subject shouldChangeSceneSubject;
+Subject shouldUpdateDebounce;
+Subject shouldChangeHeadlightsStatus;
+
+Subject resetViewSubject;
+
 struct InputManager : public Manager {
     
 protected:
     
     GLFWwindow* window;
     
-    Subject shouldQuitSubject;
-    Subject shouldChangeSceneSubject;
-    Subject shouldUpdateDebounce;
-    Subject shouldChangeHeadlightsStatus;
+    int waitHeadlights = 60;
     
     void checkShouldQuit(GLFWwindow* window) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
@@ -24,8 +28,8 @@ protected:
         }
     }
     
-    void checkShouldChangeScene(GLFWwindow* window, bool* shouldRebuildPipeline) {
-        if (glfwGetKey(window, GLFW_KEY_SPACE)) {
+    void checkShouldChangeScene(GLFWwindow* window, bool* shouldRebuildPipeline, bool* sceneChanged) {
+        if (glfwGetKey(window, GLFW_KEY_SPACE) || *sceneChanged) {
             shouldChangeSceneSubject.notifyChangeScene();
             *shouldRebuildPipeline = true;
         }
@@ -35,9 +39,24 @@ protected:
         }
     }
     
-    void checkShouldChangeHeadlightsStatus(GLFWwindow* window) {
-        if (glfwGetKey(window, GLFW_KEY_L)) {
+    void checkShouldChangeHeadlightsStatus(GLFWwindow* window, bool* headlightsChanged) {
+        if ((glfwGetKey(window, GLFW_KEY_L) || *headlightsChanged) && waitHeadlights >= 60) {
             shouldChangeHeadlightsStatus.notifyChangeHeadlightsStatus();
+            waitHeadlights = 0;
+        }
+        else{
+            if(glfwGetKey(window, GLFW_KEY_L) || *headlightsChanged){
+                waitHeadlights++;
+            }
+            else{
+                waitHeadlights = 60;
+            }
+        }
+    }
+    
+    void checkResetView(GLFWwindow* window, bool* viewReset) {
+        if (glfwGetKey(window, GLFW_KEY_V) || *viewReset) {
+            resetViewSubject.notifyResetView();
         }
     }
     
@@ -54,31 +73,24 @@ public:
         this->window = window;
     }
     
-    void addObserversForSceneEvents(std::vector<Observer*> observers) {
-        for (Observer* observer : observers) {
-            shouldQuitSubject.addObserver(observer);
-            shouldChangeSceneSubject.addObserver(observer);
-            shouldUpdateDebounce.addObserver(observer);
-        }
-    }
-    
-    void addObserversForLightEvents(std::vector<Observer*> observers) {
-        for (Observer* observer : observers) {
-            shouldChangeHeadlightsStatus.addObserver(observer);
-        }
-    }
-    
     void update(std::vector<void*> params) override {
         bool* shouldRebuildPipeline = nullptr;
-        if (params.size() == 1) {
+        bool* headlightsChanged = nullptr;
+        bool* sceneChanged = nullptr;
+        bool* viewReset = nullptr;
+        if (params.size() == 4) {
             shouldRebuildPipeline = static_cast<bool*>(params[0]);
+            headlightsChanged = static_cast<bool*>(params[1]);
+            sceneChanged = static_cast<bool*>(params[2]);
+            viewReset = static_cast<bool*>(params[3]);
         } else {
             std::cout << "InputManager.update(): Wrong Parameters" << std::endl;
             exit(-1);
         }
         checkShouldQuit(window);
-        checkShouldChangeScene(window, shouldRebuildPipeline);
-        checkShouldChangeHeadlightsStatus(window);
+        checkShouldChangeScene(window, shouldRebuildPipeline, sceneChanged);
+        checkShouldChangeHeadlightsStatus(window, headlightsChanged);
+        checkResetView(window, viewReset);
     }
     
 };

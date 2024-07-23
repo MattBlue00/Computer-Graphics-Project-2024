@@ -12,7 +12,7 @@ Subject brakeSubject;
 // subject observed by Interaction
 Subject headlightsSubject;
 
-struct CarManager: public Manager{
+struct CarManager: public Manager, public Observer {
     
 protected:
     
@@ -26,6 +26,8 @@ protected:
     const float MAX_SPEED = 50.52f; // 181kmh
     
     const float RAYCAST_DISTANCE = 2.0f;
+    
+    bool canStart = false;
     
     bool goingOnwards = true;
     int mayBeBlocked = 0;
@@ -214,6 +216,8 @@ public:
     }
     
     void update(std::vector<void*> params) override {
+        
+        if(!canStart) return;
         
         glm::vec3 carMovementInput;
         float deltaTime;
@@ -407,6 +411,10 @@ public:
     
     btRaycastVehicle* getVehicle(){
         return vehicle;
+    }
+    
+    void onStartTimer() override {
+        canStart = true;
     }
     
 };

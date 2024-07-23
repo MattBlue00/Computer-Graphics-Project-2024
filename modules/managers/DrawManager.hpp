@@ -65,24 +65,18 @@ protected:
 
         float adjustedRoll = std::clamp(Roll, -0.005f, 0.005f);
         
-        ubo.mMat = MakeWorld(Pos, Yaw, Pitch, adjustedRoll);
-        ubo.mvpMat = ViewPrj * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        updateUBO(MakeWorld(Pos, Yaw, Pitch, adjustedRoll), ViewPrj);
 
-        scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-        scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+        mapToDescriptorSet(scene->DS[i], currentImage);
     }
 
     void drawWorld(int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj){
         for (std::vector<std::string>::iterator it = world.begin(); it != world.end(); it++) {
             int i = scene->InstanceIds[it->c_str()];
             
-            ubo.mMat = scene->I[i].Wm;
-            ubo.mvpMat = ViewPrj * ubo.mMat;
-            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+            updateUBO(scene->I[i].Wm, ViewPrj);
 
-            scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-            scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+            mapToDescriptorSet(scene->DS[i], currentImage);
         }
     }
 
@@ -97,20 +91,15 @@ protected:
 
             if (drawOval || drawInner) {
                 // Disegna la barriera specificata in base al giro
-                ubo.mMat = scene->I[i].Wm;
-                ubo.mvpMat = ViewPrj * ubo.mMat;
-                ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+                updateUBO(scene->I[i].Wm, ViewPrj);
             }
             else if (rescale) {
                 // Rescale other barriers to zero
                 glm::mat4 scaledWm = glm::scale(scene->I[i].Wm, glm::vec3(0.0f, 0.0f, 0.0f));
-                ubo.mMat = scaledWm;
-                ubo.mvpMat = ViewPrj * ubo.mMat;
-                ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+                updateUBO(scaledWm, ViewPrj);
             }
 
-            scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-            scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+            mapToDescriptorSet(scene->DS[i], currentImage);
         }
     }
 
@@ -127,12 +116,9 @@ protected:
                 scene->I[i].Wm = glm::scale(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
             }
             
-            ubo.mMat = scene->I[i].Wm;
-            ubo.mvpMat = ViewPrj * ubo.mMat;
-            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+            updateUBO(scene->I[i].Wm, ViewPrj);
 
-            scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-            scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+            mapToDescriptorSet(scene->DS[i], currentImage);
         }
     }
 
@@ -197,12 +183,9 @@ protected:
                                                                       * brakingFactor));
         }
         
-        ubo.mMat = scene->I[i].Wm;
-        ubo.mvpMat = ViewPrj * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        updateUBO(scene->I[i].Wm, ViewPrj);
 
-        scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-        scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+        mapToDescriptorSet(scene->DS[i], currentImage);
     }
 
     void drawAirship(int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj){
@@ -226,12 +209,9 @@ protected:
             }
         }
         
-        ubo.mMat = scene->I[i].Wm;
-        ubo.mvpMat = ViewPrj * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        updateUBO(scene->I[i].Wm, ViewPrj);
 
-        scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-        scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+        mapToDescriptorSet(scene->DS[i], currentImage);
     }
 
     void drawEarth(int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj){
@@ -239,12 +219,9 @@ protected:
        
         scene->I[i].Wm = glm::rotate(scene->I[i].Wm, DEG_0_2, Y_AXIS);
         
-        ubo.mMat = scene->I[i].Wm;
-        ubo.mvpMat = ViewPrj * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        updateUBO(scene->I[i].Wm, ViewPrj);
 
-        scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-        scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+        mapToDescriptorSet(scene->DS[i], currentImage);
     }
 
     void drawMoon(int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj){
@@ -252,12 +229,9 @@ protected:
        
         scene->I[i].Wm = glm::rotate(scene->I[i].Wm, -DEG_0_2, Y_AXIS);
         
-        ubo.mMat = scene->I[i].Wm;
-        ubo.mvpMat = ViewPrj * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        updateUBO(scene->I[i].Wm, ViewPrj);
 
-        scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-        scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+        mapToDescriptorSet(scene->DS[i], currentImage);
     }
 
     void drawSpaceShips(int currentImage, float Yaw, glm::vec3 Pos, glm::mat4 ViewPrj){
@@ -271,12 +245,9 @@ protected:
                 scene->I[i].Wm = glm::translate(scene->I[i].Wm, glm::vec3(SPACE_SHIP_MOV_PER_FRAME, 0.0f, 0.0f));
             }
             
-            ubo.mMat = scene->I[i].Wm;
-            ubo.mvpMat = ViewPrj * ubo.mMat;
-            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+            updateUBO(scene->I[i].Wm, ViewPrj);
 
-            scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-            scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+            mapToDescriptorSet(scene->DS[i], currentImage);
         }
     }
 
@@ -298,12 +269,9 @@ protected:
                 scene->I[i].Wm = glm::scale(scene->I[i].Wm, glm::vec3(1.05f, 1.05f, 1.05f));
             }
             
-            ubo.mMat = scene->I[i].Wm;
-            ubo.mvpMat = ViewPrj * ubo.mMat;
-            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+            updateUBO(scene->I[i].Wm, ViewPrj);
 
-            scene->DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-            scene->DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+            mapToDescriptorSet(scene->DS[i], currentImage);
             
             fireworkIndex = (fireworkIndex + 1) % fullFireworkFrames.size();
         }
@@ -327,6 +295,17 @@ protected:
             gubo.lightOn[i].v = lightsData.lightOn[i];
         }
         gubo.eyePos = cameraPosition;
+    }
+    
+    void updateUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection){
+        ubo.mMat = worldMatrix;
+        ubo.mvpMat = viewProjection * ubo.mMat;
+        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+    }
+    
+    void mapToDescriptorSet(DescriptorSet* DS, int currentImage){
+        DS->map(currentImage, &ubo, sizeof(ubo), 0);
+        DS->map(currentImage, &gubo, sizeof(gubo), 2);
     }
     
 public:

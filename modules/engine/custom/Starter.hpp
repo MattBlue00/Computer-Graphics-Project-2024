@@ -1892,39 +1892,84 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 	
 	
 	// Control Wrapper
-	void handleGamePad(int id,  glm::vec3 &m, glm::vec3 &r, bool &fire) {
-		const float deadZone = 0.1f;
-		
-		if(glfwJoystickIsGamepad(id)) {
-			GLFWgamepadstate state;
-			if (glfwGetGamepadState(id, &state)) {
-				if(fabs(state.axes[GLFW_GAMEPAD_AXIS_LEFT_X]) > deadZone) {
-					m.x += state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
-				}
-				if(fabs(state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y]) > deadZone) {
-					m.z += state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-				}
-				if(fabs(state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER]) > deadZone) {
-					m.y -= state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
-				}
-				if(fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]) > deadZone) {
-					m.y += state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
-				}
+    void handleGamePad(int id, glm::vec3& m, glm::vec3& r, bool* headlightsChanged, bool* sceneChanged, bool* viewReset) {
+        const float deadZone = 0.1f;
 
-				if(fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X]) > deadZone) {
-					r.y += state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
-				}
-				if(fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]) > deadZone) {
-					r.x += state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
-				}
-				r.z += state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] ? 1.0f : 0.0f;
-				r.z -= state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] ? 1.0f : 0.0f;
-				fire = fire | (bool)state.buttons[GLFW_GAMEPAD_BUTTON_A] | (bool)state.buttons[GLFW_GAMEPAD_BUTTON_B];
-			}
-		}
-	}
+        if (glfwJoystickIsGamepad(id)) {
+            GLFWgamepadstate state;
+            if (glfwGetGamepadState(id, &state)) {
+                // Movimento a destra/sinistra con lo stick sinistro
+                if (fabs(state.axes[GLFW_GAMEPAD_AXIS_LEFT_X]) > deadZone) {
+                    m.x = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+                }
+                else {
+                    m.x = 0.0f;
+                }
+                
+                if (fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X]) > deadZone) {
+                    r.y = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
+                }
+                else {
+                    r.y = 0.0f;
+                }
+                
+                if (fabs(state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]) > deadZone) {
+                    r.x = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+                }
+                else {
+                    r.x = 0.0f;
+                }
+                
+                // Movimento a destra/sinistra con le freccette
+                if (state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT]) {
+                    m.x = -1.0f; // Sinistra
+                }
+                else if (state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT]) {
+                    m.x = 1.0f; // Destra
+                }
+                
+                // Accelerazione con il tasto X (GLFW_GAMEPAD_BUTTON_A) e freno con il tasto cerchio (GLFW_GAMEPAD_BUTTON_B)
+                if (state.buttons[GLFW_GAMEPAD_BUTTON_A]) {
+                    m.z = -1.0f; // Accelerazione
+                }
+                else if (state.buttons[GLFW_GAMEPAD_BUTTON_X]) {
+                    m.z = 1.0f; // Freno
+                }
+                else {
+                    m.z = 0.0f;
+                }
+                
+                // Cambio luci con il tasto Y
+                if (state.buttons[GLFW_GAMEPAD_BUTTON_Y]) {
+                    *headlightsChanged = true;
+                }
+                else{
+                    *headlightsChanged = false;
+                }
+                
+                if (state.buttons[GLFW_GAMEPAD_BUTTON_START]) {
+                    *viewReset = true;
+                }
+                else{
+                    *viewReset = false;
+                }
+                
+                // Cambio scena con il tasto L1 o R1 (ma non entrambi contemporaneamente)
+                if (state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER]) {
+                    *sceneChanged = true;
+                }
+                else if (state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]) {
+                    *sceneChanged = true;
+                }
+                else {
+                    *sceneChanged = false;
+                }
+                
+            }
+        }
+    }
 		
-	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r) {
+	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool* headlightsChanged, bool* sceneChanged, bool* viewReset) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
 		
@@ -1934,39 +1979,25 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		deltaT = time - lastTime;
 		lastTime = time;
 
-		static double old_xpos = 0, old_ypos = 0;
-		double xpos, ypos;
-		glfwGetCursorPos(window, &xpos, &ypos);
-		double m_dx = xpos - old_xpos;
-		double m_dy = ypos - old_ypos;
-		old_xpos = xpos; old_ypos = ypos;
-
-		const float MOUSE_RES = 10.0f;				
-		glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
-		if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-			r.y = -m_dx / MOUSE_RES;
-			r.x = -m_dy / MOUSE_RES;
-		}
-
-		if(glfwGetKey(window, GLFW_KEY_LEFT)) {
-			r.y = -1.0f;
-		}
-		if(glfwGetKey(window, GLFW_KEY_RIGHT)) {
-			r.y = 1.0f;
-		}
-		if(glfwGetKey(window, GLFW_KEY_UP)) {
-			r.x = -1.0f;
-		}
-		if(glfwGetKey(window, GLFW_KEY_DOWN)) {
-			r.x = 1.0f;
-		}
-		if(glfwGetKey(window, GLFW_KEY_Q)) {
-			r.z = 1.0f;
-		}
-		if(glfwGetKey(window, GLFW_KEY_E)) {
-			r.z = -1.0f;
-		}
-
+        if(glfwGetKey(window, GLFW_KEY_LEFT)) {
+            r.y = -1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_RIGHT)) {
+            r.y = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_UP)) {
+            r.x = -1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_DOWN)) {
+            r.x = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_Q)) {
+            r.z = 1.0f;
+        }
+        if(glfwGetKey(window, GLFW_KEY_E)) {
+            r.z = -1.0f;
+        }
+        
 		if(glfwGetKey(window, GLFW_KEY_A)) {
 			m.x = -1.0f;
 		}
@@ -1985,12 +2016,18 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		if(glfwGetKey(window, GLFW_KEY_F)) {
 			m.y = -1.0f;
 		}
+        
+        if(glfwGetKey(window, GLFW_KEY_V)) {
+            *viewReset = true;
+        }
+        else{
+            *viewReset = false;
+        }
 		
-		bool fire = glfwGetKey(window, GLFW_KEY_SPACE) | (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
-		handleGamePad(GLFW_JOYSTICK_1,m,r,fire);
-		handleGamePad(GLFW_JOYSTICK_2,m,r,fire);
-		handleGamePad(GLFW_JOYSTICK_3,m,r,fire);
-		handleGamePad(GLFW_JOYSTICK_4,m,r,fire);
+		handleGamePad(GLFW_JOYSTICK_1,m,r,headlightsChanged,sceneChanged,viewReset);
+		handleGamePad(GLFW_JOYSTICK_2,m,r,headlightsChanged,sceneChanged,viewReset);
+		handleGamePad(GLFW_JOYSTICK_3,m,r,headlightsChanged,sceneChanged,viewReset);
+		handleGamePad(GLFW_JOYSTICK_4,m,r,headlightsChanged,sceneChanged,viewReset);
 	}
 	
 	// Public part of the base class
