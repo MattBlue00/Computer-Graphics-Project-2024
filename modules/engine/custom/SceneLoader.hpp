@@ -38,7 +38,7 @@ class Scene {
 	std::unordered_map<std::string, int> InstanceIds;
     
     // json file
-    nlohmann::json sceneJson;
+    json sceneJson;
 
 	void init(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL,
 			  Pipeline &P, std::string file) {

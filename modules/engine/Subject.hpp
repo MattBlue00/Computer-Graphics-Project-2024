@@ -79,6 +79,12 @@ struct Subject {
         }
     }
     
+    void notifyChangeCircuit(){
+        for (Observer* observer : observers) {
+            observer->onChangeCircuit();
+        }
+    }
+    
 };
 
 #endif

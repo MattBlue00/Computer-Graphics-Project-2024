@@ -26,7 +26,7 @@ public:
         }
         this->window = window;
         
-        currentScene = FIRST_PERSON_SCENE;
+        currentScene = THIRD_PERSON_SCENE;
         debounce = false;
         currentDebounce = 0;
     }
@@ -35,6 +35,10 @@ public:
         for (Observer* observer : observers) {
             shouldChangeView.addObserver(observer);
         }
+    }
+    
+    int getCurrentScene(){
+        return currentScene;
     }
     
     // OBSERVER METHODS

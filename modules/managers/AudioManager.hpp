@@ -111,6 +111,14 @@ protected:
             it->second.clear();  // Clear the channel list for this sound
         }
     }
+    
+    // Check for FMOD errors
+    void checkFmodError(FMOD_RESULT result) {
+        if (result != FMOD_OK) {
+            std::cerr << "FMOD error! (" << result << ") " << FMOD_ErrorString(result) << std::endl;
+            exit(-1);
+        }
+    }
 
 public:
     
@@ -146,14 +154,6 @@ public:
     void update(std::vector<void*>) override {
         result = audio_system->update();
         checkFmodError(result);
-    }
-
-    // Check for FMOD errors
-    void checkFmodError(FMOD_RESULT result) {
-        if (result != FMOD_OK) {
-            std::cerr << "FMOD error! (" << result << ") " << FMOD_ErrorString(result) << std::endl;
-            exit(-1);
-        }
     }
 
     // Clean up the audio system

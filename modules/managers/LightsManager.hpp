@@ -2,7 +2,6 @@
 #define LIGHTS_MANAGER_HPP
 
 #include "Utils.hpp"
-#include "Car.hpp"
 
 struct LightsManager : public Observer, public Manager {
     

@@ -17,6 +17,8 @@ public:
     
     virtual void onChangeView(){};
     virtual void onChangeHeadlightsStatus(){};
+    
+    virtual void onChangeCircuit(){};
 
     virtual ~Observer() = default;
 };

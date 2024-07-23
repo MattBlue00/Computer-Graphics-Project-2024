@@ -1,7 +1,8 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
-#import "Utils.hpp"
+#include "Utils.hpp"
+#include <btBulletDynamicsCommon.h>
 
 struct LightsData{
     std::vector<glm::mat4> lightWorldMatrices;
@@ -17,6 +18,12 @@ struct CameraData {
     float CamYaw;
     float CamDist;
     float CamRoll;
+};
+
+struct Checkpoint {
+    std::string id;
+    btVector3 position;
+    btVector3 halfExtents; // Dimensioni del checkpoint (mezze estensioni)
 };
 
 struct UniformBufferObject {

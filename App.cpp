@@ -9,9 +9,9 @@
 #include "modules/managers/InputManager.hpp"      // responds to input
 #include "modules/managers/SceneManager.hpp"      // updates scene
 #include "modules/managers/CameraManager.hpp"           // handles camera movement
-#include "modules/Car.hpp"              // handles car movement
+#include "modules/managers/CarManager.hpp"              // handles car movement
 #include "modules/managers/DrawManager.hpp"           // draws the objects
-#include "modules/Physics.hpp"          // adds physics
+#include "modules/managers/PhysicsManager.hpp"          // adds physics
 #include "modules/managers/AudioManager.hpp"            // adds audio management
 #include "modules/managers/LightsManager.hpp"           // adds lights management
 
@@ -50,15 +50,16 @@ protected:
     SceneManager sceneManager;
     CameraManager cameraManager;
     DrawManager drawManager;
-    
-    // current scene
-    int currScene = THIRD_PERSON_SCENE;
+    PhysicsManager physicsManager;
+    CarManager carManager;
 
     // aspect ratio
     float aspectRatio;
-
-    // Initial position
-    glm::vec3 initialCarPosition;
+    
+    // global variables
+    json sceneJson;
+    btDynamicsWorld* dynamicsWorld;
+    LightsData lightsData;
 
     // Here you set the main application parameters
     void setWindowParameters() {
@@ -123,21 +124,20 @@ protected:
         lightsManager.init({});
         audioManager.init({&config["audio"]});
         
-        LightsData lightsData = lightsManager.getLightsData();
+        lightsData = lightsManager.getLightsData();
         drawManager.init({&SC, &lightsData});
         
         // add observers
         inputManager.addObserversForSceneEvents({&sceneManager});
         inputManager.addObserversForLightEvents({&lightsManager});
         sceneManager.addObservers({&cameraManager});
-        
-        // Init local variables
-        initialCarPosition = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
 
         // creates the physics world
-        initPhysics(SC.sceneJson);
+        sceneJson = SC.sceneJson;
+        physicsManager.init({&sceneJson});
         
-        initCar();
+        dynamicsWorld = physicsManager.getDynamicsWorld();
+        carManager.init({dynamicsWorld});
         
         // register the UI observers
         speedSubject.addObserver(&uiManager);
@@ -152,6 +152,8 @@ protected:
         collectedCoinsSubject.addObserver(&audioManager);
         uiManager.startTimerSubject.addObserver(&audioManager);
         checkLapsSubject.addObserver(&audioManager);
+        
+        changeCircuitSubject.addObserver(&physicsManager);
         
         std::cout << "Initialization completed!\n";
     }
@@ -181,7 +183,6 @@ protected:
     // You also have to destroy the pipelines: since they need to be rebuilt, they have two different
     // methods: .cleanup() recreates them, while .destroy() delete them completely
     void localCleanup() {
-
         // Cleanup descriptor set layouts
         DSL.cleanup();
 
@@ -191,7 +192,7 @@ protected:
         SC.localCleanup();
         
         uiManager.cleanup();
-        cleanupPhysics();
+        physicsManager.cleanup();
         audioManager.cleanup();
     }
 
@@ -206,7 +207,7 @@ protected:
     }
     
     void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-        uiManager.populateCommandBuffer(commandBuffer, currentImage, currScene);
+        uiManager.populateCommandBuffer(commandBuffer, currentImage, sceneManager.getCurrentScene());
     }
 
     // Here is where you update the uniforms.
@@ -224,20 +225,19 @@ protected:
         getSixAxis(deltaT, carMovementInput, cameraRotationInput);
 
         // updates vehicle movement
-        updateVehicle(vehicle, carMovementInput, deltaT);
-
+        carManager.update({&carMovementInput, &deltaT});
+        
+        btRaycastVehicle* car = carManager.getVehicle();
         // applies a step in the physics simulation
-        updatePhysics(deltaT);
+        physicsManager.update({&deltaT, car});
         
         // get position, yaw and pitch of car rigid body
-        glm::vec3 carPosition = getVehiclePosition(vehicle);
-        float yaw = getVehicleYaw(vehicle);
-        float pitch = getVehiclePitch(vehicle);
-        float roll = getVehicleRoll(vehicle);
+        glm::vec3 carPosition = carManager.getVehiclePosition();
+        float yaw = carManager.getVehicleYaw();
+        float pitch = carManager.getVehiclePitch();
+        float roll = carManager.getVehicleRoll();
         
         glm::mat4 textureWm = getCarTextureWorldMatrix(carPosition, pitch, yaw, roll);
-        
-        checkCollisions(vehicle, SC.sceneJson);
         
         // checks if space was pressed
         bool shouldRebuildPipeline;
@@ -256,7 +256,7 @@ protected:
 
         glm::vec3 cameraPosition = cameraManager.getCameraPosition();
         glm::mat4 viewProjection = cameraManager.getViewProjection();
-        LightsData lightsData = lightsManager.getLightsData();
+        lightsData = lightsManager.getLightsData();
         drawManager.update({&currentImage, &pitch, &yaw, &roll, &carPosition, &cameraPosition, &viewProjection, &lightsData});
 
     }

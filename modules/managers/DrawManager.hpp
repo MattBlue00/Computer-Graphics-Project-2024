@@ -2,6 +2,7 @@
 #define DRAWER_HPP
 
 #include "engine/custom/SceneLoader.hpp"
+#include "managers/PhysicsManager.hpp"
 #include "tools/WVP.hpp"
 #include "tools/Types.hpp"
 #include "Utils.hpp"
