@@ -50,7 +50,6 @@ public:
             currentScene = (currentScene+1) % 2;
             if(currentScene == THIRD_PERSON_SCENE) {
                 shouldChangeView.notifyChangeView();
-                //*dampedCamPos = Pos;
             } else if(currentScene == FIRST_PERSON_SCENE) {
                 shouldChangeView.notifyChangeView();
             }

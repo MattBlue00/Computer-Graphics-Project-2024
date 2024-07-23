@@ -1,8 +1,8 @@
 // HEADERS
 
 // professor headers
-#include "modules/Starter.hpp"          // vulkan starter header
-#include "modules/TextMaker.hpp"        // text header
+#include "modules/engine/custom/Starter.hpp"          // vulkan starter header
+#include "modules/engine/custom/TextMaker.hpp"        // text header
 
 // our headers
 #include "Utils.hpp"                    // constants and structs
@@ -10,13 +10,13 @@
 #include "modules/managers/SceneManager.hpp"      // updates scene
 #include "modules/managers/CameraManager.hpp"           // handles camera movement
 #include "modules/Car.hpp"              // handles car movement
-#include "modules/Drawer.hpp"           // draws the objects
+#include "modules/managers/DrawManager.hpp"           // draws the objects
 #include "modules/Physics.hpp"          // adds physics
 #include "modules/managers/AudioManager.hpp"            // adds audio management
 #include "modules/managers/LightsManager.hpp"           // adds lights management
 
 // imported here because it needs to see UBO and GUBO (which are in Utils.hpp)
-#include "modules/Scene.hpp"            // scene header (from professor)
+#include "modules/engine/custom/SceneLoader.hpp"            // scene header (from professor)
 #include "modules/managers/UIManager.hpp"
 
 // PROTOTYPES DECLARATION
@@ -42,15 +42,6 @@ protected:
     // Scene
     Scene SC;
 
-    // ???
-    glm::vec3** deltaP;
-
-    // ???
-    float* deltaA;
-
-    // ???
-    float* usePitch;
-
     // Managers
     UIManager uiManager;
     LightsManager lightsManager;
@@ -58,6 +49,7 @@ protected:
     InputManager inputManager;
     SceneManager sceneManager;
     CameraManager cameraManager;
+    DrawManager drawManager;
     
     // current scene
     int currScene = THIRD_PERSON_SCENE;
@@ -131,6 +123,9 @@ protected:
         lightsManager.init({});
         audioManager.init({&config["audio"]});
         
+        LightsData lightsData = lightsManager.getLightsData();
+        drawManager.init({&SC, &lightsData});
+        
         // add observers
         inputManager.addObserversForSceneEvents({&sceneManager});
         inputManager.addObserversForLightEvents({&lightsManager});
@@ -138,15 +133,6 @@ protected:
         
         // Init local variables
         initialCarPosition = glm::vec3(SC.I[SC.InstanceIds["car"]].Wm[3]);
-
-        deltaP = (glm::vec3**)calloc(SC.InstanceCount, sizeof(glm::vec3*));
-        deltaA = (float*)calloc(SC.InstanceCount, sizeof(float));
-        usePitch = (float*)calloc(SC.InstanceCount, sizeof(float));
-        for (int i = 0; i < SC.InstanceCount; i++) {
-            deltaP[i] = new glm::vec3(SC.I[i].Wm[3]);
-            deltaA[i] = 0.0f;
-            usePitch[i] = 0.0f;
-        }
 
         // creates the physics world
         initPhysics(SC.sceneJson);
@@ -195,12 +181,6 @@ protected:
     // You also have to destroy the pipelines: since they need to be rebuilt, they have two different
     // methods: .cleanup() recreates them, while .destroy() delete them completely
     void localCleanup() {
-        for (int i = 0; i < SC.InstanceCount; i++) {
-            delete deltaP[i];
-        }
-        free(deltaP);
-        free(deltaA);
-        free(usePitch);
 
         // Cleanup descriptor set layouts
         DSL.cleanup();
@@ -240,11 +220,8 @@ protected:
         glm::vec3 carMovementInput = ZERO_VEC3;
         glm::vec3 cameraRotationInput = ZERO_VEC3;
 
-        // stores whether a specific input has been given
-        bool fire = false;
-
-        // gets WASD and arrows input from user, and sets deltaT and fire
-        getSixAxis(deltaT, carMovementInput, cameraRotationInput, fire);
+        // gets WASD and arrows input from user and sets deltaT
+        getSixAxis(deltaT, carMovementInput, cameraRotationInput);
 
         // updates vehicle movement
         updateVehicle(vehicle, carMovementInput, deltaT);
@@ -258,7 +235,7 @@ protected:
         float pitch = getVehiclePitch(vehicle);
         float roll = getVehicleRoll(vehicle);
         
-        glm::mat4 textureWm = getCarTextureWorldMatrix(&SC, carPosition, pitch, yaw, roll, deltaA);
+        glm::mat4 textureWm = getCarTextureWorldMatrix(carPosition, pitch, yaw, roll);
         
         checkCollisions(vehicle, SC.sceneJson);
         
@@ -277,37 +254,13 @@ protected:
             RebuildPipeline();
         }
 
-        UniformBufferObject ubo{};
-                        
-        // Here is where you actually update your uniforms
-
-        GlobalUniformBufferObject gubo{};
-        // sets lights, camera position and direction;
-        updateGUBO(&gubo, cameraManager.getCameraPosition());
-
-        // draws every object of this app
-        drawAll(&SC, &gubo, &ubo, currentImage, yaw, carPosition, cameraManager.getViewProjection(), deltaP, deltaA, usePitch, pitch, roll);
+        glm::vec3 cameraPosition = cameraManager.getCameraPosition();
+        glm::mat4 viewProjection = cameraManager.getViewProjection();
+        LightsData lightsData = lightsManager.getLightsData();
+        drawManager.update({&currentImage, &pitch, &yaw, &roll, &carPosition, &cameraPosition, &viewProjection, &lightsData});
 
     }
     
-    void updateGUBO(GlobalUniformBufferObject* gubo, glm::vec3 cameraPosition) {
-        // updates global uniforms
-        gubo->ambientLightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
-        gubo->ambientLightColor = ONE_VEC4;
-        gubo->eyeDir = ZERO_VEC4;
-        gubo->eyeDir.w = 1.0;
-
-        for (int i = 0; i < LIGHTS_COUNT; i++) {
-            gubo->lightColor[i] = glm::vec4(lightsManager.lightColors[i], lightsManager.lightIntensities[i]);
-            gubo->lightDir[i].v = lightsManager.lightWorldMatrices[i] * glm::vec4(0, 0, 1, 0);
-            gubo->lightPos[i].v = lightsManager.lightWorldMatrices[i] * glm::vec4(0, 0, 0, 1);
-            gubo->lightOn[i].v = lightsManager.lightOn[i];
-        }
-
-        gubo->eyePos = cameraPosition;
-        gubo->cosIn = lightsManager.cosIn;
-        gubo->cosOut = lightsManager.cosOut;
-    }
 };
 
 // This is the main: probably you do not need to touch this!

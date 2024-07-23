@@ -1,20 +1,11 @@
 #ifndef CAMERA_MANAGER_HPP
 #define CAMERA_MANAGER_HPP
 
-#include "WVP.hpp"
+#include "tools/WVP.hpp"
+#include "tools/Types.hpp"
 #include "Utils.hpp"
 #include "engine/Manager.hpp"
 #include "engine/Observer.hpp"
-
-// CAMERA DATA STRUCTURES
-
-// camera data valid for any view
-struct CameraData {
-    float CamPitch;
-    float CamYaw;
-    float CamDist;
-    float CamRoll;
-};
 
 struct CameraManager : public Observer, public Manager {
     

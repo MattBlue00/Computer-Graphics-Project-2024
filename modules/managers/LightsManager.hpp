@@ -4,21 +4,21 @@
 #include "Utils.hpp"
 #include "Car.hpp"
 
-// lights variables
 struct LightsManager : public Observer, public Manager {
     
 protected:
     
+    LightsData lightsData{};
     json lightsArray;
     bool isLightInit = false;
 
     void resetSemaphore(){
-        lightOn[getLightIndexByName("red_light_left")] = ZERO_VEC3;
-        lightOn[getLightIndexByName("red_light_right")] = ZERO_VEC3;
-        lightOn[getLightIndexByName("yellow_light_left")] = ZERO_VEC3;
-        lightOn[getLightIndexByName("yellow_light_right")] = ZERO_VEC3;
-        lightOn[getLightIndexByName("green_light_left")] = ZERO_VEC3;
-        lightOn[getLightIndexByName("green_light_right")] = ZERO_VEC3;
+        lightsData.lightOn[getLightIndexByName("red_light_left")] = ZERO_VEC3;
+        lightsData.lightOn[getLightIndexByName("red_light_right")] = ZERO_VEC3;
+        lightsData.lightOn[getLightIndexByName("yellow_light_left")] = ZERO_VEC3;
+        lightsData.lightOn[getLightIndexByName("yellow_light_right")] = ZERO_VEC3;
+        lightsData.lightOn[getLightIndexByName("green_light_left")] = ZERO_VEC3;
+        lightsData.lightOn[getLightIndexByName("green_light_right")] = ZERO_VEC3;
     }
     
     // Returns the index of the light with the specified name
@@ -44,7 +44,7 @@ protected:
                                                         lightsArray[index]["translation"][1],
                                                         lightsArray[index]["translation"][2]);
 
-            lightWorldMatrices[index] = glm::translate(textureWm, rightLocalTranslation);
+            lightsData.lightWorldMatrices[index] = glm::translate(textureWm, rightLocalTranslation);
         } else {
             std::cout << "Light not found!" << std::endl;
         }
@@ -52,15 +52,8 @@ protected:
     
 public:
     
-    std::vector<glm::mat4> lightWorldMatrices;
-    std::vector<glm::vec3> lightColors;
-    std::vector<float> lightIntensities;
-    std::vector<glm::vec3> lightOn;
-    float cosIn = 0.985f; // cosine of 10 degrees
-    float cosOut = 0.906f; // cosine of 25 degrees
-    
     // inits light system
-    void init(std::vector<void*>) override {
+    void init(std::vector<void*> params) override {
         // LOADS FILE
         json js;
         std::ifstream ifs("models/lights.json");
@@ -78,10 +71,10 @@ public:
             lightsArray = js["lights"];
             
             // Resize vectors to hold the lights data
-            lightWorldMatrices.resize(LIGHTS_COUNT);
-            lightColors.resize(LIGHTS_COUNT);
-            lightIntensities.resize(LIGHTS_COUNT);
-            lightOn.resize(LIGHTS_COUNT);
+            lightsData.lightWorldMatrices.resize(LIGHTS_COUNT);
+            lightsData.lightColors.resize(LIGHTS_COUNT);
+            lightsData.lightIntensities.resize(LIGHTS_COUNT);
+            lightsData.lightOn.resize(LIGHTS_COUNT);
             
             // PREPARES LIGHTS FOR THE APPLICATION
             for (int i = 0; i < LIGHTS_COUNT; i++) {
@@ -112,15 +105,15 @@ public:
                     lightScale = ONE_VEC3;
                 }
                 
-                lightWorldMatrices[i] = glm::translate(ONE_MAT4, lightTranslation) *
+                lightsData.lightWorldMatrices[i] = glm::translate(ONE_MAT4, lightTranslation) *
                 glm::mat4(quaternion) *
                 glm::scale(ONE_MAT4, lightScale);
                 
                 json lightColor = lightDescription["color"];
-                lightColors[i] = glm::vec3(lightColor[0], lightColor[1], lightColor[2]);
+                lightsData.lightColors[i] = glm::vec3(lightColor[0], lightColor[1], lightColor[2]);
                 
-                lightIntensities[i] = lightDescription["intensity"];
-                lightOn[i] = ONE_VEC3;
+                lightsData.lightIntensities[i] = lightDescription["intensity"];
+                lightsData.lightOn[i] = ONE_VEC3;
             }
             
             isLightInit = true;
@@ -128,6 +121,9 @@ public:
         } catch (const nlohmann::json::exception &e) {
             std::cout << e.what() << '\n';
         }
+        
+        lightsData.cosIn = 0.985f; // cosine of 10 degrees
+        lightsData.cosOut = 0.906f; // cosine of 25 degrees
     }
     
     // update car light position based on car position
@@ -150,6 +146,10 @@ public:
 
     }
     
+    LightsData getLightsData(){
+        return lightsData;
+    }
+    
     //------Observer methods--------
     
     void onStartSemaphore(int countDownValue) override {
@@ -161,18 +161,18 @@ public:
             case 5:
             case 4:
             case 3:
-                lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
-                lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
                 break;
             case 2:
-                lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
-                lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
-                lightOn[getLightIndexByName("yellow_light_left")] = ONE_VEC3;
-                lightOn[getLightIndexByName("yellow_light_right")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("yellow_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("yellow_light_right")] = ONE_VEC3;
                 break;
             case 1:
-                lightOn[getLightIndexByName("green_light_left")] = ONE_VEC3;
-                lightOn[getLightIndexByName("green_light_right")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("green_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("green_light_right")] = ONE_VEC3;
                 break;
             default:
                 break;
@@ -184,8 +184,8 @@ public:
         int leftIndex = getLightIndexByName("brake_light_left");
         int rightIndex = getLightIndexByName("brake_light_right");
         
-        lightOn[leftIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
-        lightOn[rightIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
+        lightsData.lightOn[leftIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
+        lightsData.lightOn[rightIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
         
     }
     
@@ -193,11 +193,11 @@ public:
         int leftIndex = getLightIndexByName("headlight_left");
         int rightIndex = getLightIndexByName("headlight_right");
         
-        glm::vec3 currentLeftLightStatus = lightOn[leftIndex];
-        glm::vec3 currentRightLightStatus = lightOn[leftIndex];
+        glm::vec3 currentLeftLightStatus = lightsData.lightOn[leftIndex];
+        glm::vec3 currentRightLightStatus = lightsData.lightOn[leftIndex];
         
-        lightOn[leftIndex] = currentLeftLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
-        lightOn[rightIndex] = currentRightLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
+        lightsData.lightOn[leftIndex] = currentLeftLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
+        lightsData.lightOn[rightIndex] = currentRightLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
     }
 
 };

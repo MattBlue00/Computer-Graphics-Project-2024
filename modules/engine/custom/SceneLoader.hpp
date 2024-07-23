@@ -1,5 +1,7 @@
-#ifndef SCENE_HPP
-#define SCENE_HPP
+#ifndef SCENE_LOADER_HPP
+#define SCENE_LOADER_HPP
+
+#include "tools/Types.hpp"
 
 typedef struct {
 	std::string *id;
@@ -165,7 +167,7 @@ std::cout << k << "\t" << is[k]["id"] << ", " << is[k]["model"] << "(" << MeshId
 
 // WARNING: ADDED BY US
 
-#include "Drawer.hpp"
+#include "managers/DrawManager.hpp"
 #include "Utils.hpp"
 
 void addInstanceToWorld(std::string instance_id); // external function ("Drawer.hpp")
