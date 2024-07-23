@@ -31,18 +31,6 @@ layout(location = 1) in vec3 fragNorm;
 layout(location = 2) in vec2 fragTexCoord;
 layout(location = 0) out vec4 outColor;
 
-// DIRECT LIGHT DIRECTION
-
-vec3 direct_light_dir(vec3 pos, int i) {
-    return gubo.lightDir[i];
-}
-
-// DIRECT LIGHT COLOR
-
-vec3 direct_light_color(vec3 pos, int i) {
-    return gubo.lightColor[i].rgb;
-}
-
 // POINT LIGHT DIRECTION
 
 vec3 point_light_dir(vec3 pos, int i) {
@@ -65,11 +53,7 @@ vec3 point_light_color(vec3 pos, int i) {
     
     float attenuation = 1.0 / (constant + linear * distance + quadratic * distance * distance);
 
-    if (distance > 1.0) {
-        attenuation = 0.0;
-    }
-    
-    if (i >= 6 && distance > 0.1) {
+    if (distance > 1.0 || (i >= 6 && distance > 0.1)) {
         attenuation = 0.0;
     }
     
@@ -102,8 +86,8 @@ vec3 spot_light_color(vec3 pos, int i) {
 // BRDF
 
 vec3 BRDF(vec3 Albedo, vec3 Norm, vec3 EyeDir, vec3 LD) {
-    vec3 Diffuse = Albedo * max(dot(Norm, LD), 0.0f);
-    vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(LD, Norm)), 0.0f), 160.0f));
+    vec3 Diffuse = Albedo * max(dot(Norm, LD), 0.0f);   // lambert diffuse model
+    vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(LD, Norm)), 0.0f), 160.0f));  // phong specular model
     return Diffuse + Specular;
 }
 
@@ -115,32 +99,62 @@ void main()
     vec3 EyeDir = normalize(gubo.eyePos - fragPos);
     vec3 Albedo = texture(texSampler, fragTexCoord).xyz;
     
-    vec3 LightDirection = gubo.ambientLightDir;
-    vec4 LightColor = gubo.ambientLightColor;
+    vec3 ambientLightDirection = gubo.ambientLightDir;
+    vec4 ambientLightColor = gubo.ambientLightColor;
     
     vec3 LD;    // light direction
     vec3 LC;    // light color
 
     vec3 RendEqSol = vec3(0);
     
-    for(int i = 0; i < LIGHTS_COUNT; i++){
-        if(i<8){
-            LD = point_light_dir(fragPos, i);
-            LC = point_light_color(fragPos, i);
-        }
-        else{
-            LD = spot_light_dir(fragPos, i);
-            LC = spot_light_color(fragPos, i);
-        }
-        RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[i];
-    }
+    LD = point_light_dir(fragPos, 0);
+    LC = point_light_color(fragPos, 0);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[0];
     
-    vec3 Diffuse = Albedo * (max(dot(Norm, LightDirection), 0.0) * 0.9 + 0.1);
-    vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(LightDirection, Norm)), 0.0), 64.0));
-    vec3 Ambient = mix(vec3(0.18, 0.12, 0.08), vec3(0.2, 0.1, 0.1), bvec3(Norm.x > 0.0)) * (Norm.x * Norm.x) +
-                   mix(vec3(0.1), vec3(0.06, 0.2, 0.2), bvec3(Norm.y > 0.0)) * (Norm.y * Norm.y) +
-                   mix(vec3(0.06, 0.12, 0.14), vec3(0.16, 0.04, 0.08), bvec3(Norm.z > 0.0)) * (Norm.z * Norm.z);
-    Ambient *= Albedo;
+    LD = point_light_dir(fragPos, 1);
+    LC = point_light_color(fragPos, 1);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[1];
     
-    outColor = vec4(((Diffuse + Specular * (1.0 - gubo.eyeDir.w)) * LightColor.xyz) + Ambient, 1.0) + vec4(RendEqSol, 1.0);
+    LD = point_light_dir(fragPos, 2);
+    LC = point_light_color(fragPos, 2);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[2];
+    
+    LD = point_light_dir(fragPos, 3);
+    LC = point_light_color(fragPos, 3);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[3];
+    
+    LD = point_light_dir(fragPos, 4);
+    LC = point_light_color(fragPos, 4);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[4];
+    
+    LD = point_light_dir(fragPos, 5);
+    LC = point_light_color(fragPos, 5);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[5];
+    
+    LD = point_light_dir(fragPos, 6);
+    LC = point_light_color(fragPos, 6);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[6];
+    
+    LD = point_light_dir(fragPos, 7);
+    LC = point_light_color(fragPos, 7);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[7];
+    
+    LD = spot_light_dir(fragPos, 8);
+    LC = spot_light_color(fragPos, 8);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[8];
+    
+    LD = spot_light_dir(fragPos, 9);
+    LC = spot_light_color(fragPos, 9);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[9];
+    
+    vec3 ambientDiffuse = Albedo * (max(dot(Norm, ambientLightDirection), 0.0) * 0.9 + 0.1); // lampert diffuse model
+    vec3 ambientSpecular = vec3(pow(max(dot(EyeDir, -reflect(ambientLightDirection, Norm)), 0.0), 64.0)); // phong specular model
+    
+    vec3 ambientCorrection =
+        mix(vec3(0.18, 0.12, 0.08), vec3(0.2, 0.1, 0.1), bvec3(Norm.x > 0.0)) * (Norm.x * Norm.x) +
+        mix(vec3(0.1), vec3(0.06, 0.2, 0.2), bvec3(Norm.y > 0.0)) * (Norm.y * Norm.y) +
+        mix(vec3(0.06, 0.12, 0.14), vec3(0.16, 0.04, 0.08), bvec3(Norm.z > 0.0)) * (Norm.z * Norm.z);
+    ambientCorrection *= Albedo;
+    
+    outColor = vec4(((ambientDiffuse + ambientSpecular * (1.0 - gubo.eyeDir.w)) * ambientLightColor.xyz) + ambientCorrection, 1.0) + vec4(RendEqSol, 1.0);
 }
