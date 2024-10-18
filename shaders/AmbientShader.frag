@@ -147,7 +147,7 @@ void main()
     LC = spot_light_color(fragPos, 9);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[9];
     
-    vec3 ambientDiffuse = Albedo * (max(dot(Norm, ambientLightDirection), 0.0) * 0.9 + 0.1); // lampert diffuse model
+    vec3 ambientDiffuse = Albedo * (max(dot(Norm, ambientLightDirection), 0.0) * 0.9 + 0.1); // lambert diffuse model
     vec3 ambientSpecular = vec3(pow(max(dot(EyeDir, -reflect(ambientLightDirection, Norm)), 0.0), 64.0)); // phong specular model
     
     vec3 ambientCorrection =

@@ -2648,10 +2648,13 @@ void Model::loadModelOBJ(std::string file) {
 				*o = color;
 			}
 			
-			glm::vec2 texCoord = {
-				attrib.texcoords[2 * index.texcoord_index + 0],
-				1 - attrib.texcoords[2 * index.texcoord_index + 1] 
-			};
+            glm::vec2 texCoord = {0.0f, 0.0f};  // Valore di default in caso non ci siano UVs
+            if (index.texcoord_index >= 0) {  // Verifica se l'indice UV è valido
+                texCoord = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    1 - attrib.texcoords[2 * index.texcoord_index + 1]
+                };
+            }
 			if(VD->UV.hasIt) {
 				glm::vec2 *o = (glm::vec2 *)((char*)(&vertex[0]) + VD->UV.offset);
 				*o = texCoord;
