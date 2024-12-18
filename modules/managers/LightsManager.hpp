@@ -2,6 +2,8 @@
 #define LIGHTS_MANAGER_HPP
 
 #include "Utils.hpp"
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 struct LightsManager : public Observer, public Manager {
     
@@ -52,7 +54,8 @@ protected:
 public:
     
     // inits light system
-    void init(std::vector<void*> params) override {
+    void init(ManagerInitData* param) override {
+        
         // LOADS FILE
         json js;
         std::ifstream ifs("models/lights.json");
@@ -126,24 +129,24 @@ public:
     }
     
     // update car light position based on car position
-    void update(std::vector<void*> params) override {
+    void update(ManagerUpdateData* param) override {
         
         if(!isLightInit) return;
         
-        glm::mat4 textureWm;
-        if (params.size() == 1) {
-            textureWm = *static_cast<glm::mat4*>(params[0]);
-        } else {
-            std::cout << "LightsManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
+        auto* data = dynamic_cast<LightsManagerUpdateData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerUpdateData");
         }
 
-        updateLightWorldMatrix(getLightIndexByName("brake_light_left"), textureWm);
-        updateLightWorldMatrix(getLightIndexByName("brake_light_right"), textureWm);
-        updateLightWorldMatrix(getLightIndexByName("headlight_left"), textureWm);
-        updateLightWorldMatrix(getLightIndexByName("headlight_right"), textureWm);
+        updateLightWorldMatrix(getLightIndexByName("brake_light_left"), data->textureWm);
+        updateLightWorldMatrix(getLightIndexByName("brake_light_right"), data->textureWm);
+        updateLightWorldMatrix(getLightIndexByName("headlight_left"), data->textureWm);
+        updateLightWorldMatrix(getLightIndexByName("headlight_right"), data->textureWm);
 
     }
+    
+    void cleanup() override {}
     
     LightsData getLightsData(){
         return lightsData;

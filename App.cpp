@@ -1,7 +1,7 @@
 // HEADERS
 
-#include "modules/engine/custom/Starter.hpp"                // vulkan starter header
-#include "modules/engine/custom/TextMaker.hpp"              // text header
+#include "modules/engine/vulkan/Starter.hpp"                // vulkan starter header
+#include "modules/engine/vulkan/TextMaker.hpp"              // text header
 #include "Utils.hpp"                                        // constants and structs
 #include "modules/managers/InputManager.hpp"                // responds to input
 #include "modules/managers/SceneManager.hpp"                // updates scene
@@ -11,8 +11,11 @@
 #include "modules/managers/PhysicsManager.hpp"              // adds physics
 #include "modules/managers/AudioManager.hpp"                // adds audio management
 #include "modules/managers/LightsManager.hpp"               // adds lights management
-#include "modules/engine/custom/SceneLoader.hpp"            // scene header (from professor)
+#include "modules/engine/vulkan/Scene.hpp"                  // scene header (from professor)
+#include "modules/scenes/MainScene.hpp"                     // main scene
 #include "modules/managers/UIManager.hpp"                   // manages UI
+#include "modules/managers/utils/ManagerInitData.hpp"       // utils
+#include "modules/managers/utils/ManagerUpdateData.hpp"     // utils
 
 // MAIN APP
 
@@ -27,10 +30,10 @@ protected:
     VertexDescriptor VD;
 
     // Pipelines [Shader couples]
-    Pipeline P;
+    Pipeline ambientPipeline;
 
     // Scene
-    Scene SC;
+    MainScene mainScene;
 
     // Managers
     UIManager uiManager;
@@ -47,7 +50,6 @@ protected:
     float aspectRatio;
     
     // global variables
-    json sceneJson;
     btDynamicsWorld* dynamicsWorld;
     LightsData lightsData;
 
@@ -97,25 +99,39 @@ protected:
             });
 
         // Pipelines [Shader couples]
-        P.init(this, &VD, "shaders/AmbientVert.spv", "shaders/AmbientFrag.spv", { &DSL });
-        P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+        ambientPipeline.init(this, &VD, "shaders/AmbientVert.spv", "shaders/AmbientFrag.spv", { &DSL });
+        ambientPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
 
         // Load Scene
-        SC.init(this, &VD, DSL, P, "models/scene.json");
+        mainScene.load(this, &VD, DSL, "models/scene.json");
+        mainScene.init();
         
         json config = parseConfigFile();
         
         // managers init
-        inputManager.init({window});
-        sceneManager.init({window});
-        cameraManager.init({});
-        uiManager.init({this});
-        lightsManager.init({});
-        audioManager.init({&config["audio"]});
+        
+        InputManagerInitData inputManagerInitData = InputManagerInitData(window);
+        inputManager.init(&inputManagerInitData);
+        
+        SceneManagerInitData sceneManagerInitdata = SceneManagerInitData(window);
+        sceneManager.init(&sceneManagerInitdata);
+        
+        CameraManagerInitData cameraManagerInitData = CameraManagerInitData();
+        cameraManager.init(&cameraManagerInitData);
+        
+        UIManagerInitData uiManagerInitData = UIManagerInitData(this);
+        uiManager.init(&uiManagerInitData);
+        
+        LightsManagerInitData lightsManagerInitData = LightsManagerInitData();
+        lightsManager.init(&lightsManagerInitData);
+        
+        AudioManagerInitData audioManagerInitData = AudioManagerInitData(config["audio"]);
+        audioManager.init(&audioManagerInitData);
         
         lightsData = lightsManager.getLightsData();
-        drawManager.init({&SC, &lightsData});
+        DrawManagerInitData drawManagerInitData = DrawManagerInitData(mainScene.getGameObjects(), lightsData);
+        drawManager.init(&drawManagerInitData);
         
         // add observers
         shouldQuitSubject.addObserver(&sceneManager);
@@ -126,11 +142,12 @@ protected:
         resetViewSubject.addObserver(&cameraManager);
 
         // creates the physics world
-        sceneJson = SC.sceneJson;
-        physicsManager.init({&sceneJson});
+        PhysicsManagerInitData physicsManagerInitData = PhysicsManagerInitData(mainScene.getSceneJson());
+        physicsManager.init(&physicsManagerInitData);
         
         dynamicsWorld = physicsManager.getDynamicsWorld();
-        carManager.init({dynamicsWorld});
+        CarManagerInitData carManagerInitData = CarManagerInitData(dynamicsWorld);
+        carManager.init(&carManagerInitData);
         
         // register the UI observers
         speedSubject.addObserver(&uiManager);
@@ -157,10 +174,10 @@ protected:
     // Here you create your pipelines and Descriptor Sets!
     void pipelinesAndDescriptorSetsInit() {
         // This creates a new pipeline (with the current surface), using its shaders
-        P.create();
+        ambientPipeline.create();
 
         // Here you define the data set
-        SC.pipelinesAndDescriptorSetsInit(DSL);
+        mainScene.pipelinesAndDescriptorSetsInit(DSL);
         uiManager.pipelinesAndDescriptorSetsInit();
     }
 
@@ -168,9 +185,9 @@ protected:
     // All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
     void pipelinesAndDescriptorSetsCleanup() {
         // Cleanup pipelines
-        P.cleanup();
+        ambientPipeline.cleanup();
 
-        SC.pipelinesAndDescriptorSetsCleanup();
+        mainScene.pipelinesAndDescriptorSetsCleanup();
         uiManager.pipelinesAndDescriptorSetsCleanup();
     }
 
@@ -183,9 +200,9 @@ protected:
         DSL.cleanup();
 
         // Destroys the pipelines
-        P.destroy();
-
-        SC.localCleanup();
+        ambientPipeline.destroy();
+        
+        mainScene.localCleanup();
         
         uiManager.cleanup();
         physicsManager.cleanup();
@@ -198,8 +215,8 @@ protected:
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
         // binds the pipeline
-        P.bind(commandBuffer);
-        SC.populateCommandBuffer(commandBuffer, currentImage, P);
+        ambientPipeline.bind(commandBuffer);
+        mainScene.populateCommandBuffer(commandBuffer, currentImage, ambientPipeline);
     }
     
     void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
@@ -226,11 +243,13 @@ protected:
         getSixAxis(deltaT, carMovementInput, cameraRotationInput, &headlightsChanged, &sceneChanged, &viewReset);
 
         // updates vehicle movement
-        carManager.update({&carMovementInput, &deltaT});
+        CarManagerUpdateData carManagerUpdateData = CarManagerUpdateData(carMovementInput);
+        carManager.update(&carManagerUpdateData);
         
         btRaycastVehicle* car = carManager.getVehicle();
         // applies a step in the physics simulation
-        physicsManager.update({&deltaT, car});
+        PhysicsManagerUpdateData physicsManagerUpdateData = PhysicsManagerUpdateData(deltaT, car);
+        physicsManager.update(&physicsManagerUpdateData);
         
         // get position, yaw and pitch of car rigid body
         glm::vec3 carPosition = carManager.getVehiclePosition();
@@ -244,11 +263,20 @@ protected:
         bool shouldRebuildPipeline;
         
         // manager updates
-        lightsManager.update({&textureWm});
-        inputManager.update({&shouldRebuildPipeline, &headlightsChanged, &sceneChanged, &viewReset});
-        cameraManager.update({&pitch, &yaw, &roll, &aspectRatio, &deltaT, &cameraRotationInput, &carMovementInput, &carPosition});
-        uiManager.update({});
-        audioManager.update({});
+        LightsManagerUpdateData lightsManagerUpdateData = LightsManagerUpdateData(textureWm);
+        lightsManager.update(&lightsManagerUpdateData);
+        
+        InputManagerUpdateData inputManagerUpdateData = InputManagerUpdateData(&shouldRebuildPipeline, &headlightsChanged, &sceneChanged, &viewReset);
+        inputManager.update(&inputManagerUpdateData);
+        
+        CameraManagerUpdateData cameraManagerUpdateData = CameraManagerUpdateData(aspectRatio, deltaT, cameraRotationInput, carMovementInput, PositionData(carPosition, yaw, pitch, roll));
+        cameraManager.update(&cameraManagerUpdateData);
+        
+        UIManagerUpdateData uiManagerUpdateData = UIManagerUpdateData();
+        uiManager.update(&uiManagerUpdateData);
+        
+        AudioManagerUpdateData audioManagerUpdateData = AudioManagerUpdateData();
+        audioManager.update(&audioManagerUpdateData);
 
         // if so, rebuilds pipeline
         if(shouldRebuildPipeline){
@@ -258,7 +286,10 @@ protected:
         glm::vec3 cameraPosition = cameraManager.getCameraPosition();
         glm::mat4 viewProjection = cameraManager.getViewProjection();
         lightsData = lightsManager.getLightsData();
-        drawManager.update({&currentImage, &pitch, &yaw, &roll, &carPosition, &cameraPosition, &viewProjection, &lightsData});
+        PositionData positionData = PositionData(carPosition, yaw, pitch, roll);
+        
+        DrawManagerUpdateData drawManagerUpdateData = DrawManagerUpdateData(currentImage, positionData, cameraPosition, viewProjection, lightsData);
+        drawManager.update(&drawManagerUpdateData);
 
     }
     

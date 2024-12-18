@@ -3,7 +3,9 @@
 
 #include <btBulletDynamicsCommon.h>
 #include "Utils.hpp"
-#include "engine/Subject.hpp"
+#include "engine/pattern/Subject.hpp"
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 std::vector<btCollisionShape*> collisionShapes;
 
@@ -483,13 +485,12 @@ protected:
     
 public:
     
-    void init(std::vector<void*> params) override {
+    void init(ManagerInitData* param) override {
         
-        if (params.size() == 1) {
-            sceneJson = static_cast<json*>(params[0]);
-        } else {
-            std::cout << "PhysicsManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
+        auto* data = dynamic_cast<PhysicsManagerInitData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerInitData");
         }
         
         broadphase = new btDbvtBroadphase();
@@ -508,23 +509,25 @@ public:
         secondLap = false;
         updateCheckpoints = true;
         
+        json sceneJson = data->sceneJson;
+        
         for (auto it = physicsObjectsMap.begin(); it != physicsObjectsMap.end(); ++it) {
             std::string id = it->first;
             
             // Cercare l'istanza corrispondente nell'array "instances"
-            auto instanceIt = std::find_if((*sceneJson)["instances"].begin(), (*sceneJson)["instances"].end(), [&id](const json& instance) {
+            auto instanceIt = std::find_if(sceneJson["instances"].begin(), sceneJson["instances"].end(), [&id](const json& instance) {
                 return instance["id"] == id;
             });
             
-            if (instanceIt != (*sceneJson)["instances"].end()) {
+            if (instanceIt != sceneJson["instances"].end()) {
                 std::string modelId = (*instanceIt)["model"];
                 
                 // Cercare il modello corrispondente nell'array "models" usando il modelId trovato nell'istanza
-                auto modelIt = std::find_if((*sceneJson)["models"].begin(), (*sceneJson)["models"].end(), [&modelId](const json& model) {
+                auto modelIt = std::find_if(sceneJson["models"].begin(), sceneJson["models"].end(), [&modelId](const json& model) {
                     return model["id"] == modelId;
                 });
                 
-                if (modelIt != (*sceneJson)["models"].end()) {
+                if (modelIt != sceneJson["models"].end()) {
                     
                     std::string modelFilename = (*modelIt)["model"];
                     std::string format = (*modelIt)["format"];
@@ -551,7 +554,7 @@ public:
         }
         
         //initiate coins
-        for (const auto& instance : (*sceneJson)["instances"]) {
+        for (const auto& instance : sceneJson["instances"]) {
             if (instance["model"] == "coin") {
                 // Converti i dati della trasformazione in btTransform
                 auto& t = instance["transform"];
@@ -592,21 +595,15 @@ public:
         createCheckpoints();
     }
     
-    void update(std::vector<void*> params) override {
+    void update(ManagerUpdateData* param) override {
+        auto* data = dynamic_cast<PhysicsManagerUpdateData*>(param);
         
-        float deltaTime;
-        btRaycastVehicle* vehicle;
-        
-        if (params.size() == 2) {
-            deltaTime = *static_cast<float*>(params[0]);
-            vehicle = static_cast<btRaycastVehicle*>(params[1]);
-        } else {
-            std::cout << "PhysicsManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerUpdateData");
         }
         
-        dynamicsWorld->stepSimulation(deltaTime, 60);
-        checkCollisions(vehicle);
+        dynamicsWorld->stepSimulation(data->deltaTime, 60);
+        checkCollisions(data->vehicle);
     }
     
     void cleanup() override {

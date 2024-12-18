@@ -2,8 +2,10 @@
 #define CAR_MANAGER_HPP
 
 #include <btBulletDynamicsCommon.h>
-#include "managers/PhysicsManager.hpp"
-#include "engine/Subject.hpp"
+#include "PhysicsManager.hpp"
+#include "engine/pattern/Subject.hpp"
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 // subjects observed by UI
 Subject speedSubject;
@@ -136,14 +138,15 @@ protected:
     
 public:
     
-    void init(std::vector<void*> params) override {
+    void init(ManagerInitData* param) override {
         
-        if (params.size() == 1) {
-            dynamicsWorld = static_cast<btDynamicsWorld*>(params[0]);
-        } else {
-            std::cout << "CarManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
+        auto* data = dynamic_cast<CarManagerInitData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerInitData");
         }
+        
+        dynamicsWorld = data->dynamicsWorld;
         
         // Car initialization with btBoxShape and btCompoundShape
         btBoxShape* chassisShape = new btBoxShape(btVector3(1.6, 0.5, 1.95));
@@ -215,19 +218,14 @@ public:
         vehicle->setCoordinateSystem(0, 1, 2);
     }
     
-    void update(std::vector<void*> params) override {
+    void update(ManagerUpdateData* param) override {
         
         if(!canStart) return;
         
-        glm::vec3 carMovementInput;
-        float deltaTime;
+        auto* data = dynamic_cast<CarManagerUpdateData*>(param);
         
-        if (params.size() == 2) {
-            carMovementInput = *static_cast<glm::vec3*>(params[0]);
-            deltaTime = *static_cast<float*>(params[1]);
-        } else {
-            std::cout << "CarManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerUpdateData");
         }
         
         brakeSubject.notifyBrake(false);
@@ -241,14 +239,14 @@ public:
         float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
         
         // Movimento avanti/indietro
-        if (carMovementInput.z < 0) { // W premuto
+        if (data->carMovementInput.z < 0) { // W premuto
             engineForce = ENGINE_FORCE;
             brakeForce = 0.0f;
             if(isVehicleStopped(0.5f) && !goingOnwards){
                 goingOnwards = true;
             }
         }
-        else if (carMovementInput.z > 0 && goingOnwards) { // S premuto
+        else if (data->carMovementInput.z > 0 && goingOnwards) { // S premuto
             engineForce = 0.0f; // Forza negativa per andare in retro
             brakeForce = BRAKE_FORCE;
             if(isVehicleStopped(0.5f)){
@@ -257,7 +255,7 @@ public:
             // notify the brake lights
             brakeSubject.notifyBrake(true);
         }
-        else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
+        else if (data->carMovementInput.z > 0 && !goingOnwards) { // S premuto
             engineForce = -ENGINE_FORCE; // Forza negativa per andare in retro
             brakeForce = 0.0f;
             // notify the brake lights
@@ -289,13 +287,13 @@ public:
         float dynamicSteeringIncrement = glm::clamp(STEERING_INCREMENT_PER_FRAME * speedFactor, MIN_STEERING, MAX_STEERING);
         
         // Sterzata destra/sinistra
-        if (carMovementInput.x > 0) {
+        if (data->carMovementInput.x > 0) {
             steering -= dynamicSteeringIncrement;
             if (steering < -MAX_STEERING) {
                 steering = -MAX_STEERING;
             }
         }
-        else if (carMovementInput.x < 0) {
+        else if (data->carMovementInput.x < 0) {
             steering += dynamicSteeringIncrement;
             if (steering > MAX_STEERING) {
                 steering = MAX_STEERING;
@@ -368,6 +366,8 @@ public:
         checkVehiclePosition();
         
     }
+    
+    void cleanup() override {}
     
     btTransform getVehicleTransform(){
         btTransform transform;

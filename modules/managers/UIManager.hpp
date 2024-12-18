@@ -1,10 +1,12 @@
 #ifndef UI_MANAGER_HPP
 #define UI_MANAGER_HPP
 
-#include "engine/custom/TextMaker.hpp"  // text header
+#include "engine/vulkan/TextMaker.hpp"  // text header
 #include <chrono>         // for time tracking
-#include "engine/Subject.hpp"
-#include "engine/Manager.hpp"
+#include "engine/pattern/Subject.hpp"
+#include "engine/main/Manager.hpp"
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 Subject startTimerSubject;
 
@@ -61,16 +63,15 @@ protected:
 
 public:
 
-    void init(std::vector<void*> params) override {
+    void init(ManagerInitData* param) override {
         
-        BaseProject* _BP = nullptr;
-        if (params.size() == 1) {
-            _BP = static_cast<BaseProject*>(params[0]);
-        } else {
-            std::cout << "UIManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
+        auto* data = dynamic_cast<UIManagerInitData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerInitData");
         }
-        BP = _BP;
+        
+        BP = data->baseProject;
         
         // init TextMakers
         laps.init(BP, &outLaps);
@@ -108,7 +109,7 @@ public:
     }
     
     // update function
-    void update(std::vector<void*>) override {
+    void update(ManagerUpdateData* param) override {
         if(!isGameStarted) handleStartTimer();  // if start-timer changes update the UI
         else if(!isGameFinished) handleTimer(); // if real timer changes update UI
     }

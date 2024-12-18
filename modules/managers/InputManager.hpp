@@ -3,9 +3,12 @@
 
 #include "managers/CameraManager.hpp"
 #include "Utils.hpp"
-#include "engine/Observer.hpp"
-#include "engine/Subject.hpp"
-#include "engine/Manager.hpp"
+#include "engine/pattern/Observer.hpp"
+#include "engine/pattern/Subject.hpp"
+#include "engine/main/Manager.hpp"
+#include "engine/main/utils/ManagerInitData.hpp"
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 Subject shouldQuitSubject;
 Subject shouldChangeSceneSubject;
@@ -62,36 +65,30 @@ protected:
     
 public:
     
-    void init(std::vector<void*> params) override {
-        GLFWwindow* window = nullptr;
-        if (params.size() == 1) {
-            window = static_cast<GLFWwindow*>(params[0]);
-        } else {
-            std::cout << "InputManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
+    void init(ManagerInitData* param) override {
+        auto* data = dynamic_cast<InputManagerInitData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerInitData");
         }
-        this->window = window;
+        
+        this->window = data->window;
     }
     
-    void update(std::vector<void*> params) override {
-        bool* shouldRebuildPipeline = nullptr;
-        bool* headlightsChanged = nullptr;
-        bool* sceneChanged = nullptr;
-        bool* viewReset = nullptr;
-        if (params.size() == 4) {
-            shouldRebuildPipeline = static_cast<bool*>(params[0]);
-            headlightsChanged = static_cast<bool*>(params[1]);
-            sceneChanged = static_cast<bool*>(params[2]);
-            viewReset = static_cast<bool*>(params[3]);
-        } else {
-            std::cout << "InputManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
+    void update(ManagerUpdateData* param) override {
+        auto* data = dynamic_cast<InputManagerUpdateData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerUpdateData");
         }
+        
         checkShouldQuit(window);
-        checkShouldChangeScene(window, shouldRebuildPipeline, sceneChanged);
-        checkShouldChangeHeadlightsStatus(window, headlightsChanged);
-        checkResetView(window, viewReset);
+        checkShouldChangeScene(window, data->shouldRebuildPipeline, data->sceneChanged);
+        checkShouldChangeHeadlightsStatus(window, data->headlightsChanged);
+        checkResetView(window, data->viewReset);
     }
+    
+    void cleanup() override {}
     
 };
 

@@ -4,8 +4,10 @@
 #include "tools/WVP.hpp"
 #include "tools/Types.hpp"
 #include "Utils.hpp"
-#include "engine/Manager.hpp"
-#include "engine/Observer.hpp"
+#include "engine/main/Manager.hpp"
+#include "engine/pattern/Observer.hpp"
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 struct CameraManager : public Observer, public Manager {
     
@@ -133,40 +135,27 @@ protected:
     
 public:
     
-    void init(std::vector<void*> params) override {
+    void init(ManagerInitData* param) override {
         currentView = THIRD_PERSON_VIEW;
         switchToThirdPersonCamera();
     }
     
-    void update(std::vector<void*> params) override {
-        float pitch;
-        float yaw;
-        float roll;
-        float aspectRatio;
-        float deltaT;
-        glm::vec3 cameraRotationInput;
-        glm::vec3 carMovementInput;
-        glm::vec3 carPosition;
-        if (params.size() == 8) {
-            pitch = *static_cast<float*>(params[0]);
-            yaw = *static_cast<float*>(params[1]);
-            roll = *static_cast<float*>(params[2]);
-            aspectRatio = *static_cast<float*>(params[3]);
-            deltaT = *static_cast<float*>(params[4]);
-            cameraRotationInput = *static_cast<glm::vec3*>(params[5]);
-            carMovementInput = *static_cast<glm::vec3*>(params[6]);
-            carPosition = *static_cast<glm::vec3*>(params[7]);
-        } else {
-            std::cout << "CameraManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
+    void update(ManagerUpdateData* param) override {
+        auto* data = dynamic_cast<CameraManagerUpdateData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerUpdateData");
         }
+        
         if(currentView == THIRD_PERSON_VIEW){
-            updateThirdPersonCamera(pitch, yaw, roll, aspectRatio, deltaT, cameraRotationInput, carMovementInput, carPosition);
+            updateThirdPersonCamera(data->carPosition.pitch, data->carPosition.yaw, data->carPosition.roll, data->aspectRatio, data->deltaT, data->cameraRotationInput, data->carMovementInput, data->carPosition.position);
         }
         else{
-            updateFirstPersonCamera(pitch, yaw, roll, aspectRatio, deltaT, cameraRotationInput, carPosition);
+            updateFirstPersonCamera(data->carPosition.pitch, data->carPosition.yaw, data->carPosition.roll, data->aspectRatio, data->deltaT, data->cameraRotationInput, data->carPosition.position);
         }
     }
+    
+    void cleanup() override {}
     
     glm::vec3 getCameraPosition(){
         return cameraPosition;

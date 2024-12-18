@@ -2,6 +2,8 @@
 #define SCENE_MANAGER_HPP
 
 #include "Utils.hpp"
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 Subject shouldChangeView;
 
@@ -16,20 +18,23 @@ protected:
     
 public:
     
-    void init(std::vector<void*> params) override {
-        GLFWwindow* window = nullptr;
-        if (params.size() == 1) {
-            window = static_cast<GLFWwindow*>(params[0]);
-        } else {
-            std::cout << "SceneManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
+    void init(ManagerInitData* param) override {
+        auto* data = dynamic_cast<SceneManagerInitData*>(param);
+        
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerInitData");
         }
-        this->window = window;
+        
+        this->window = data->window;
         
         currentScene = THIRD_PERSON_SCENE;
         debounce = false;
         currentDebounce = 0;
     }
+    
+    void update(ManagerUpdateData* param) override {}
+    
+    void cleanup() override {}
     
     int getCurrentScene(){
         return currentScene;

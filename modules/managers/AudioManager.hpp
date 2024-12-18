@@ -3,6 +3,8 @@
 
 #include <fmod.hpp>
 #include <fmod_errors.h>
+#include "utils/ManagerInitData.hpp"
+#include "utils/ManagerUpdateData.hpp"
 
 struct AudioManager : public Observer, public Manager {
     
@@ -123,14 +125,11 @@ protected:
 public:
     
     // Initialize the audio system
-    void init(std::vector<void*> params) override {
+    void init(ManagerInitData* param) override {
+        auto* data = dynamic_cast<AudioManagerInitData*>(param);
         
-        json audioMap = nullptr;
-        if (params.size() == 1) {
-            audioMap = *static_cast<json*>(params[0]);
-        } else {
-            std::cout << "AudioManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
+        if (!data) {
+            throw std::runtime_error("Invalid type for ManagerInitData");
         }
         
         result = FMOD::System_Create(&audio_system);
@@ -138,7 +137,7 @@ public:
         result = audio_system->init(1024, FMOD_INIT_NORMAL, 0);  // Increased number of channels
         checkFmodError(result);
 
-        for (const auto& music : audioMap) {
+        for (const auto& music : data->audioMap) {
             std::string name = music["name"];
             std::string path = music["path"];
 
@@ -151,7 +150,7 @@ public:
     }
 
     // Update the audio system
-    void update(std::vector<void*>) override {
+    void update(ManagerUpdateData* param) override {
         result = audio_system->update();
         checkFmodError(result);
     }
