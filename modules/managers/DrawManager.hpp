@@ -1,31 +1,28 @@
 #ifndef DRAWER_HPP
 #define DRAWER_HPP
 
-#include "engine/vulkan/Scene.hpp"
+#include "engine/main/Scene.hpp"
 #include "PhysicsManager.hpp"
 #include "tools/WVP.hpp"
 #include "tools/Types.hpp"
 #include "Utils.hpp"
-#include "utils/ManagerInitData.hpp"
-#include "utils/ManagerUpdateData.hpp"
 
-struct DrawManager : public Manager {
+class DrawManager : public Manager {
     
 protected:
-    
-    std::vector<GameObject*> gameObjects;
+
     UniformBufferObject ubo{};
     GlobalUniformBufferObject gubo{};
     
-    void drawGameObjects(int currentImage, PositionData positionData, glm::mat4 viewProjection) {
+    void drawGameObjects() {
         for(GameObject* obj : gameObjects){
-            obj->update(positionData);
-            updateUBO(obj->worldMatrix, viewProjection);
-            obj->mapMemory(currentImage, &gubo, &ubo);
+            obj->update();
+            updateUBO(obj->worldMatrix, cameraWorldData.viewProjection);
+            obj->mapMemory(EngineCurrentImage, &gubo, &ubo);
         }
     }
     
-    void initGUBO(LightsData lightsData){
+    void initGUBO(){
         gubo.ambientLightDir = glm::vec3(cos(DEG_135), sin(DEG_135), 0.0f);
         gubo.ambientLightColor = ONE_VEC4;
         gubo.eyeDir = ZERO_VEC4;
@@ -34,7 +31,7 @@ protected:
         gubo.cosOut = lightsData.cosOut;
     }
     
-    void updateGUBO(LightsData lightsData, glm::vec3 cameraPosition) {
+    void updateGUBO() {
         // updates global uniforms
         for (int i = 0; i < LIGHTS_COUNT; i++) {
             gubo.lightColor[i] = glm::vec4(lightsData.lightColors[i], lightsData.lightIntensities[i]);
@@ -42,7 +39,7 @@ protected:
             gubo.lightPos[i].v = lightsData.lightWorldMatrices[i] * glm::vec4(0, 0, 0, 1);
             gubo.lightOn[i].v = lightsData.lightOn[i];
         }
-        gubo.eyePos = cameraPosition;
+        gubo.eyePos = cameraWorldData.position;
     }
     
     void updateUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection){
@@ -53,26 +50,13 @@ protected:
     
 public:
     
-    void init(ManagerInitData* param) override {
-        auto* data = dynamic_cast<DrawManagerInitData*>(param);
-        
-        if (!data) {
-            throw std::runtime_error("Invalid type for ManagerInitData");
-        }
-        
-        gameObjects = data->gameObjects;
-        initGUBO(data->lightsData);
+    void init() override {
+        initGUBO();
     }
     
-    void update(ManagerUpdateData* param) override {
-        auto* data = dynamic_cast<DrawManagerUpdateData*>(param);
-        
-        if (!data) {
-            throw std::runtime_error("Invalid type for ManagerUpdateData");
-        }
-        
-        updateGUBO(data->lightsData, data->cameraPosition);
-        drawGameObjects(data->currentImage, data->positionData, data->viewProjection);
+    void update() override {
+        updateGUBO();
+        drawGameObjects();
     }
     
     void cleanup() override {}

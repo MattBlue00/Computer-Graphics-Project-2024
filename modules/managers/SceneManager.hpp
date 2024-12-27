@@ -2,68 +2,73 @@
 #define SCENE_MANAGER_HPP
 
 #include "Utils.hpp"
-#include "utils/ManagerInitData.hpp"
-#include "utils/ManagerUpdateData.hpp"
+#include "../modules/engine/pattern/Receiver.hpp"
+#include "../modules/data/WorldData.hpp"
 
-Subject shouldChangeView;
-
-struct SceneManager : public Observer, public Manager {
+class SceneManager : public Manager, public Receiver {
     
 protected:
     
-    GLFWwindow* window;
-    int currentScene;
     bool debounce;
     int currentDebounce;
     
+    int waitChange = 60;
+    
+    void onQuit() {
+        glfwSetWindowShouldClose(EngineWindow, GL_TRUE);
+    }
+    
+    void onChangeScene() {
+        if(waitChange >= 60){
+            if(!debounce) {
+                debounce = true;
+                currentDebounce = GLFW_KEY_SPACE;
+                EngineCurrentScene = (EngineCurrentScene+1) % 2;
+                if(EngineCurrentScene == THIRD_PERSON_SCENE) {
+                    changeViewSignal.emit({});
+                } else if(EngineCurrentScene == FIRST_PERSON_SCENE) {
+                    changeViewSignal.emit({});
+                }
+                std::cout << "Camera : " << (EngineCurrentScene == 0 ? "Third Person" : "First Person") << "\n";
+            }
+            
+            waitChange = 0;
+        }
+    }
+    
+    void onUpdateDebounce() {
+        if((currentDebounce == GLFW_KEY_SPACE) && debounce) {
+            debounce = false;
+            currentDebounce = 0;
+        }
+    }
+    
 public:
     
-    void init(ManagerInitData* param) override {
-        auto* data = dynamic_cast<SceneManagerInitData*>(param);
-        
-        if (!data) {
-            throw std::runtime_error("Invalid type for ManagerInitData");
-        }
-        
-        this->window = data->window;
-        
-        currentScene = THIRD_PERSON_SCENE;
+    void init() override {
+        EngineCurrentScene = THIRD_PERSON_SCENE;
         debounce = false;
         currentDebounce = 0;
     }
     
-    void update(ManagerUpdateData* param) override {}
-    
-    void cleanup() override {}
-    
-    int getCurrentScene(){
-        return currentScene;
-    }
-    
-    // OBSERVER METHODS
-    
-    void onQuit() override {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-    
-    void onChangeScene() override {
-        if(!debounce) {
-            debounce = true;
-            currentDebounce = GLFW_KEY_SPACE;
-            currentScene = (currentScene+1) % 2;
-            if(currentScene == THIRD_PERSON_SCENE) {
-                shouldChangeView.notifyChangeView();
-            } else if(currentScene == FIRST_PERSON_SCENE) {
-                shouldChangeView.notifyChangeView();
-            }
-            std::cout << "Scene : " << currentScene << "\n";
+    void update() override {
+        if(waitChange < 60){
+            waitChange++;
         }
     }
     
-    void onUpdateDebounce() override {
-        if((currentDebounce == GLFW_KEY_SPACE) && debounce) {
-            debounce = false;
-            currentDebounce = 0;
+    void cleanup() override {}
+    
+    void handleData(std::string id, std::any data) override {
+        if (id == QUIT_SIGNAL) {
+            onQuit();
+        } else if (id == CHANGE_SCENE_SIGNAL) {
+            onChangeScene();
+        } else if (id == UPDATE_DEBOUNCE_SIGNAL) {
+            onUpdateDebounce();
+        }
+        else {
+            std::cerr << "Unknown signal type: " << id << std::endl;
         }
     }
     

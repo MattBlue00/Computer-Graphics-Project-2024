@@ -12,7 +12,7 @@ public:
     Airship(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds)
     : GameObject(id, m, t, wm, ds) {}
     
-    void update(PositionData positionData) override {
+    void update() override {
         // updates airship's transform matrix
         if(airshipGoingUp){
             if(worldMatrix[3][1] < 3.0f){

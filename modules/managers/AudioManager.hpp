@@ -3,10 +3,10 @@
 
 #include <fmod.hpp>
 #include <fmod_errors.h>
-#include "utils/ManagerInitData.hpp"
-#include "utils/ManagerUpdateData.hpp"
+#include "../modules/engine/pattern/Receiver.hpp"
+#include <any>
 
-struct AudioManager : public Observer, public Manager {
+class AudioManager : public Manager, public Receiver {
     
 protected:
     
@@ -121,23 +121,44 @@ protected:
             exit(-1);
         }
     }
+    
+    void onCoinCollected() {
+        playSound("COIN_SFX", 1.0f);
+    }
+    
+    void onStartSemaphore() {
+        if(countdownValue > 1 && countdownValue < 5){
+            playSound("COUNTDOWN_SFX", 0.15f);
+        }else if (countdownValue == 1){
+            playSound("START_SFX", 0.15f);
+            playSound("RACE_MUSIC", 0.2f, 7);
+            
+        }
+    };
+    
+    void onLapChanged() {
+        if (currentLap == 2) {
+            stopSound("RACE_MUSIC");
+            playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
+                playSound("RACE_MUSIC", 0.2f, 7, 1.25f);
+            });
+        } else if (currentLap == 0) {
+            stopSound("RACE_MUSIC");
+            playSound("END_SFX", 0.5f);
+        }
+    }
 
 public:
     
     // Initialize the audio system
-    void init(ManagerInitData* param) override {
-        auto* data = dynamic_cast<AudioManagerInitData*>(param);
-        
-        if (!data) {
-            throw std::runtime_error("Invalid type for ManagerInitData");
-        }
+    void init() override {
         
         result = FMOD::System_Create(&audio_system);
         checkFmodError(result);
         result = audio_system->init(1024, FMOD_INIT_NORMAL, 0);  // Increased number of channels
         checkFmodError(result);
 
-        for (const auto& music : data->audioMap) {
+        for (const auto& music : audioData) {
             std::string name = music["name"];
             std::string path = music["path"];
 
@@ -150,7 +171,7 @@ public:
     }
 
     // Update the audio system
-    void update(ManagerUpdateData* param) override {
+    void update() override {
         result = audio_system->update();
         checkFmodError(result);
     }
@@ -170,36 +191,19 @@ public:
         }
     }
     
-    // -------Observer methods--------
-    void onCoinCollected(int collectedCoins) override {
-        playSound("COIN_SFX", 1.0f);
-    }
-    
-    void onStartSemaphore(int countDownValue) override {
-        if(countDownValue > 1 && countDownValue < 5){
-            playSound("COUNTDOWN_SFX", 0.15f);
-        }else if (countDownValue == 1){
-            playSound("START_SFX", 0.15f);
-            playSound("RACE_MUSIC", 0.2f, 7);
-            
+    void handleData(std::string id, std::any data) override {
+        if (id == COINS_SIGNAL) {
+            onCoinCollected();
+        } else if (id == START_TIMER_SIGNAL) {
+            onStartSemaphore();
+        } else if (id == LAPS_SIGNAL) {
+            onLapChanged();
         }
-    };
-    
-    int lapsLabel = 1;
-    void onCheckLaps(int lapsDone) override {
-        if (lapsLabel > 3) return;
-
-        lapsLabel += lapsDone;
-        if (lapsLabel == 2) {
-            stopSound("RACE_MUSIC");
-            playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
-                playSound("RACE_MUSIC", 0.2f, 7, 1.25f);
-            });
-        } else if (lapsLabel == 3) {
-            stopSound("RACE_MUSIC");
-            playSound("END_SFX", 0.5f);
+        else {
+            std::cerr << "Unknown signal type: " << id << std::endl;
         }
     }
+    
 };
 
 #endif

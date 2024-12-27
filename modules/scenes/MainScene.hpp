@@ -3,20 +3,28 @@
 
 #include "../modules/objects/Airplane.hpp"
 #include "../modules/objects/Airship.hpp"
+#include "../modules/objects/Barrier.hpp"
 #include "../modules/objects/Car.hpp"
 #include "../modules/objects/Coin.hpp"
 #include "../modules/objects/DirectionBarrier.hpp"
 #include "../modules/objects/Earth.hpp"
 #include "../modules/objects/Firework.hpp"
 #include "../modules/objects/Moon.hpp"
+#include "../modules/objects/Obstacle.hpp"
+#include "../modules/objects/Ramps.hpp"
 #include "../modules/objects/Spaceship.hpp"
 #include "../modules/objects/StaticObject.hpp"
+#include "../modules/objects/Track.hpp"
 #include "../modules/engine/main/GameObject.hpp"
 #include "../managers/DrawManager.hpp"
 #include "Utils.hpp"
 #include <random>
 
 class MainScene: public Scene{
+    
+protected:
+    
+    int coinCount = 0;
 
 public:
     
@@ -27,99 +35,54 @@ public:
         std::uniform_int_distribution<> distrib(0, 40); // Intervallo [0, 40]
 
         for (json instance : Instances) {
-            const std::string id = instance["id"];
+            
             GameObject* object = nullptr;
+            
+            const std::string id = instance["id"];
+            Model* model = Models[ModelIds[instance["model"]]];
+            Texture* texture = Textures[TextureIds[instance["texture"]]];
+            glm::mat4 worldMatrix = WorldMatrices[id];
+            DescriptorSet* descriptorSet = new DescriptorSet();
 
             if (id.starts_with("airplane")) {
-                object = new Airplane(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new Airplane(id, model, texture, worldMatrix, descriptorSet);
             } else if (id.starts_with("airship")) {
-                object = new Airship(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new Airship(id, model, texture, worldMatrix, descriptorSet);
+            } else if (id.starts_with("barrier")) {
+                object = new Barrier(id, model, texture, worldMatrix, descriptorSet);
             } else if (id.starts_with("car")) {
-                object = new Car(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new Car(id, model, texture, worldMatrix, descriptorSet);
             } else if (id.starts_with("coin")) {
-                object = new Coin(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new Coin(id, model, texture, worldMatrix, descriptorSet);
             } else if (id.starts_with("dir_barrier")) {
-                object = new DirectionBarrier(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new DirectionBarrier(id, model, texture, worldMatrix, descriptorSet);
             } else if (id.starts_with("earth")) {
-                object = new Earth(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new Earth(id, model, texture, worldMatrix, descriptorSet);
             } else if (id.starts_with("firework")) {
                 // Generate a random number
-                int random_number = distrib(gen);
+                int randomNumber = distrib(gen);
                 // Generate a firework
-                object = new Firework(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet(),
-                    random_number
-                );
+                object = new Firework(id, model, texture, worldMatrix, descriptorSet, randomNumber);
             } else if (id.starts_with("moon")) {
-                object = new Moon(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new Moon(id, model, texture, worldMatrix, descriptorSet);
+            } else if (id.starts_with("tires_pile")) {
+                object = new Obstacle(id, model, texture, worldMatrix, descriptorSet);
+            } else if (id.starts_with("ramps")) {
+                object = new Ramps(id, model, texture, worldMatrix, descriptorSet);
             } else if (id.starts_with("spaceship")) {
-                object = new Spaceship(
-                    std::string(instance["id"]),
-                    Models[ModelIds[instance["model"]]],
-                    Textures[TextureIds[instance["texture"]]],
-                    WorldMatrices[instance["id"]],
-                    new DescriptorSet()
-                );
+                object = new Spaceship(id, model, texture, worldMatrix, descriptorSet);
+            } else if (id.starts_with("track")) {
+                object = new Track(id, model, texture, worldMatrix, descriptorSet);
             } else {
-                object = new StaticObject(
-                  std::string(instance["id"]),
-                  Models[ModelIds[instance["model"]]],
-                  Textures[TextureIds[instance["texture"]]],
-                  WorldMatrices[instance["id"]],
-                  new DescriptorSet()
-                );
+                object = new StaticObject(id, model, texture, worldMatrix, descriptorSet);
             }
 
             if (object) {
                 gameObjects.push_back(object);
             }
         }
+        
+        Scene::init();
     }
     
     void buildMultipleInstances(json* instances, json* sceneJson) override {
@@ -205,7 +168,7 @@ public:
         // first three coins
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -7.25 + 7.25 * i,
@@ -219,7 +182,7 @@ public:
         // three coins on the right
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -7.25,
@@ -233,7 +196,7 @@ public:
         // three coins on the left
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, 7.25,
@@ -247,7 +210,7 @@ public:
         // three coins in the middle
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, 0.25,
@@ -261,7 +224,7 @@ public:
         // three coins under the rainbow
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -7 + 7.25 * i,
@@ -275,7 +238,7 @@ public:
         // three coins after the crossroads
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -6.5 + 7 * i,
@@ -289,7 +252,7 @@ public:
         // ten coins near the star and the rocket
         for(int i = 0; i < 10; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, i%2 == 0 ? -4.25 : 4.75,
@@ -303,7 +266,7 @@ public:
         // two coins near the first tires pile
         for(int i = 0; i < 2; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, i == 0 ? 7.75 : 2.25,
@@ -317,7 +280,7 @@ public:
         // coins on the first turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -14 - i * 3.5,
@@ -332,7 +295,7 @@ public:
         for(int i = 0; i < 5; i++){
             for(int j = 0; j < 5; j++){
                 instance = {
-                    {"id", "coin_" + std::to_string(globalCoinCount)},
+                    {"id", "coin_" + std::to_string(coinCount)},
                     {"model", "coin"},
                     {"texture", "coin"},
                     {"transform",  {0.03, 0, 0, -340 - 5 * i,
@@ -347,7 +310,7 @@ public:
         // coins on the second turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -677 - i * 3.5,
@@ -361,7 +324,7 @@ public:
         // coins at the chicane
         for(int i = 0; i < 2; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, i == 0 ? -707 : -695,
@@ -375,7 +338,7 @@ public:
         // three coins after the chicane
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -695 - 7.25 * i,
@@ -389,7 +352,7 @@ public:
         // rhombus coins (central)
         for(int i = 0; i < 6; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -702.25,
@@ -403,7 +366,7 @@ public:
         // rhombus coins (left)
         for(int i = 0; i < 5; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -709.5,
@@ -417,7 +380,7 @@ public:
         // rhombus coins (right)
         for(int i = 0; i < 5; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -695,
@@ -431,7 +394,7 @@ public:
         // five coins after the landing track
         for(int i = 0; i < 5; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, i == 2 ? -702.3 : -695.3 - 13.95 * (i % 3),
@@ -445,7 +408,7 @@ public:
         // three coins on the last ramp before the tracks rejoin
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -695 - i * 7,
@@ -460,7 +423,7 @@ public:
         for(int i = 0; i < 5; i++){
             for(int j = 0; j < 3; j++){
                 instance = {
-                    {"id", "coin_" + std::to_string(globalCoinCount)},
+                    {"id", "coin_" + std::to_string(coinCount)},
                     {"model", "coin"},
                     {"texture", "coin"},
                     {"transform",  {0.03, 0, 0, -694.5 - j * 7,
@@ -475,7 +438,7 @@ public:
         // coins on the third turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -685 + i * 5,
@@ -489,7 +452,7 @@ public:
         // three coins after the third turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -582.8,
@@ -504,7 +467,7 @@ public:
         for(int i = 0; i < 5; i++){
             for(int j = 0; j < 3; j++){
                 instance = {
-                    {"id", "coin_" + std::to_string(globalCoinCount)},
+                    {"id", "coin_" + std::to_string(coinCount)},
                     {"model", "coin"},
                     {"texture", "coin"},
                     {"transform",  {0.03, 0, 0, -480 + i * 30,
@@ -519,7 +482,7 @@ public:
         // 5 coins before the fourth turn
         for(int i = 0; i < 5; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -270 + i * 30,
@@ -533,7 +496,7 @@ public:
         // coins on the fourth turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -32.5 + i * 7,
@@ -548,7 +511,7 @@ public:
         for(int i = 0; i < 15; i++){
             for(int j = 0; j < 2; j++){
                 instance = {
-                    {"id", "coin_" + std::to_string(globalCoinCount)},
+                    {"id", "coin_" + std::to_string(coinCount)},
                     {"model", "coin"},
                     {"texture", "coin"},
                     {"transform",  {0.03, 0, 0, -130 + i * 7.5,
@@ -563,7 +526,7 @@ public:
         // coins on the first ramp of the inner track
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -196.5 - i * 1.5,
@@ -577,7 +540,7 @@ public:
         // coins under the rainbow tunnel
         for(int i = 0; i < 15; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -280 - i * 7,
@@ -591,7 +554,7 @@ public:
         // three coins on the first inner turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -530 - i * 3,
@@ -605,7 +568,7 @@ public:
         // three coins on the second inner turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -532.5 + i * 3.5,
@@ -619,7 +582,7 @@ public:
         // three coins between the second and the third inner turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -430 + i * 7,
@@ -633,7 +596,7 @@ public:
         // three coins on the third inner turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -261 + i * 4.5,
@@ -648,7 +611,7 @@ public:
         for(int i = 0; i < 7; i++){
             for(int j = 0; j < 3; j++){
                 instance = {
-                    {"id", "coin_" + std::to_string(globalCoinCount)},
+                    {"id", "coin_" + std::to_string(coinCount)},
                     {"model", "coin"},
                     {"texture", "coin"},
                     {"transform",  {0.03, 0, 0, -278 - i * 3.5 + j * 7,
@@ -663,7 +626,7 @@ public:
         // coins in air
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -311.5 - i * 2,
@@ -677,7 +640,7 @@ public:
         // coins before the s turn
         for(int i = 0; i < 5; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -506 - i * 3,
@@ -691,7 +654,7 @@ public:
         // first three coins on the s turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -580 - i * 4,
@@ -705,7 +668,7 @@ public:
         // second three coins on the s turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -581 + i * 5,
@@ -719,7 +682,7 @@ public:
         // third three coins on the s turn
         for(int i = 0; i < 3; i++){
             instance = {
-                {"id", "coin_" + std::to_string(globalCoinCount)},
+                {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
                 {"transform",  {0.03, 0, 0, -567.5 - i * 6,
@@ -742,7 +705,7 @@ private:
     void addCoin(json coin, json* instances, json* sceneJson){
         instances->push_back(coin);
         (*sceneJson)["instances"].push_back(coin);
-        globalCoinCount++;
+        coinCount++;
     }
     
 };

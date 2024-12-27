@@ -8,7 +8,6 @@ public:
     StaticObject(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds)
     : GameObject(id, m, t, wm, ds) {}
     
-    void update(PositionData positionData) override {}
 };
 
 #endif

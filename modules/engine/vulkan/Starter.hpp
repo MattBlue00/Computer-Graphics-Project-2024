@@ -45,6 +45,9 @@
 #define SINFL_IMPLEMENTATION
 #include <sinfl.h>
 
+// WARNING: addedy by us
+#include "../modules/data/Signals.hpp"
+
 // For compile compatibility issues
 #ifndef M_E
 #define M_E			2.7182818284590452354	/* e */
@@ -265,8 +268,15 @@ class Model {
     std::vector<PendingResource> pendingResources;
 
 	public:
+    
 	std::vector<unsigned char> vertices{};
 	std::vector<uint32_t> indices{};
+    
+    // WARNING: added by me
+    std::string name;
+    std::string fileName;
+    ModelType type;
+    
 	void loadModelOBJ(std::string file);
 	void loadModelGLTF(std::string file, bool encoded);
 	void createIndexBuffer();
@@ -275,7 +285,7 @@ class Model {
     void updateVertexBuffer();
     void destroyPendingResources();
 
-	void init(BaseProject *bp, VertexDescriptor *VD, std::string file, ModelType MT);
+	void init(BaseProject *bp, VertexDescriptor *VD, std::string modelName, std::string file, ModelType MT);
 	void initMesh(BaseProject *bp, VertexDescriptor *VD);
     void updateMesh(BaseProject *bp, VertexDescriptor *VD);
 	void cleanup();
@@ -1892,7 +1902,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 	
 	
 	// Control Wrapper
-    void handleGamePad(int id, glm::vec3& m, glm::vec3& r, bool* headlightsChanged, bool* sceneChanged, bool* viewReset) {
+    void handleGamePad(int id, glm::vec3& m, glm::vec3& r) {
         const float deadZone = 0.1f;
 
         if (glfwJoystickIsGamepad(id)) {
@@ -1941,35 +1951,26 @@ std::cout << "Starting createInstance()\n"  << std::flush;
                 
                 // Cambio luci con il tasto Y
                 if (state.buttons[GLFW_GAMEPAD_BUTTON_Y]) {
-                    *headlightsChanged = true;
-                }
-                else{
-                    *headlightsChanged = false;
+                    headlightsChangeSignal.emit({});
                 }
                 
                 if (state.buttons[GLFW_GAMEPAD_BUTTON_START]) {
-                    *viewReset = true;
-                }
-                else{
-                    *viewReset = false;
+                    resetViewSignal.emit({});
                 }
                 
                 // Cambio scena con il tasto L1 o R1 (ma non entrambi contemporaneamente)
                 if (state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER]) {
-                    *sceneChanged = true;
+                    changeSceneSignal.emit({});
                 }
                 else if (state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]) {
-                    *sceneChanged = true;
-                }
-                else {
-                    *sceneChanged = false;
+                    changeSceneSignal.emit({});
                 }
                 
             }
         }
     }
 		
-	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool* headlightsChanged, bool* sceneChanged, bool* viewReset) {
+	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
 		
@@ -2018,16 +2019,13 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		}
         
         if(glfwGetKey(window, GLFW_KEY_V)) {
-            *viewReset = true;
-        }
-        else{
-            *viewReset = false;
+            resetViewSignal.emit({});
         }
 		
-		handleGamePad(GLFW_JOYSTICK_1,m,r,headlightsChanged,sceneChanged,viewReset);
-		handleGamePad(GLFW_JOYSTICK_2,m,r,headlightsChanged,sceneChanged,viewReset);
-		handleGamePad(GLFW_JOYSTICK_3,m,r,headlightsChanged,sceneChanged,viewReset);
-		handleGamePad(GLFW_JOYSTICK_4,m,r,headlightsChanged,sceneChanged,viewReset);
+		handleGamePad(GLFW_JOYSTICK_1,m,r);
+		handleGamePad(GLFW_JOYSTICK_2,m,r);
+		handleGamePad(GLFW_JOYSTICK_3,m,r);
+		handleGamePad(GLFW_JOYSTICK_4,m,r);
 	}
 	
 	// Public part of the base class
@@ -3078,7 +3076,7 @@ void Model::destroyPendingResources() {
     }
 }
 
-void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelType MT) {
+void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string modelName, std::string file, ModelType MT) {
 	BP = bp;
 	VD = vd;
 	if(MT == OBJ) {
@@ -3091,6 +3089,11 @@ void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelT
 	
 	createVertexBuffer();
 	createIndexBuffer();
+    
+    // WARNING: added by me
+    type = MT;
+    name = modelName;
+    fileName = file;
 }
 
 void Model::cleanup() {

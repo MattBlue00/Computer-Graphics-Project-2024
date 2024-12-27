@@ -2,19 +2,11 @@
 #define CAR_MANAGER_HPP
 
 #include <btBulletDynamicsCommon.h>
-#include "PhysicsManager.hpp"
-#include "engine/pattern/Subject.hpp"
-#include "utils/ManagerInitData.hpp"
-#include "utils/ManagerUpdateData.hpp"
 
-// subjects observed by UI
-Subject speedSubject;
-Subject brakeSubject;
+#include "../modules/data/Signals.hpp"
+#include "../modules/objects/Track.hpp"
 
-// subject observed by Interaction
-Subject headlightsSubject;
-
-struct CarManager: public Manager, public Observer {
+class CarManager: public Manager, public Receiver {
     
 protected:
     
@@ -34,9 +26,6 @@ protected:
     bool goingOnwards = true;
     int mayBeBlocked = 0;
     int lastSpeedKmh = 0;
-    
-    btRaycastVehicle* vehicle;
-    btDynamicsWorld* dynamicsWorld;
     
     void setSuspensions() {
         for (int i = 0; i < vehicle->getNumWheels(); i++) {
@@ -136,18 +125,15 @@ protected:
         vehicle->getRigidBody()->clearForces();
     }
     
+    void onStartTimer() {
+        if (countdownValue <= 1){
+            canStart = true;
+        }
+    }
+    
 public:
     
-    void init(ManagerInitData* param) override {
-        
-        auto* data = dynamic_cast<CarManagerInitData*>(param);
-        
-        if (!data) {
-            throw std::runtime_error("Invalid type for ManagerInitData");
-        }
-        
-        dynamicsWorld = data->dynamicsWorld;
-        
+    void init() override {
         // Car initialization with btBoxShape and btCompoundShape
         btBoxShape* chassisShape = new btBoxShape(btVector3(1.6, 0.5, 1.95));
         
@@ -218,17 +204,9 @@ public:
         vehicle->setCoordinateSystem(0, 1, 2);
     }
     
-    void update(ManagerUpdateData* param) override {
+    void update() override {
         
         if(!canStart) return;
-        
-        auto* data = dynamic_cast<CarManagerUpdateData*>(param);
-        
-        if (!data) {
-            throw std::runtime_error("Invalid type for ManagerUpdateData");
-        }
-        
-        brakeSubject.notifyBrake(false);
         
         // Controlli del veicolo
         float engineForce = 0.0f;
@@ -239,27 +217,24 @@ public:
         float currentSpeed = vehicle->getRigidBody()->getLinearVelocity().length();
         
         // Movimento avanti/indietro
-        if (data->carMovementInput.z < 0) { // W premuto
+        if (carMovementInput.z < 0) { // W premuto
             engineForce = ENGINE_FORCE;
             brakeForce = 0.0f;
             if(isVehicleStopped(0.5f) && !goingOnwards){
                 goingOnwards = true;
             }
         }
-        else if (data->carMovementInput.z > 0 && goingOnwards) { // S premuto
+        else if (carMovementInput.z > 0 && goingOnwards) { // S premuto
             engineForce = 0.0f; // Forza negativa per andare in retro
             brakeForce = BRAKE_FORCE;
             if(isVehicleStopped(0.5f)){
                 goingOnwards = false;
             }
-            // notify the brake lights
-            brakeSubject.notifyBrake(true);
+            
         }
-        else if (data->carMovementInput.z > 0 && !goingOnwards) { // S premuto
+        else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
             engineForce = -ENGINE_FORCE; // Forza negativa per andare in retro
             brakeForce = 0.0f;
-            // notify the brake lights
-            brakeSubject.notifyBrake(true);
         }
         else { // Nessun input
             if (isVehicleStopped(0.5f)){
@@ -287,13 +262,13 @@ public:
         float dynamicSteeringIncrement = glm::clamp(STEERING_INCREMENT_PER_FRAME * speedFactor, MIN_STEERING, MAX_STEERING);
         
         // Sterzata destra/sinistra
-        if (data->carMovementInput.x > 0) {
+        if (carMovementInput.x > 0) {
             steering -= dynamicSteeringIncrement;
             if (steering < -MAX_STEERING) {
                 steering = -MAX_STEERING;
             }
         }
-        else if (data->carMovementInput.x < 0) {
+        else if (carMovementInput.x < 0) {
             steering += dynamicSteeringIncrement;
             if (steering > MAX_STEERING) {
                 steering = MAX_STEERING;
@@ -354,20 +329,37 @@ public:
             currentSpeed = 0;
         }
         
+        checkVehiclePosition();
+        
+        if (!goingOnwards){
+            reverseSignal.emit({});
+        }
+        
+        if ((carMovementInput.z > 0 && goingOnwards) || (carMovementInput.z < 0 && !goingOnwards)){
+            brakeSignal.emit({});
+        }
+        
         // update Kmh Speed and notify UI only when necessary
-        int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
+        currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
         if(lastSpeedKmh != currentSpeedKmh){
             // fix the flickering speed number at maxspeed
             if(currentSpeedKmh == std::abs(std::floor(MAX_SPEED * 3.6))) return;
-            speedSubject.notifySpeedChanged(currentSpeedKmh);
+            speedSignal.emit({});
             lastSpeedKmh = currentSpeedKmh;
         }
-        
-        checkVehiclePosition();
         
     }
     
     void cleanup() override {}
+    
+    void handleData(std::string id, std::any data) override {
+        if (id == START_TIMER_SIGNAL) {
+            onStartTimer();
+        }
+        else {
+            std::cerr << "Unknown signal type: " << id << std::endl;
+        }
+    }
     
     btTransform getVehicleTransform(){
         btTransform transform;
@@ -407,14 +399,6 @@ public:
         glm::quat rotation = getVehicleRotation();
         return atan2(2.0f * (rotation.w * rotation.z + rotation.x * rotation.y),
                      1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
-    }
-    
-    btRaycastVehicle* getVehicle(){
-        return vehicle;
-    }
-    
-    void onStartTimer() override {
-        canStart = true;
     }
     
 };

@@ -11,11 +11,14 @@
 #include "modules/managers/PhysicsManager.hpp"              // adds physics
 #include "modules/managers/AudioManager.hpp"                // adds audio management
 #include "modules/managers/LightsManager.hpp"               // adds lights management
-#include "modules/engine/vulkan/Scene.hpp"                  // scene header (from professor)
+#include "modules/engine/main/Scene.hpp"                    // scene header (from professor)
 #include "modules/scenes/MainScene.hpp"                     // main scene
 #include "modules/managers/UIManager.hpp"                   // manages UI
-#include "modules/managers/utils/ManagerInitData.hpp"       // utils
-#include "modules/managers/utils/ManagerUpdateData.hpp"     // utils
+#include "modules/data/EngineData.hpp"                      // global data that my custom engine uses
+#include "modules/data/WorldData.hpp"                       // global data that my game modules use
+#include "modules/engine/pattern/Receiver.hpp"              // class that receives signals and processes data
+#include "modules/engine/pattern/Signal.hpp"                // signal that emits data
+#include "modules/data/SignalTypes.hpp"                     // signal types
 
 // MAIN APP
 
@@ -45,13 +48,7 @@ protected:
     DrawManager drawManager;
     PhysicsManager physicsManager;
     CarManager carManager;
-
-    // aspect ratio
-    float aspectRatio;
     
-    // global variables
-    btDynamicsWorld* dynamicsWorld;
-    LightsData lightsData;
 
     // Here you set the main application parameters
     void setWindowParameters() {
@@ -63,22 +60,26 @@ protected:
         initialBackgroundColor = {0.01f, 0.01f, 0.08f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 766;
-        texturesInPool = 387;
-        setsInPool = 387;
+        uniformBlocksInPool = 3000;
+        texturesInPool = 3000;
+        setsInPool = 3000;
 
-        aspectRatio = 4.0f / 3.0f;
+        EngineAspectRatio = 4.0f / 3.0f;
     }
 
     // What to do when the window changes size
     void onWindowResize(int w, int h) {
         std::cout << "Window resized to: " << w << " x " << h << "\n";
-        aspectRatio = (float)w / (float)h;
+        EngineAspectRatio = (float)w / (float)h;
     }
 
     // Here you load and setup all your Vulkan Models and Textures.
     // Here you also create your Descriptor set layouts and load the shaders for the pipelines
     void localInit() {
+        // Initialize ENGINE parameters
+        EngineBaseProject = this;
+        EngineWindow = window;
+        
         // Descriptor Layouts [what will be passed to the shaders]
         DSL.init(this, {
                     {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
@@ -104,69 +105,70 @@ protected:
             VK_CULL_MODE_NONE, false);
 
         // Load Scene
-        mainScene.load(this, &VD, DSL, "models/scene.json");
+        mainScene.load("models/scene.json", &VD);
         mainScene.init();
         
+        // init audio data from config file's path
         json config = parseConfigFile();
+        audioData = config["audio"];
         
         // managers init
+        inputManager.init();
+        sceneManager.init();
+        cameraManager.init();
+        uiManager.init();
+        lightsManager.init();
+        audioManager.init();
+        drawManager.init();
         
-        InputManagerInitData inputManagerInitData = InputManagerInitData(window);
-        inputManager.init(&inputManagerInitData);
+        // add listeners
         
-        SceneManagerInitData sceneManagerInitdata = SceneManagerInitData(window);
-        sceneManager.init(&sceneManagerInitdata);
+        std::vector<Signal*> sceneManagerSignals = { &quitSignal, &changeSceneSignal, &updateDebounceSignal };
+        for (Signal* signal : sceneManagerSignals) {
+            signal->addListener([this, signal](std::string id, std::any data) {
+                this->sceneManager.onSignal(signal->getId(), {});
+            });
+        }
         
-        CameraManagerInitData cameraManagerInitData = CameraManagerInitData();
-        cameraManager.init(&cameraManagerInitData);
-        
-        UIManagerInitData uiManagerInitData = UIManagerInitData(this);
-        uiManager.init(&uiManagerInitData);
-        
-        LightsManagerInitData lightsManagerInitData = LightsManagerInitData();
-        lightsManager.init(&lightsManagerInitData);
-        
-        AudioManagerInitData audioManagerInitData = AudioManagerInitData(config["audio"]);
-        audioManager.init(&audioManagerInitData);
-        
-        lightsData = lightsManager.getLightsData();
-        DrawManagerInitData drawManagerInitData = DrawManagerInitData(mainScene.getGameObjects(), lightsData);
-        drawManager.init(&drawManagerInitData);
-        
-        // add observers
-        shouldQuitSubject.addObserver(&sceneManager);
-        shouldChangeSceneSubject.addObserver(&sceneManager);
-        shouldUpdateDebounce.addObserver(&sceneManager);
-        
-        shouldChangeView.addObserver(&cameraManager);
-        resetViewSubject.addObserver(&cameraManager);
+        std::vector<Signal*> cameraManagerSignals = { &changeViewSignal, &resetViewSignal };
+        for (Signal* signal : cameraManagerSignals) {
+            signal->addListener([this, signal](std::string id, std::any data) {
+                this->cameraManager.onSignal(signal->getId(), {});
+            });
+        }
 
         // creates the physics world
-        PhysicsManagerInitData physicsManagerInitData = PhysicsManagerInitData(mainScene.getSceneJson());
-        physicsManager.init(&physicsManagerInitData);
+        physicsManager.init();
+        carManager.init();
         
-        dynamicsWorld = physicsManager.getDynamicsWorld();
-        CarManagerInitData carManagerInitData = CarManagerInitData(dynamicsWorld);
-        carManager.init(&carManagerInitData);
+        std::vector<Signal*> uiManagerSignals = { &speedSignal, &coinsSignal, &lapsSignal };
+        for (Signal* signal : uiManagerSignals) {
+            signal->addListener([this, signal](std::string id, std::any data) {
+                this->uiManager.onSignal(signal->getId(), {});
+            });
+        }
         
-        // register the UI observers
-        speedSubject.addObserver(&uiManager);
-        collectedCoinsSubject.addObserver(&uiManager);
-        checkLapsSubject.addObserver(&uiManager);
+        std::vector<Signal*> lightsManagerSignals = { &startTimerSignal, &brakeSignal, &headlightsChangeSignal, &reverseSignal };
+        for (Signal* signal : lightsManagerSignals) {
+            signal->addListener([this, signal](std::string id, std::any data) {
+                this->lightsManager.onSignal(signal->getId(), {});
+            });
+        }
         
-        // register the Light Observers, the timers are in UiManager
-        startTimerSubject.addObserver(&lightsManager);
-        brakeSubject.addObserver(&lightsManager);
-        shouldChangeHeadlightsStatus.addObserver(&lightsManager);
+        std::vector<Signal*> audioManagerSignals = { &startTimerSignal, &coinsSignal, &lapsSignal };
+        for (Signal* signal : audioManagerSignals) {
+            signal->addListener([this, signal](std::string id, std::any data) {
+                this->audioManager.onSignal(signal->getId(), {});
+            });
+        }
         
-        // register the Audio Observers
-        collectedCoinsSubject.addObserver(&audioManager);
-        startTimerSubject.addObserver(&audioManager);
-        checkLapsSubject.addObserver(&audioManager);
+        startTimerSignal.addListener([this](std::string id, std::any data) {
+            this->carManager.onSignal(startTimerSignal.getId(), {});
+        });
         
-        changeCircuitSubject.addObserver(&physicsManager);
-        
-        startTimerSubject.addObserver(&carManager);
+        rebuildPipelineSignal.addListener([this](std::string id, std::any data) {
+            this->RebuildPipeline();
+        });
         
         std::cout << "Initialization completed!\n";
     }
@@ -177,7 +179,7 @@ protected:
         ambientPipeline.create();
 
         // Here you define the data set
-        mainScene.pipelinesAndDescriptorSetsInit(DSL);
+        mainScene.descriptorSetsInit(DSL);
         uiManager.pipelinesAndDescriptorSetsInit();
     }
 
@@ -220,36 +222,26 @@ protected:
     }
     
     void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-        uiManager.populateCommandBuffer(commandBuffer, currentImage, sceneManager.getCurrentScene());
+        uiManager.populateCommandBuffer(commandBuffer, currentImage, EngineCurrentScene);
     }
 
     // Here is where you update the uniforms.
     // Very likely this will be where you will be writing the logic of your application.
     void updateUniformBuffer(uint32_t currentImage) {
-
-        // small amount of time that passes at every "update"
-        float deltaT;
+        EngineCurrentImage = currentImage;
 
         // inits WASD and arrows user input
-        glm::vec3 carMovementInput = ZERO_VEC3;
-        glm::vec3 cameraRotationInput = ZERO_VEC3;
-
-        // gamepad controls triggers
-        bool sceneChanged = false;
-        bool headlightsChanged = false;
-        bool viewReset = false;
+        carMovementInput = ZERO_VEC3;
+        cameraRotationInput = ZERO_VEC3;
         
         // gets WASD and arrows input from user and sets deltaT
-        getSixAxis(deltaT, carMovementInput, cameraRotationInput, &headlightsChanged, &sceneChanged, &viewReset);
+        getSixAxis(EngineDeltaTime, carMovementInput, cameraRotationInput);
 
         // updates vehicle movement
-        CarManagerUpdateData carManagerUpdateData = CarManagerUpdateData(carMovementInput);
-        carManager.update(&carManagerUpdateData);
-        
-        btRaycastVehicle* car = carManager.getVehicle();
+        carManager.update();
+    
         // applies a step in the physics simulation
-        PhysicsManagerUpdateData physicsManagerUpdateData = PhysicsManagerUpdateData(deltaT, car);
-        physicsManager.update(&physicsManagerUpdateData);
+        physicsManager.update();
         
         // get position, yaw and pitch of car rigid body
         glm::vec3 carPosition = carManager.getVehiclePosition();
@@ -257,39 +249,20 @@ protected:
         float pitch = carManager.getVehiclePitch();
         float roll = carManager.getVehicleRoll();
         
-        glm::mat4 textureWm = getCarTextureWorldMatrix(carPosition, pitch, yaw, roll);
+        vehicleTextureWorldMatrix = getCarTextureWorldMatrix(carPosition, pitch, yaw, roll);
         
-        // checks if space was pressed
-        bool shouldRebuildPipeline;
+        sceneManager.update();
+        lightsManager.update();
+        inputManager.update();
         
-        // manager updates
-        LightsManagerUpdateData lightsManagerUpdateData = LightsManagerUpdateData(textureWm);
-        lightsManager.update(&lightsManagerUpdateData);
+        carWorldData = CarWorldData(pitch, yaw, roll, carPosition);
+        cameraManager.update();
         
-        InputManagerUpdateData inputManagerUpdateData = InputManagerUpdateData(&shouldRebuildPipeline, &headlightsChanged, &sceneChanged, &viewReset);
-        inputManager.update(&inputManagerUpdateData);
+        uiManager.update();
         
-        CameraManagerUpdateData cameraManagerUpdateData = CameraManagerUpdateData(aspectRatio, deltaT, cameraRotationInput, carMovementInput, PositionData(carPosition, yaw, pitch, roll));
-        cameraManager.update(&cameraManagerUpdateData);
-        
-        UIManagerUpdateData uiManagerUpdateData = UIManagerUpdateData();
-        uiManager.update(&uiManagerUpdateData);
-        
-        AudioManagerUpdateData audioManagerUpdateData = AudioManagerUpdateData();
-        audioManager.update(&audioManagerUpdateData);
+        audioManager.update();
 
-        // if so, rebuilds pipeline
-        if(shouldRebuildPipeline){
-            RebuildPipeline();
-        }
-
-        glm::vec3 cameraPosition = cameraManager.getCameraPosition();
-        glm::mat4 viewProjection = cameraManager.getViewProjection();
-        lightsData = lightsManager.getLightsData();
-        PositionData positionData = PositionData(carPosition, yaw, pitch, roll);
-        
-        DrawManagerUpdateData drawManagerUpdateData = DrawManagerUpdateData(currentImage, positionData, cameraPosition, viewProjection, lightsData);
-        drawManager.update(&drawManagerUpdateData);
+        drawManager.update();
 
     }
     

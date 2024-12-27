@@ -15,7 +15,7 @@ public:
         fireworkFrame = startingFrame;
     }
     
-    void update(PositionData positionData) override {
+    void update() override {
         if(worldMatrix[0][0] >= 1.0f){
             if(fireworkFrame < MAX_FULL_FIREWORK_FRAMES){
                 fireworkFrame += 1;

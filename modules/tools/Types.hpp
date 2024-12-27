@@ -13,17 +13,20 @@ struct LightsData{
     float cosOut;
 };
 
-struct CameraData {
-    float CamPitch;
-    float CamYaw;
-    float CamDist;
-    float CamRoll;
+struct CameraWorldData {
+    float pitch;
+    float yaw;
+    float roll;
+    float distance;
+    glm::vec3 position;
+    glm::mat4 viewProjection;
 };
 
-struct Checkpoint {
-    std::string id;
-    btVector3 position;
-    btVector3 halfExtents; // Dimensioni del checkpoint (mezze estensioni)
+struct CarWorldData {
+    float pitch;
+    float yaw;
+    float roll;
+    glm::vec3 position;
 };
 
 struct UniformBufferObject {

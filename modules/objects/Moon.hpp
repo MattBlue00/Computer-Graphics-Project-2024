@@ -8,7 +8,7 @@ public:
     Moon(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds)
     : GameObject(id, m, t, wm, ds) {}
     
-    void update(PositionData positionData) override {
+    void update() override {
         worldMatrix = glm::rotate(worldMatrix, -DEG_0_2, Y_AXIS);
     }
     

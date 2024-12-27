@@ -12,7 +12,7 @@ public:
     Spaceship(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds)
     : GameObject(id, m, t, wm, ds) {}
     
-    void update(PositionData positionData) override {
+    void update() override {
         if(worldMatrix[3][0] <= -SPACE_SHIP_MAX_DIST){
             worldMatrix[3][0] = SPACE_SHIP_MAX_DIST;
         }

@@ -3,12 +3,10 @@
 
 #include "tools/Types.hpp"
 #include "engine/main/GameObject.hpp"
+#include "../modules/data/WorldData.hpp"
 
 class Scene {
 protected:
-	VertexDescriptor *VD;
-	
-	BaseProject *BP;
 
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
@@ -29,23 +27,11 @@ protected:
     
     json sceneJson;
     
-    // game objects
-    std::vector<GameObject*> gameObjects = {};
-    
     virtual void buildMultipleInstances(json* instances, json* sceneJson) = 0;
 
 public:
     
-    std::vector<GameObject*> getGameObjects() {
-        return gameObjects;
-    }
-    
-    json getSceneJson(){
-        return sceneJson;
-    }
-    
-	void load(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL, std::string file) {
-		BP = _BP;
+	void load(std::string file, VertexDescriptor* VD) {
 		// Models, textures and Descriptors (values assigned to the uniforms)
 		json js;
 		std::ifstream ifs(file);
@@ -68,11 +54,15 @@ public:
 
 			Models = (Model **)calloc(ModelCount, sizeof(Model *));
 			for(int k = 0; k < ModelCount; k++) {
-				ModelIds[ms[k]["id"]] = k;
+                std::string modelName = ms[k]["id"];
+				ModelIds[modelName] = k;
 				std::string MT = ms[k]["format"].template get<std::string>();
                 Models[k] = new Model();
+                
+                ModelType type = (MT[0] == 'O') ? OBJ : ((MT[0] == 'G') ? GLTF : MGCG);
+                std::string fileName = ms[k]["model"];
 
-                Models[k]->init(BP, VD, ms[k]["model"], (MT[0] == 'O') ? OBJ : ((MT[0] == 'G') ? GLTF : MGCG));
+                Models[k]->init(EngineBaseProject, VD, modelName, fileName, type);
 			}
 			
 			// TEXTURES
@@ -85,7 +75,7 @@ public:
 				TextureIds[ts[k]["id"]] = k;
                 Textures[k] = new Texture();
 
-                Textures[k]->init(BP, ts[k]["texture"]);
+                Textures[k]->init(EngineBaseProject, ts[k]["texture"]);
 			}
 
 			// INSTANCES TextureCount
@@ -116,13 +106,17 @@ public:
 		}
 	}
     
-    virtual void init() = 0;
-
-	void pipelinesAndDescriptorSetsInit(DescriptorSetLayout &DSL) {
+    virtual void init(){
         for(auto obj : gameObjects) {
-            obj->init(BP, DSL);
+            obj->init();
         }
-	}
+    }
+    
+    void descriptorSetsInit(DescriptorSetLayout &dsl){
+        for(auto obj : gameObjects) {
+            obj->descriptorSetInit(dsl);
+        }
+    }
 	
 	void pipelinesAndDescriptorSetsCleanup() {
 		// Cleanup datasets

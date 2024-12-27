@@ -51,11 +51,6 @@ const int FIRST_PERSON_SCENE = 1;
 
 const int LIGHTS_COUNT = 10;
 
-// PROJECT-SPECIFIC VARIABLES
-
-int globalCoinCount = 0;
-int collectedCoins = 0;
-
 // PROJECT-SPECIFIC FUNCTIONS
 
 json parseConfigFile() {
