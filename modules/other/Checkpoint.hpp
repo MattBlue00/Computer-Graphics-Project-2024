@@ -13,6 +13,7 @@ protected:
     btVector3 halfExtents;
 
     bool hit;
+    bool enabled;
     
     void init(){
         btCollisionShape* checkpointShape = new btBoxShape(halfExtents);
@@ -32,8 +33,7 @@ protected:
         // Imposta il corpo rigido come cinematico
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE);
         
-        // Imposta l'ID del checkpoint come user pointer per identificazione
-        rigidBody->setUserPointer(this);
+        Collider::init(rigidBody);
         
         addRigidBodyQueue.push_back(rigidBody);
     }
@@ -45,6 +45,7 @@ public:
         this->position = position;
         this->halfExtents = halfExtents;
         hit = false;
+        enabled = true;
         init();
     }
     
@@ -58,11 +59,17 @@ public:
         hit = false;
     }
     
+    void disable() {
+        enabled = false;
+    }
+    
     void onCollision(Collider* other) override {
-        if(!hit && id == nextCheckpointId){
-            std::cout << "Hitting " << id << std::endl;
-            hit = true;
-            updateNextCheckpointSignal.emit({});
+        if(enabled){
+            if(!hit && id == nextCheckpointId){
+                std::cout << "Hitting " << id << std::endl;
+                hit = true;
+                updateNextCheckpointSignal.emit({});
+            }
         }
     }
     

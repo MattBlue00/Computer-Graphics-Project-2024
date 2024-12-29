@@ -29,6 +29,7 @@ protected:
 public:
     
     void init() override {
+        
         // Crea un generatore di numeri casuali
         std::random_device rd;  // Entropia hardware (se disponibile)
         std::mt19937 gen(rd()); // Generatore di numeri casuali Mersenne Twister

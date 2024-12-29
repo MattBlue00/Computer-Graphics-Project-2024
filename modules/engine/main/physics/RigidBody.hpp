@@ -162,6 +162,43 @@ protected:
         return mesh;
     }
     
+    btTransform glmToBtTransform(const glm::mat4& glmMat) {
+        // Estrai la base (rotazione/scalatura) dalla matrice glm
+        btMatrix3x3 basis(
+            glmMat[0][0], glmMat[1][0], glmMat[2][0], // Colonna 1
+            glmMat[0][1], glmMat[1][1], glmMat[2][1], // Colonna 2
+            glmMat[0][2], glmMat[1][2], glmMat[2][2]  // Colonna 3
+        );
+
+        // Estrai la traslazione dalla matrice glm
+        btVector3 origin(glmMat[3][0], glmMat[3][1], glmMat[3][2]);
+
+        // Costruisci il btTransform usando basis e origin
+        return btTransform(basis, origin);
+    }
+    
+    void printBtTransform(const btTransform& t) {
+        const btMatrix3x3& basis = t.getBasis(); // Ottieni la matrice base
+        const btVector3& origin = t.getOrigin(); // Ottieni la traslazione
+
+        std::cout << "btTransform (\n";
+
+        // Stampiamo la matrice 4x4 derivata
+        for (int row = 0; row < 3; ++row) {
+            std::cout << "    ";
+            for (int col = 0; col < 3; ++col) {
+                std::cout << basis[row][col]; // Elemento della matrice base
+                std::cout << ", ";
+            }
+            std::cout << origin[row]; // Componente della traslazione
+            std::cout << ",\n";
+        }
+
+        // Aggiungi l'ultima riga fissa [0, 0, 0, 1]
+        std::cout << "    0, 0, 0, 1\n";
+        std::cout << ");\n";
+    }
+    
 public:
     
     RigidBody(Model* model, glm::mat4 glmTransform) {
@@ -186,23 +223,21 @@ class KinematicRigidBody : public RigidBody {
 protected:
     
     void init(glm::mat4 glmTransform) override {
-        RigidBody::init(glmTransform);
-        
-        btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+        // Usa la matrice di trasformazione per creare il btTransform iniziale
+        btTransform initialTransform = glmToBtTransform(glmTransform);
+
+        // Crea il motionState con la trasformazione iniziale
+        btDefaultMotionState* motionState = new btDefaultMotionState(initialTransform);
+
+        // Crea la rigid body con la massa 0 per un oggetto cinematico
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, collisionShape, btVector3(0, 0, 0));
         rigidBody = new btRigidBody(rigidBodyCI);
+
+        // Imposta il flag per indicare che è un oggetto cinematico
         rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-        
-        btMatrix3x3 basis = btMatrix3x3(
-                                        glmTransform[0][0], glmTransform[1][0], glmTransform[2][0],
-                                        glmTransform[0][1], glmTransform[1][1], glmTransform[2][1],
-                                        glmTransform[0][2], glmTransform[1][2], glmTransform[2][2]
-        );
-        btVector3 origin(glmTransform[3][0], glmTransform[3][1], glmTransform[3][2]);
-        
-        btTransform transform(basis, origin);
-        
-        rigidBody->setWorldTransform(transform);
+
+        // Applica la trasformazione iniziale
+        rigidBody->setWorldTransform(initialTransform);
     }
 
 public:
@@ -227,7 +262,6 @@ private:
 protected:
     
     void init(glm::mat4 glmTransform) override {
-        RigidBody::init(glmTransform);
         btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(0, motionState, collisionShape, btVector3(0, 0, 0));
         rigidBody = new btRigidBody(rigidBodyCI);

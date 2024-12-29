@@ -17,6 +17,8 @@ protected:
     std::vector<Checkpoint*> checkpoints;
     
     void setCheckpointsBasedOnLap(int lapNumber){
+        checkpointsLap.clear();
+        std::cout << "Setting checkpoints based on lap: " << lapNumber << std::endl;
         switch(lapNumber){
             case 1:
                 checkpointsLap.push_back(checkpoints[0]); // checkpoint 1
@@ -32,9 +34,10 @@ protected:
                 checkpointsLap.push_back(checkpoints[5]); // checkpoint final
                 break;
             default:
-                checkpointsLap.clear();
-                checkpointsLap.push_back(checkpoints[0]); // checkpoint 1
-                break;
+                for(Checkpoint* checkpoint : checkpoints){
+                    checkpoint->disable();
+                }
+                return;
         }
         nextCheckpointId = checkpointsLap[0]->getId();
     }
@@ -82,7 +85,9 @@ protected:
     
     void onLapChanged(){
         currentLap = (currentLap + 1) % 3;
-        checkpointsLap.clear();
+        for (Checkpoint* checkpoint : checkpointsLap){
+            checkpoint->reset();
+        }
         if (currentLap == 2) {
             setBarrierStatus("dir_barrier_inner", true);
             setBarrierStatus("dir_barrier_oval", false);

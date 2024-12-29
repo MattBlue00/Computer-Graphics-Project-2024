@@ -15,6 +15,10 @@ public:
     KinematicRigidBody(new btSphereShape(1.0f), wm),
     Collider() {}
     
+    void init() override {
+        Collider::init(rigidBody);
+    }
+    
     void update() override {
         if (enabled) {
             // Coin is present in the world, update its transform matrix
@@ -23,14 +27,13 @@ public:
     }
     
     void onCollision(Collider* other) override {
-        std::cout << "Colliding with " << id << std::endl;
         if(enabled){
-            std::cout << "Collecting " << id << std::endl;
+            std::cout << "Collecting " << GameObject::id << std::endl;
             collectedCoins++;
+            coinsSignal.emit({});
             dynamicsWorld->removeRigidBody(rigidBody);
             dynamicsWorld->removeCollisionObject(this);
             disable();
-            std::cout << collectedCoins << std::endl;
         }
     }
     

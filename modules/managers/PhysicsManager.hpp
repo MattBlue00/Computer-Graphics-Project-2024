@@ -65,12 +65,34 @@ public:
         for (GameObject* obj : gameObjects) {
             RigidBody* rigidBodyObj = dynamic_cast<RigidBody*>(obj);
             if (rigidBodyObj) {
-                std::cout << "Adding " << obj->getId() << " to the physics world!\n";
                 dynamicsWorld->addRigidBody(rigidBodyObj->getRigidBody());
             }
         }
         
         processRigidBodyQueues();
+        
+        for (int i = 0; i < dynamicsWorld->getNumCollisionObjects(); i++) {
+            btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
+
+            // Ottieni la trasformazione
+            btTransform transform;
+            btRigidBody* body = btRigidBody::upcast(obj); // Cast a btRigidBody
+            if (body && body->getMotionState()) {
+                body->getMotionState()->getWorldTransform(transform);
+            } else {
+                transform = obj->getWorldTransform(); // Per oggetti che non sono btRigidBody
+            }
+
+            // Estrai posizione e rotazione
+            btVector3 position = transform.getOrigin();
+            btQuaternion rotation = transform.getRotation();
+
+            // Stampa i dettagli
+            std::cout << "Object " << i << " in dynamicsWorld: " << obj << std::endl;
+            std::cout << "  Position: (" << position.getX() << ", " << position.getY() << ", " << position.getZ() << ")" << std::endl;
+            std::cout << "  Rotation (quaternion): (" << rotation.getX() << ", " << rotation.getY()
+                      << ", " << rotation.getZ() << ", " << rotation.getW() << ")" << std::endl;
+        }
     }
     
     void update() override {
@@ -93,7 +115,6 @@ public:
         for (GameObject* obj : gameObjects) {
             RigidBody* rigidBodyObj = dynamic_cast<RigidBody*>(obj);
             if (rigidBodyObj) {
-                std::cout << "Deleting the collision shape of " << obj->getId() << "\n";
                 delete rigidBodyObj->getCollisionShape();
             }
         }

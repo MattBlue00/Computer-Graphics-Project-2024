@@ -7,8 +7,10 @@ class Collider : public btCollisionObject {
     
 public:
     
-    Collider() {
-        setUserPointer(this);
+    Collider() {}
+    
+    void init(btRigidBody* rb) {
+        rb->setUserPointer(this);
     }
 
     virtual void onCollision(Collider* other) {};
