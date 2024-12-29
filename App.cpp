@@ -186,11 +186,13 @@ protected:
     // Here you destroy your pipelines and Descriptor Sets!
     // All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
     void pipelinesAndDescriptorSetsCleanup() {
+        std::cout << "Starting pipelines and descriptor sets cleanup.\n";
         // Cleanup pipelines
         ambientPipeline.cleanup();
 
         mainScene.pipelinesAndDescriptorSetsCleanup();
         uiManager.pipelinesAndDescriptorSetsCleanup();
+        std::cout << "Pipelines and descriptor sets cleanup completed.\n";
     }
 
     // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
@@ -198,17 +200,25 @@ protected:
     // You also have to destroy the pipelines: since they need to be rebuilt, they have two different
     // methods: .cleanup() recreates them, while .destroy() delete them completely
     void localCleanup() {
+        std::cout << "Starting local cleanup.\n";
         // Cleanup descriptor set layouts
         DSL.cleanup();
+        
+        std::cout << "DSL cleanup completed.\n";
 
         // Destroys the pipelines
         ambientPipeline.destroy();
         
+        std::cout << "Pipelines destruction completed.\n";
+        
         mainScene.localCleanup();
+        
+        std::cout << "Main scene cleanup completed.\n";
         
         uiManager.cleanup();
         physicsManager.cleanup();
         audioManager.cleanup();
+        std::cout << "Local cleanup completed.\n";
     }
 
     // Here it is the creation of the command buffer:

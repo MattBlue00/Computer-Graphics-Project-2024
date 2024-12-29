@@ -266,6 +266,8 @@ class Model {
             VkFence fence;
         };
     std::vector<PendingResource> pendingResources;
+    
+    bool clean = false;
 
 	public:
     
@@ -303,6 +305,8 @@ struct Texture {
 	VkSampler textureSampler;
 	int imgs;
 	static const int maxImgs = 6;
+    
+    bool clean = false;
 	
 	void createTextureImage(std::string files[], VkFormat Fmt);
 	void createTextureImageView(VkFormat Fmt);
@@ -3097,23 +3101,28 @@ void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string modelName, s
 }
 
 void Model::cleanup() {
-    destroyPendingResources();
-
-    if (vertexBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
-        vertexBuffer = VK_NULL_HANDLE;
-    }
-    if (vertexBufferMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
-        vertexBufferMemory = VK_NULL_HANDLE;
-    }
-    if (indexBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(BP->device, indexBuffer, nullptr);
-        indexBuffer = VK_NULL_HANDLE;
-    }
-    if (indexBufferMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(BP->device, indexBufferMemory, nullptr);
-        indexBufferMemory = VK_NULL_HANDLE;
+    if(!clean){
+        
+        destroyPendingResources();
+        
+        if (vertexBuffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
+            vertexBuffer = VK_NULL_HANDLE;
+        }
+        if (vertexBufferMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
+            vertexBufferMemory = VK_NULL_HANDLE;
+        }
+        if (indexBuffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(BP->device, indexBuffer, nullptr);
+            indexBuffer = VK_NULL_HANDLE;
+        }
+        if (indexBufferMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(BP->device, indexBufferMemory, nullptr);
+            indexBufferMemory = VK_NULL_HANDLE;
+        }
+        
+        clean = true;
     }
 }
 
@@ -3264,10 +3273,13 @@ void Texture::initCubic(BaseProject *bp, std::string files[6]) {
 
 
 void Texture::cleanup() {
-   	vkDestroySampler(BP->device, textureSampler, nullptr);
-   	vkDestroyImageView(BP->device, textureImageView, nullptr);
-	vkDestroyImage(BP->device, textureImage, nullptr);
-	vkFreeMemory(BP->device, textureImageMemory, nullptr);
+    if(!clean){
+        vkDestroySampler(BP->device, textureSampler, nullptr);
+        vkDestroyImageView(BP->device, textureImageView, nullptr);
+        vkDestroyImage(BP->device, textureImage, nullptr);
+        vkFreeMemory(BP->device, textureImageMemory, nullptr);
+        clean = true;
+    }
 }
 
 void Pipeline::init(BaseProject *bp, VertexDescriptor *vd,
