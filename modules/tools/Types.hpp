@@ -54,10 +54,17 @@ struct GlobalUniformBufferObject {
     alignas(4) float cosOut;
 };
 
-struct Vertex {
+struct AmbientVertex {
     glm::vec3 pos;
-    glm::vec2 UV;
     glm::vec3 norm;
+    glm::vec2 UV;
+};
+
+struct MetalsVertex {
+    glm::vec3 pos;
+    glm::vec3 norm;
+    glm::vec2 UV;
+    glm::vec2 props; // x: metalness, y: roughness
 };
 
 #endif
