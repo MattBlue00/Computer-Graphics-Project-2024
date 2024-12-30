@@ -11,14 +11,23 @@ class DrawManager : public Manager {
     
 protected:
 
-    UniformBufferObject ubo{};
+    AmbientUniformBufferObject ambientUbo{};
+    MetalsUniformBufferObject metalsUbo{};
     GlobalUniformBufferObject gubo{};
     
     void drawGameObjects() {
         for(GameObject* obj : gameObjects){
             obj->update();
-            updateUBO(obj->worldMatrix, cameraWorldData.viewProjection);
-            obj->mapMemory(EngineCurrentImage, &gubo, &ubo);
+            switch (obj->getPipelineType()){
+                case AMBIENT:
+                    updateAmbientUBO(obj->worldMatrix, cameraWorldData.viewProjection);
+                    obj->mapMemory(EngineCurrentImage, &gubo, &ambientUbo, sizeof(ambientUbo));
+                    break;
+                case METALS:
+                    updateMetalsUBO(obj->worldMatrix, cameraWorldData.viewProjection, obj->getProperty("metalness"), obj->getProperty("roughness"));
+                    obj->mapMemory(EngineCurrentImage, &gubo, &metalsUbo, sizeof(metalsUbo));
+                    break;
+            }
         }
     }
     
@@ -42,10 +51,18 @@ protected:
         gubo.eyePos = cameraWorldData.position;
     }
     
-    void updateUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection){
-        ubo.mMat = worldMatrix;
-        ubo.mvpMat = viewProjection * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+    void updateAmbientUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection){
+        ambientUbo.mMat = worldMatrix;
+        ambientUbo.mvpMat = viewProjection * ambientUbo.mMat;
+        ambientUbo.nMat = glm::inverse(glm::transpose(ambientUbo.mMat));
+    }
+    
+    void updateMetalsUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection, float metalness, float roughness){
+        metalsUbo.mMat = worldMatrix;
+        metalsUbo.mvpMat = viewProjection * metalsUbo.mMat;
+        metalsUbo.nMat = glm::inverse(glm::transpose(metalsUbo.mMat));
+        metalsUbo.metalness = metalness;
+        metalsUbo.roughness = roughness;
     }
     
 public:

@@ -9,11 +9,12 @@ const int LIGHTS_COUNT = 10;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
-layout(binding = 0) uniform UniformBufferObject
-{
-    mat4 mvpMat;
-    mat4 mMat;
-    mat4 nMat;
+layout(binding = 0, std140) uniform MetalsUniformBufferObject {
+    mat4 mvpMat; // Model-View-Projection matrix
+    mat4 mMat;   // Model matrix
+    mat4 nMat;   // Normal matrix (transpose(inverse(modelMatrix)))
+    float metalness;
+    float roughness;
 } ubo;
 
 layout(binding = 1) uniform sampler2D texSampler;
@@ -34,7 +35,6 @@ layout(binding = 2) uniform GlobalUniformBufferObject {
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec3 fragNorm;
 layout(location = 2) in vec2 fragTexCoord;
-layout(location = 3) in vec2 materialProps; // x: metalness, y: roughness
 
 layout(location = 0) out vec4 outColor;
 
@@ -156,10 +156,6 @@ void main()
     vec3 EyeDir = normalize(gubo.eyePos - fragPos); // View vector
     vec3 Albedo = texture(texSampler, fragTexCoord).rgb; // Albedo color from texture
 
-    // Material properties
-    float metalness = materialProps.x;
-    float roughness = clamp(materialProps.y, 0.0, 1.0);
-
     vec3 LD;    // light direction
     vec3 LC;    // light color
 
@@ -167,46 +163,46 @@ void main()
     
     LD = point_light_dir(fragPos, 0);
     LC = point_light_color(fragPos, 0);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[0];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[0];
     
     LD = point_light_dir(fragPos, 1);
     LC = point_light_color(fragPos, 1);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[1];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[1];
     
     LD = point_light_dir(fragPos, 2);
     LC = point_light_color(fragPos, 2);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[2];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[2];
     
     LD = point_light_dir(fragPos, 3);
     LC = point_light_color(fragPos, 3);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[3];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[3];
     
     LD = point_light_dir(fragPos, 4);
     LC = point_light_color(fragPos, 4);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[4];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[4];
     
     LD = point_light_dir(fragPos, 5);
     LC = point_light_color(fragPos, 5);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[5];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[5];
     
     LD = point_light_dir(fragPos, 6);
     LC = point_light_color(fragPos, 6);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[6];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[6];
     
     LD = point_light_dir(fragPos, 7);
     LC = point_light_color(fragPos, 7);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[7];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[7];
     
     LD = spot_light_dir(fragPos, 8);
     LC = spot_light_color(fragPos, 8);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[8];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[8];
     
     LD = spot_light_dir(fragPos, 9);
     LC = spot_light_color(fragPos, 9);
-    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, roughness, metalness) * LC * gubo.lightOn[9];
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[9];
 
     // Ambient lighting
-    vec3 ambientDiffuse = Albedo * (1.0 - metalness) * (max(dot(Norm, gubo.ambientLightDir), 0.0) * 0.9 + 0.1);
+    vec3 ambientDiffuse = Albedo * (1.0 - ubo.metalness) * (max(dot(Norm, gubo.ambientLightDir), 0.0) * 0.9 + 0.1);
     vec3 ambientSpecular = fresnel_schlick(max(dot(EyeDir, Norm), 0.0), vec3(0.04)) * gubo.ambientLightColor.xyz;
     vec3 ambientLight = ambientDiffuse + ambientSpecular;
 

@@ -30,8 +30,7 @@ protected:
     DescriptorSetLayout DSL;
 
     // Vertex formats
-    VertexDescriptor ambientVD;
-    VertexDescriptor metalsVD;
+    VertexDescriptor vertexDescriptor;
 
     // Pipelines [Shader couples]
     Pipeline ambientPipeline;
@@ -84,22 +83,29 @@ protected:
         
         // Descriptor Layouts [what will be passed to the shaders]
         DSL.init(this, {
-                    {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-                    {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
-                    {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+        });
+        
+        // Vertex descriptors
+        vertexDescriptor.init(this, {
+                  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
+            }, {
+              {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
+                     sizeof(glm::vec3), POSITION},
+              {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
+                     sizeof(glm::vec3), NORMAL},
+              {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
+                     sizeof(glm::vec2), UV}
             });
         
         // Pipelines init
         initAmbientPipeline();
         initMetalsPipeline();
-        
-        std::unordered_map<std::string, VertexDescriptor*> vdMap = {
-            {"ambient", &ambientVD},
-            {"metals", &metalsVD}
-        };
 
         // Load Scene
-        mainScene.load("models/scene.json", vdMap);
+        mainScene.load("models/scene.json", &vertexDescriptor);
         mainScene.init();
         
         // init audio data from config file's path
@@ -168,41 +174,15 @@ protected:
     }
     
     void initAmbientPipeline(){
-        // Vertex descriptor
-        ambientVD.init(this, {
-                  {0, sizeof(AmbientVertex), VK_VERTEX_INPUT_RATE_VERTEX}
-            }, {
-              {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(AmbientVertex, pos),
-                     sizeof(glm::vec3), POSITION},
-              {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(AmbientVertex, norm),
-                     sizeof(glm::vec3), NORMAL},
-              {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(AmbientVertex, UV),
-                     sizeof(glm::vec2), UV}
-            });
-
         // Pipeline [Shader couples]
-        ambientPipeline.init(this, &ambientVD, "shaders/ambient/AmbientVert.spv", "shaders/ambient/AmbientFrag.spv", { &DSL });
+        ambientPipeline.init(this, &vertexDescriptor, "shaders/ambient/AmbientVert.spv", "shaders/ambient/AmbientFrag.spv", { &DSL });
         ambientPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
     }
     
     void initMetalsPipeline(){
-        // Vertex descriptor
-        metalsVD.init(this, {
-                  {0, sizeof(MetalsVertex), VK_VERTEX_INPUT_RATE_VERTEX}
-            }, {
-              {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(MetalsVertex, pos),
-                     sizeof(glm::vec3), POSITION},
-              {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(MetalsVertex, norm),
-                     sizeof(glm::vec3), NORMAL},
-              {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(MetalsVertex, UV),
-                     sizeof(glm::vec2), UV},
-              {0, 3, VK_FORMAT_R32G32_SFLOAT, offsetof(MetalsVertex, props),
-                     sizeof(glm::vec2), PROPS}
-            });
-
         // Pipeline [Shader couples]
-        metalsPipeline.init(this, &metalsVD, "shaders/metals/MetalsVert.spv", "shaders/metals/MetalsFrag.spv", { &DSL });
+        metalsPipeline.init(this, &vertexDescriptor, "shaders/metals/MetalsVert.spv", "shaders/metals/MetalsFrag.spv", { &DSL });
         metalsPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
     }
@@ -266,7 +246,10 @@ protected:
         // binds the pipeline
         ambientPipeline.bind(commandBuffer);
         metalsPipeline.bind(commandBuffer);
-        mainScene.populateCommandBuffer(commandBuffer, currentImage, ambientPipeline);
+        mainScene.populateCommandBuffer(commandBuffer, currentImage, {
+            {AMBIENT, &ambientPipeline},
+            {METALS, &metalsPipeline}
+        });
     }
     
     void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {

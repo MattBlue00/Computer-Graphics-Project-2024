@@ -9,8 +9,8 @@ class Spaceship: public GameObject {
    
 public:
     
-    Spaceship(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds)
-    : GameObject(id, m, t, wm, ds) {}
+    Spaceship(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds, PipelineType pt, std::unordered_map<std::string, float> props)
+    : GameObject(id, m, t, wm, ds, pt, props) {}
     
     void update() override {
         if(worldMatrix[3][0] <= -SPACE_SHIP_MAX_DIST){

@@ -29,10 +29,18 @@ struct CarWorldData {
     glm::vec3 position;
 };
 
-struct UniformBufferObject {
+struct AmbientUniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
     alignas(16) glm::mat4 mMat;
     alignas(16) glm::mat4 nMat;
+};
+
+struct MetalsUniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
+    alignas(4) float metalness;
+    alignas(4) float roughness;
 };
 
 struct GlobalUniformBufferObject {
@@ -54,17 +62,10 @@ struct GlobalUniformBufferObject {
     alignas(4) float cosOut;
 };
 
-struct AmbientVertex {
+struct Vertex {
     glm::vec3 pos;
     glm::vec3 norm;
     glm::vec2 UV;
-};
-
-struct MetalsVertex {
-    glm::vec3 pos;
-    glm::vec3 norm;
-    glm::vec2 UV;
-    glm::vec2 props; // x: metalness, y: roughness
 };
 
 #endif

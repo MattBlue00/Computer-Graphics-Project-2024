@@ -213,7 +213,7 @@ struct VertexBindingDescriptorElement {
 	VkVertexInputRate inputRate;
 };
 
-enum VertexDescriptorElementUsage {POSITION, NORMAL, UV, COLOR, TANGENT, PROPS, OTHER};
+enum VertexDescriptorElementUsage {POSITION, NORMAL, UV, COLOR, TANGENT, OTHER};
 
 struct VertexDescriptorElement {
 	uint32_t binding;
@@ -237,7 +237,6 @@ struct VertexDescriptor {
 	VertexComponent UV;
 	VertexComponent Color;
 	VertexComponent Tangent;
-    VertexComponent Props;
 
 	std::vector<VertexBindingDescriptorElement> Bindings;
 	std::vector<VertexDescriptorElement> Layout;
@@ -290,7 +289,7 @@ class Model {
     void updateVertexBuffer();
     void destroyPendingResources();
 
-	void init(BaseProject *bp, VertexDescriptor *VD, std::string modelName, std::string file, ModelType MT, std::unordered_map<std::string, float> params);
+	void init(BaseProject *bp, VertexDescriptor *VD, std::string modelName, std::string file, ModelType MT);
 	void initMesh(BaseProject *bp, VertexDescriptor *VD);
     void updateMesh(BaseProject *bp, VertexDescriptor *VD);
 	void cleanup();
@@ -329,9 +328,9 @@ struct Texture {
 };
 
 struct DescriptorSetLayoutBinding {
-	uint32_t binding;
-	VkDescriptorType type;
-	VkShaderStageFlags flags;
+    uint32_t binding;
+    VkDescriptorType type;
+    VkShaderStageFlags flags;
 };
 
 
@@ -2511,7 +2510,6 @@ void VertexDescriptor::init(BaseProject *bp, std::vector<VertexBindingDescriptor
 	UV.hasIt = false; UV.offset = 0;
 	Color.hasIt = false; Color.offset = 0;
 	Tangent.hasIt = false; Tangent.offset = 0;
-    Props.hasIt = false; Props.offset = 0;
 	
 	if(B.size() == 1) {	// for now, read models only with every vertex information in a single binding
 		for(int i = 0; i < E.size(); i++) {
@@ -2576,18 +2574,6 @@ void VertexDescriptor::init(BaseProject *bp, std::vector<VertexBindingDescriptor
 				  std::cout << "Vertex Tangent - wrong format\n";
 				}
 			    break;
-            case VertexDescriptorElementUsage::PROPS:
-              if(E[i].format == VK_FORMAT_R32G32_SFLOAT) {
-                if(E[i].size == sizeof(glm::vec2)) {
-                  Props.hasIt = true;
-                  Props.offset = E[i].offset;
-                } else {
-                  std::cout << "Vertex Tangent - wrong size\n";
-                }
-              } else {
-                std::cout << "Vertex Tangent - wrong format\n";
-              }
-              break;
 			  default:
 			    break;
 			}
@@ -2687,22 +2673,6 @@ void Model::loadModelOBJ(std::string file) {
 				glm::vec3 *o = (glm::vec3 *)((char*)(&vertex[0]) + VD->Normal.offset);
 				*o = norm;
 			}
-            if (VD->Props.hasIt) {
-                glm::vec2 props = {0.0f, 0.0f}; // Valori di default
-
-                // Controllo e assegnazione dei valori di metalness e roughness dai parameters
-                if (parameters.find("metalness") != parameters.end()) {
-                    props.x = parameters["metalness"];
-                }
-
-                if (parameters.find("roughness") != parameters.end()) {
-                    props.y = parameters["roughness"];
-                }
-
-                // Scrittura dei valori di props nel buffer del vertice
-                glm::vec2 *o = (glm::vec2 *)((char*)(&vertex[0]) + VD->Props.offset);
-                *o = props;
-            }
 			
 			vertices.insert(vertices.end(), vertex.begin(), vertex.end());
 			indices.push_back((int)(vertices.size()/mainStride)-1);
@@ -2887,16 +2857,6 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 					glm::vec2 *o = (glm::vec2 *)((char*)(&vertex[0]) + VD->UV.offset);
 					*o = texCoord;
 				}
-                
-                if (VD->Props.hasIt) {
-                    glm::vec2 *o = (glm::vec2 *)((char*)(&vertex[0]) + VD->Props.offset);
-
-                    // Ottieni metalness e roughness dalla mappa parameters
-                    float metalness = parameters.count("metalness") ? parameters["metalness"] : 0.0f;
-                    float roughness = parameters.count("roughness") ? parameters["roughness"] : 0.0f;
-
-                    *o = glm::vec2(metalness, roughness);
-                }
 
 //std::cout << vertices.size() << "," << vertex.size() << " Inserting\n";
 				vertices.insert(vertices.end(), vertex.begin(), vertex.end());
@@ -3122,8 +3082,7 @@ void Model::destroyPendingResources() {
     }
 }
 
-void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string modelName, std::string file, ModelType MT, std::unordered_map<std::string, float> params) {
-    parameters = params;
+void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string modelName, std::string file, ModelType MT) {
 	BP = bp;
 	VD = vd;
 	if(MT == OBJ) {

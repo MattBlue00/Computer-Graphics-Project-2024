@@ -9,7 +9,7 @@ const int LIGHTS_COUNT = 10;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
-layout(binding = 0) uniform UniformBufferObject
+layout(binding = 0, std140) uniform AmbientUniformBufferObject
 {
     mat4 mvpMat;
     mat4 mMat;

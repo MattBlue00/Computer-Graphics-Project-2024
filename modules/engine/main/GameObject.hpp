@@ -1,6 +1,8 @@
 #ifndef GAME_OBJECT_HPP
 #define GAME_OBJECT_HPP
 
+#include "graphics/PipelineTypes.hpp"
+
 class GameObject {
     
 public:
@@ -9,12 +11,14 @@ public:
     Model* getModel() const { return model; }
     Texture* getTexture() const { return texture; }
     DescriptorSet* getDescriptorSet() const { return descriptorSet; }
+    PipelineType getPipelineType() const { return pipelineType; }
+    float getProperty(std::string key) { return properties[key]; }
     bool isEnabled() const { return enabled; }
     
     glm::mat4 worldMatrix;
     
-    GameObject(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds)
-    : id(id), model(m), texture(t), worldMatrix(wm), descriptorSet(ds) {
+    GameObject(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds, PipelineType pt, std::unordered_map<std::string, float> props)
+    : id(id), model(m), texture(t), worldMatrix(wm), descriptorSet(ds), pipelineType(pt), properties(props) {
         enabled = true;
         _oldWorldMatrix = worldMatrix;
     };
@@ -22,11 +26,22 @@ public:
     virtual void init() {};
     
     void descriptorSetInit(DescriptorSetLayout &dsl){
-        descriptorSet->init(EngineBaseProject, &dsl, {
-            {0, UNIFORM, sizeof(UniformBufferObject), nullptr},
-            {1, TEXTURE, 0, texture},
-            {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
-        });
+        switch(pipelineType){
+            case AMBIENT:
+                descriptorSet->init(EngineBaseProject, &dsl, {
+                    {0, UNIFORM, sizeof(AmbientUniformBufferObject), nullptr},
+                    {1, TEXTURE, 0, texture},
+                    {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+                });
+                break;
+            case METALS:
+                descriptorSet->init(EngineBaseProject, &dsl, {
+                    {0, UNIFORM, sizeof(MetalsUniformBufferObject), nullptr},
+                    {1, TEXTURE, 0, texture},
+                    {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+                });
+                break;
+        }
     }
     
     virtual void update() {};
@@ -42,16 +57,16 @@ public:
     
     virtual ~GameObject() = default;
     
-    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, Pipeline &P) {
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, Pipeline* pipeline) {
         model->bind(commandBuffer);
-        descriptorSet->bind(commandBuffer, P, 0, currentImage);
+        descriptorSet->bind(commandBuffer, *pipeline, 0, currentImage);
                     
         vkCmdDrawIndexed(commandBuffer,
                 static_cast<uint32_t>(model->indices.size()), 1, 0, 0, 0);
     }
     
-    void mapMemory(int currentImage, GlobalUniformBufferObject* gubo, UniformBufferObject* ubo){
-        descriptorSet->map(currentImage, ubo, sizeof(*ubo), 0);
+    void mapMemory(int currentImage, GlobalUniformBufferObject* gubo, void* ubo, int uboSize){
+        descriptorSet->map(currentImage, ubo, uboSize, 0);
         descriptorSet->map(currentImage, gubo, sizeof(*gubo), 2);
     }
     
@@ -72,6 +87,8 @@ protected:
     Model* model;
     Texture* texture;
     DescriptorSet* descriptorSet;
+    PipelineType pipelineType;
+    std::unordered_map<std::string, float> properties;
     
     bool enabled;
     

@@ -5,7 +5,7 @@
 
 #version 450
 
-layout(binding = 0, std140) uniform UniformBufferObject
+layout(binding = 0, std140) uniform AmbientUniformBufferObject
 {
     mat4 mvpMat;
     mat4 mMat;

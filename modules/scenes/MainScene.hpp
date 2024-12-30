@@ -46,36 +46,39 @@ public:
             DescriptorSet* descriptorSet = new DescriptorSet();
 
             if (id.starts_with("airplane")) {
-                object = new Airplane(id, model, texture, worldMatrix, descriptorSet);
+                object = new Airplane(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("airship")) {
-                object = new Airship(id, model, texture, worldMatrix, descriptorSet);
+                object = new Airship(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("barrier")) {
-                object = new Barrier(id, model, texture, worldMatrix, descriptorSet);
+                object = new Barrier(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("car")) {
-                object = new Car(id, model, texture, worldMatrix, descriptorSet);
+                object = new Car(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("coin")) {
-                object = new Coin(id, model, texture, worldMatrix, descriptorSet);
+                object = new Coin(id, model, texture, worldMatrix, descriptorSet, METALS, {
+                    {"metalness", 1.0f},
+                    {"roughness", 0.5f}
+                });
             } else if (id.starts_with("dir_barrier")) {
-                object = new DirectionBarrier(id, model, texture, worldMatrix, descriptorSet);
+                object = new DirectionBarrier(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("earth")) {
-                object = new Earth(id, model, texture, worldMatrix, descriptorSet);
+                object = new Earth(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("firework")) {
                 // Generate a random number
                 int randomNumber = distrib(gen);
                 // Generate a firework
-                object = new Firework(id, model, texture, worldMatrix, descriptorSet, randomNumber);
+                object = new Firework(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {}, randomNumber);
             } else if (id.starts_with("moon")) {
-                object = new Moon(id, model, texture, worldMatrix, descriptorSet);
+                object = new Moon(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("tires_pile")) {
-                object = new Obstacle(id, model, texture, worldMatrix, descriptorSet);
+                object = new Obstacle(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("ramps")) {
-                object = new Ramps(id, model, texture, worldMatrix, descriptorSet);
+                object = new Ramps(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("spaceship")) {
-                object = new Spaceship(id, model, texture, worldMatrix, descriptorSet);
+                object = new Spaceship(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else if (id.starts_with("track")) {
-                object = new Track(id, model, texture, worldMatrix, descriptorSet);
+                object = new Track(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             } else {
-                object = new StaticObject(id, model, texture, worldMatrix, descriptorSet);
+                object = new StaticObject(id, model, texture, worldMatrix, descriptorSet, AMBIENT, {});
             }
 
             if (object) {

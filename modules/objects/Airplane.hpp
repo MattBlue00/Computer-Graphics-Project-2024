@@ -17,8 +17,8 @@ class Airplane: public GameObject {
 
 public:
     
-    Airplane(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds)
-    : GameObject(id, m, t, wm, ds) {}
+    Airplane(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds, PipelineType pt, std::unordered_map<std::string, float> props)
+    : GameObject(id, m, t, wm, ds, pt, props) {}
     
     void update() override {
         // updates airplane's position

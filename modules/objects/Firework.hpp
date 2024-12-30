@@ -10,8 +10,8 @@ class Firework: public GameObject {
    
 public:
     
-    Firework(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds, int startingFrame)
-    : GameObject(id, m, t, wm, ds) {
+    Firework(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds, PipelineType pt, std::unordered_map<std::string, float> props, int startingFrame)
+    : GameObject(id, m, t, wm, ds, pt, props) {
         fireworkFrame = startingFrame;
     }
     

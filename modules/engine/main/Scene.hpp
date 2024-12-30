@@ -31,7 +31,7 @@ protected:
 
 public:
     
-	void load(std::string file, std::unordered_map<std::string, VertexDescriptor*> vdMap) {
+	void load(std::string file, VertexDescriptor* vertexDescriptor) {
 		// Models, textures and Descriptors (values assigned to the uniforms)
 		json js;
 		std::ifstream ifs(file);
@@ -60,21 +60,8 @@ public:
                 
                 ModelType type = (MT[0] == 'O') ? OBJ : ((MT[0] == 'G') ? GLTF : MGCG);
                 std::string fileName = ms[k]["model"];
-                
-                std::string pipelineId = ms[k]["pipeline"];
-                
-                std::unordered_map<std::string, float> params = {};
-                
-                // Carica i parametri specifici del modello
-                if (ms[k].contains("parameters")) {
-                    json paramsJson = ms[k]["parameters"];
-                    for (auto it = paramsJson.begin(); it != paramsJson.end(); ++it) {
-                        // Inserisce il parametro nel map
-                        params[it.key()] = it.value().get<float>();
-                    }
-                }
 
-                Models[k]->init(EngineBaseProject, vdMap[pipelineId], modelName, fileName, type, params);
+                Models[k]->init(EngineBaseProject, vertexDescriptor, modelName, fileName, type);
 			}
 			
 			// TEXTURES
@@ -145,9 +132,9 @@ public:
         free(Textures);
     }
 	
-    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, Pipeline &P) {
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, std::unordered_map<PipelineType, Pipeline*> pipelines) {
         for(auto obj : gameObjects) {
-            obj->populateCommandBuffer(commandBuffer, currentImage, P);
+            obj->populateCommandBuffer(commandBuffer, currentImage, pipelines[obj->getPipelineType()]);
         }
 	}
 };

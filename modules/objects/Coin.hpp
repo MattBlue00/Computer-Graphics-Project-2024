@@ -10,8 +10,8 @@ class Coin: public GameObject, public KinematicRigidBody, public Collider {
     
 public:
     
-    Coin(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds) :
-    GameObject(id, m, t, wm, ds),
+    Coin(std::string id, Model* m, Texture* t, glm::mat4 wm, DescriptorSet* ds, PipelineType pt, std::unordered_map<std::string, float> props) :
+    GameObject(id, m, t, wm, ds, pt, props),
     KinematicRigidBody(new btSphereShape(1.0f), wm),
     Collider() {}
     
