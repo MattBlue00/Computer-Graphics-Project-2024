@@ -26,22 +26,11 @@ public:
     virtual void init() {};
     
     void descriptorSetInit(DescriptorSetLayout &dsl){
-        switch(pipelineType){
-            case AMBIENT:
-                descriptorSet->init(EngineBaseProject, &dsl, {
-                    {0, UNIFORM, sizeof(AmbientUniformBufferObject), nullptr},
-                    {1, TEXTURE, 0, texture},
-                    {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
-                });
-                break;
-            case METALS:
-                descriptorSet->init(EngineBaseProject, &dsl, {
-                    {0, UNIFORM, sizeof(MetalsUniformBufferObject), nullptr},
-                    {1, TEXTURE, 0, texture},
-                    {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
-                });
-                break;
-        }
+        descriptorSet->init(EngineBaseProject, &dsl, {
+            {0, UNIFORM, sizeof(CookTorranceUniformBufferObject), nullptr},
+            {1, TEXTURE, 0, texture},
+            {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+        });
     }
     
     virtual void update() {};

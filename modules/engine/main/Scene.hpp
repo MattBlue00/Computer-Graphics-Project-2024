@@ -111,9 +111,9 @@ public:
         }
     }
     
-    void descriptorSetsInit(DescriptorSetLayout &dsl){
+    void descriptorSetsInit(std::unordered_map<PipelineType, DescriptorSetLayout*> dslMap){
         for(auto obj : gameObjects) {
-            obj->descriptorSetInit(dsl);
+            obj->descriptorSetInit(*dslMap[obj->getPipelineType()]);
         }
     }
 	

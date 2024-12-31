@@ -1,11 +1,11 @@
-// AmbientShader.vert
+// PhongShader.vert
 
 // DIFFUSION MODEL: LAMBERT
 // REFLECTION MODEL: PHONG
 
 #version 450
 
-layout(binding = 0, std140) uniform AmbientUniformBufferObject
+layout(binding = 0, std140) uniform PhongUniformBufferObject
 {
     mat4 mvpMat;
     mat4 mMat;

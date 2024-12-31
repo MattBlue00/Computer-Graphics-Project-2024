@@ -11,21 +11,27 @@ class DrawManager : public Manager {
     
 protected:
 
-    AmbientUniformBufferObject ambientUbo{};
-    MetalsUniformBufferObject metalsUbo{};
+    PhongUniformBufferObject phongUbo{};
+    CookTorranceUniformBufferObject cookTorranceUbo{};
+    ToonUniformBufferObject toonUbo{};
+    
     GlobalUniformBufferObject gubo{};
     
     void drawGameObjects() {
         for(GameObject* obj : gameObjects){
             obj->update();
             switch (obj->getPipelineType()){
-                case AMBIENT:
-                    updateAmbientUBO(obj->worldMatrix, cameraWorldData.viewProjection);
-                    obj->mapMemory(EngineCurrentImage, &gubo, &ambientUbo, sizeof(ambientUbo));
+                case PHONG:
+                    updatePhongUBO(obj->worldMatrix, cameraWorldData.viewProjection);
+                    obj->mapMemory(EngineCurrentImage, &gubo, &phongUbo, sizeof(phongUbo));
                     break;
-                case METALS:
-                    updateMetalsUBO(obj->worldMatrix, cameraWorldData.viewProjection, obj->getProperty("metalness"), obj->getProperty("roughness"));
-                    obj->mapMemory(EngineCurrentImage, &gubo, &metalsUbo, sizeof(metalsUbo));
+                case COOK_TORRANCE:
+                    updateCookTorranceUBO(obj->worldMatrix, cameraWorldData.viewProjection, obj->getProperty("metalness"), obj->getProperty("roughness"));
+                    obj->mapMemory(EngineCurrentImage, &gubo, &cookTorranceUbo, sizeof(cookTorranceUbo));
+                    break;
+                case TOON:
+                    updateToonUBO(obj->worldMatrix, cameraWorldData.viewProjection);
+                    obj->mapMemory(EngineCurrentImage, &gubo, &toonUbo, sizeof(toonUbo));
                     break;
             }
         }
@@ -51,18 +57,24 @@ protected:
         gubo.eyePos = cameraWorldData.position;
     }
     
-    void updateAmbientUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection){
-        ambientUbo.mMat = worldMatrix;
-        ambientUbo.mvpMat = viewProjection * ambientUbo.mMat;
-        ambientUbo.nMat = glm::inverse(glm::transpose(ambientUbo.mMat));
+    void updatePhongUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection){
+        phongUbo.mMat = worldMatrix;
+        phongUbo.mvpMat = viewProjection * phongUbo.mMat;
+        phongUbo.nMat = glm::inverse(glm::transpose(phongUbo.mMat));
     }
     
-    void updateMetalsUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection, float metalness, float roughness){
-        metalsUbo.mMat = worldMatrix;
-        metalsUbo.mvpMat = viewProjection * metalsUbo.mMat;
-        metalsUbo.nMat = glm::inverse(glm::transpose(metalsUbo.mMat));
-        metalsUbo.metalness = metalness;
-        metalsUbo.roughness = roughness;
+    void updateCookTorranceUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection, float metalness, float roughness){
+        cookTorranceUbo.mMat = worldMatrix;
+        cookTorranceUbo.mvpMat = viewProjection * cookTorranceUbo.mMat;
+        cookTorranceUbo.nMat = glm::inverse(glm::transpose(cookTorranceUbo.mMat));
+        cookTorranceUbo.metalness = metalness;
+        cookTorranceUbo.roughness = roughness;
+    }
+    
+    void updateToonUBO(glm::mat4 worldMatrix, glm::mat4 viewProjection){
+        toonUbo.mMat = worldMatrix;
+        toonUbo.mvpMat = viewProjection * toonUbo.mMat;
+        toonUbo.nMat = glm::inverse(glm::transpose(toonUbo.mMat));
     }
     
 public:

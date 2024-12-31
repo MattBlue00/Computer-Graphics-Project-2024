@@ -1,4 +1,4 @@
-// MetalsShader.frag
+// CookTorranceShader.frag
 
 // DIFFUSION MODEL: LAMBERT
 // REFLECTION MODEL: COOK-TORRANCE
@@ -9,7 +9,7 @@ const int LIGHTS_COUNT = 10;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
-layout(binding = 0, std140) uniform MetalsUniformBufferObject {
+layout(binding = 0, std140) uniform CookTorranceUniformBufferObject {
     mat4 mvpMat; // Model-View-Projection matrix
     mat4 mMat;   // Model matrix
     mat4 nMat;   // Normal matrix (transpose(inverse(modelMatrix)))
@@ -155,6 +155,9 @@ void main()
     vec3 Norm = normalize(fragNorm); // Normal vector
     vec3 EyeDir = normalize(gubo.eyePos - fragPos); // View vector
     vec3 Albedo = texture(texSampler, fragTexCoord).rgb; // Albedo color from texture
+    
+    vec3 ambientLightDirection = gubo.ambientLightDir;
+    vec4 ambientLightColor = gubo.ambientLightColor;
 
     vec3 LD;    // light direction
     vec3 LC;    // light color
@@ -201,10 +204,19 @@ void main()
     LC = spot_light_color(fragPos, 9);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[9];
 
-    // Ambient lighting
-    vec3 ambientDiffuse = Albedo * (1.0 - ubo.metalness) * (max(dot(Norm, gubo.ambientLightDir), 0.0) * 0.9 + 0.1);
-    vec3 ambientSpecular = fresnel_schlick(max(dot(EyeDir, Norm), 0.0), vec3(0.04)) * gubo.ambientLightColor.xyz;
-    vec3 ambientLight = ambientDiffuse + ambientSpecular;
-
-    outColor = vec4(ambientLight + RendEqSol, 1.0);
+    float reductionFactor = 0.9f;
+    
+    vec3 ambientDiffuse = Albedo * (max(dot(Norm, ambientLightDirection), 0.0) * 0.9 + 0.1);
+    ambientDiffuse *= reductionFactor;
+    vec3 ambientSpecular = vec3(pow(max(dot(EyeDir, -reflect(ambientLightDirection, Norm)), 0.0), 64.0));
+    ambientSpecular *= reductionFactor;
+    
+    vec3 ambientCorrection =
+        mix(vec3(0.18, 0.12, 0.08), vec3(0.2, 0.1, 0.1), bvec3(Norm.x > 0.0)) * (Norm.x * Norm.x) +
+        mix(vec3(0.1), vec3(0.06, 0.2, 0.2), bvec3(Norm.y > 0.0)) * (Norm.y * Norm.y) +
+        mix(vec3(0.06, 0.12, 0.14), vec3(0.16, 0.04, 0.08), bvec3(Norm.z > 0.0)) * (Norm.z * Norm.z);
+    ambientCorrection *= Albedo;
+    ambientCorrection *= reductionFactor;
+    
+    outColor = vec4(((ambientDiffuse + ambientSpecular * (1.0 - gubo.eyeDir.w)) * ambientLightColor.xyz) + ambientCorrection, 1.0) + vec4(RendEqSol, 1.0);
 }

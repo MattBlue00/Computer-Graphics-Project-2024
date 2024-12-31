@@ -2,8 +2,9 @@
 #define PIPELINE_TYPES_HPP
 
 enum PipelineType {
-    AMBIENT,
-    METALS
+    PHONG,
+    COOK_TORRANCE,
+    TOON
 };
 
 #endif

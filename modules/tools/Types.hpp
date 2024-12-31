@@ -29,18 +29,24 @@ struct CarWorldData {
     glm::vec3 position;
 };
 
-struct AmbientUniformBufferObject {
+struct PhongUniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
     alignas(16) glm::mat4 mMat;
     alignas(16) glm::mat4 nMat;
 };
 
-struct MetalsUniformBufferObject {
+struct CookTorranceUniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
     alignas(16) glm::mat4 mMat;
     alignas(16) glm::mat4 nMat;
     alignas(4) float metalness;
     alignas(4) float roughness;
+};
+
+struct ToonUniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
 };
 
 struct GlobalUniformBufferObject {

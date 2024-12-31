@@ -1,4 +1,4 @@
-// MetalsShader.vert
+// CookTorranceShader.vert
 
 // DIFFUSION MODEL: LAMBERT
 // REFLECTION MODEL: COOK-TORRANCE
@@ -16,7 +16,7 @@ layout(location = 1) out vec3 fragNorm;        // Normale interpolata
 layout(location = 2) out vec2 fragTexCoord;    // Coordinate texture interpolate
 
 // Uniforms
-layout(binding = 0, std140) uniform MetalsUniformBufferObject {
+layout(binding = 0, std140) uniform CookTorranceUniformBufferObject {
     mat4 mvpMat; // Model-View-Projection matrix
     mat4 mMat;   // Model matrix
     mat4 nMat;   // Normal matrix (transpose(inverse(modelMatrix)))

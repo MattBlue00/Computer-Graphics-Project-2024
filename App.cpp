@@ -27,14 +27,17 @@ class App : public BaseProject {
 protected:
 
     // Descriptor Layouts ["classes" of what will be passed to the shaders]
-    DescriptorSetLayout DSL;
+    DescriptorSetLayout phongDSL;
+    DescriptorSetLayout cookTorranceDSL;
+    DescriptorSetLayout toonDSL;
 
     // Vertex formats
     VertexDescriptor vertexDescriptor;
 
     // Pipelines [Shader couples]
-    Pipeline ambientPipeline;
-    Pipeline metalsPipeline;
+    Pipeline phongPipeline;
+    Pipeline cookTorrancePipeline;
+    Pipeline toonPipeline;
 
     // Scene
     MainScene mainScene;
@@ -81,13 +84,6 @@ protected:
         EngineBaseProject = this;
         EngineWindow = window;
         
-        // Descriptor Layouts [what will be passed to the shaders]
-        DSL.init(this, {
-            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
-            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
-        });
-        
         // Vertex descriptors
         vertexDescriptor.init(this, {
                   {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
@@ -101,8 +97,9 @@ protected:
             });
         
         // Pipelines init
-        initAmbientPipeline();
-        initMetalsPipeline();
+        initPhongPipeline();
+        initCookTorrancePipeline();
+        initToonPipeline();
 
         // Load Scene
         mainScene.load("models/scene.json", &vertexDescriptor);
@@ -173,28 +170,60 @@ protected:
         std::cout << "Initialization completed!\n";
     }
     
-    void initAmbientPipeline(){
+    void initPhongPipeline(){
+        phongDSL.init(this, {
+            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+        });
+        
         // Pipeline [Shader couples]
-        ambientPipeline.init(this, &vertexDescriptor, "shaders/ambient/AmbientVert.spv", "shaders/ambient/AmbientFrag.spv", { &DSL });
-        ambientPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+        phongPipeline.init(this, &vertexDescriptor, "shaders/phong/PhongVert.spv", "shaders/phong/PhongFrag.spv", { &phongDSL });
+        phongPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
     }
     
-    void initMetalsPipeline(){
+    void initCookTorrancePipeline(){
+        // Descriptor Layouts [what will be passed to the shaders]
+        cookTorranceDSL.init(this, {
+            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+        });
+        
         // Pipeline [Shader couples]
-        metalsPipeline.init(this, &vertexDescriptor, "shaders/metals/MetalsVert.spv", "shaders/metals/MetalsFrag.spv", { &DSL });
-        metalsPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+        cookTorrancePipeline.init(this, &vertexDescriptor, "shaders/cook_torrance/CookTorranceVert.spv", "shaders/cook_torrance/CookTorranceFrag.spv", { &cookTorranceDSL });
+        cookTorrancePipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_NONE, false);
+    }
+    
+    void initToonPipeline(){
+        // Descriptor Layouts [what will be passed to the shaders]
+        toonDSL.init(this, {
+            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+        });
+        
+        // Pipeline [Shader couples]
+        toonPipeline.init(this, &vertexDescriptor, "shaders/toon/ToonVert.spv", "shaders/toon/ToonFrag.spv", { &toonDSL });
+        toonPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
     }
 
     // Here you create your pipelines and Descriptor Sets!
     void pipelinesAndDescriptorSetsInit() {
         // This creates a new pipeline (with the current surface), using its shaders
-        ambientPipeline.create();
-        metalsPipeline.create();
+        phongPipeline.create();
+        cookTorrancePipeline.create();
+        toonPipeline.create();
 
         // Here you define the data set
-        mainScene.descriptorSetsInit(DSL);
+        mainScene.descriptorSetsInit({
+            {PHONG, &phongDSL},
+            {COOK_TORRANCE, &cookTorranceDSL},
+            {TOON, &toonDSL}
+        });
         uiManager.pipelinesAndDescriptorSetsInit();
     }
 
@@ -203,8 +232,9 @@ protected:
     void pipelinesAndDescriptorSetsCleanup() {
         std::cout << "Starting pipelines and descriptor sets cleanup.\n";
         // Cleanup pipelines
-        ambientPipeline.cleanup();
-        metalsPipeline.cleanup();
+        phongPipeline.cleanup();
+        cookTorrancePipeline.cleanup();
+        toonPipeline.cleanup();
 
         mainScene.pipelinesAndDescriptorSetsCleanup();
         uiManager.pipelinesAndDescriptorSetsCleanup();
@@ -218,13 +248,16 @@ protected:
     void localCleanup() {
         std::cout << "Starting local cleanup.\n";
         // Cleanup descriptor set layouts
-        DSL.cleanup();
+        phongDSL.cleanup();
+        cookTorranceDSL.cleanup();
+        toonDSL.cleanup();
         
-        std::cout << "DSL cleanup completed.\n";
+        std::cout << "DSLs cleanup completed.\n";
 
         // Destroys the pipelines
-        ambientPipeline.destroy();
-        metalsPipeline.destroy();
+        phongPipeline.destroy();
+        cookTorrancePipeline.destroy();
+        toonPipeline.destroy();
         
         std::cout << "Pipelines destruction completed.\n";
         
@@ -244,11 +277,14 @@ protected:
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
         // binds the pipeline
-        ambientPipeline.bind(commandBuffer);
-        metalsPipeline.bind(commandBuffer);
+        phongPipeline.bind(commandBuffer);
+        cookTorrancePipeline.bind(commandBuffer);
+        toonPipeline.bind(commandBuffer);
+        
         mainScene.populateCommandBuffer(commandBuffer, currentImage, {
-            {AMBIENT, &ambientPipeline},
-            {METALS, &metalsPipeline}
+            {PHONG, &phongPipeline},
+            {COOK_TORRANCE, &cookTorrancePipeline},
+            {TOON, &toonPipeline}
         });
     }
     
