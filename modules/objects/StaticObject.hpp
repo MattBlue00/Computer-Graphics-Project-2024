@@ -1,6 +1,8 @@
 #ifndef STATIC_OBJECT_HPP
 #define STATIC_OBJECT_HPP
 
+#include "Debug.hpp"
+
 class StaticObject: public GameObject {
     
 public:

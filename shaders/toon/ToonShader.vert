@@ -21,15 +21,8 @@ layout(location = 1) out vec3 fragNorm;   // Normale del frammento
 layout(location = 2) out vec2 fragTexCoord; // Coordinate texture per il frammento
 
 void main() {
-    // Calcola la posizione del vertice in spazio mondo usando la matrice model
+    gl_Position = ubo.mvpMat * vec4(inPosition, 1.0);
     fragPos = vec3(ubo.mMat * vec4(inPosition, 1.0));
-
-    // Calcola la normale trasformata in spazio mondo usando la matrice normal
-    fragNorm = normalize(mat3(ubo.nMat) * inNormal);
-
-    // Calcola la posizione finale usando la matrice MVP (Model-View-Projection)
-    gl_Position = ubo.mvpMat * vec4(fragPos, 1.0);
-    
-    // Passa anche le coordinate texture
+    fragNorm = mat3(ubo.nMat) * inNormal;
     fragTexCoord = inTexCoord;
 }
