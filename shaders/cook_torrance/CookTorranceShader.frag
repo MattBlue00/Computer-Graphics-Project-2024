@@ -9,7 +9,7 @@ const int LIGHTS_COUNT = 10;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
-layout(binding = 0, std140) uniform CookTorranceUniformBufferObject {
+layout(binding = 0) uniform CookTorranceUniformBufferObject {
     mat4 mvpMat; // Model-View-Projection matrix
     mat4 mMat;   // Model matrix
     mat4 nMat;   // Normal matrix (transpose(inverse(modelMatrix)))

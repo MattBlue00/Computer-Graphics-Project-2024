@@ -7,7 +7,7 @@ const int LIGHTS_COUNT = 10;
 // LAYOUT BINDINGS AND LOCATIONS
 
 // Uniform Buffer Object (UBO) per Toon shading
-layout(binding = 0, std140) uniform ToonUniformBufferObject
+layout(binding = 0) uniform ToonUniformBufferObject
 {
     mat4 mvpMat;  // Matrice Model-View-Projection
     mat4 mMat;    // Matrice Model

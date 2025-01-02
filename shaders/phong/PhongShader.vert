@@ -24,7 +24,7 @@ void main()
 {
     gl_Position = ubo.mvpMat * vec4(inPosition, 1.0);
     fragPos = (ubo.mMat * vec4(inPosition, 1.0)).xyz;
-    fragNorm = mat3(ubo.nMat[0].xyz, ubo.nMat[1].xyz, ubo.nMat[2].xyz) * inNormal;
+    fragNorm = mat3(ubo.nMat) * inNormal;
     fragTexCoord = inTexCoord;
 }
 

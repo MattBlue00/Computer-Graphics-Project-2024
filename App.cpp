@@ -27,9 +27,7 @@ class App : public BaseProject {
 protected:
 
     // Descriptor Layouts ["classes" of what will be passed to the shaders]
-    DescriptorSetLayout phongDSL;
-    DescriptorSetLayout cookTorranceDSL;
-    DescriptorSetLayout toonDSL;
+    DescriptorSetLayout DSL;
 
     // Vertex formats
     VertexDescriptor vertexDescriptor;
@@ -83,6 +81,13 @@ protected:
         // Initialize ENGINE parameters
         EngineBaseProject = this;
         EngineWindow = window;
+        
+        // Descriptor Set Layout
+        DSL.init(this, {
+            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
+            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+        });
         
         // Vertex descriptors
         vertexDescriptor.init(this, {
@@ -171,42 +176,22 @@ protected:
     }
     
     void initPhongPipeline(){
-        phongDSL.init(this, {
-            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
-            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
-        });
-        
         // Pipeline [Shader couples]
-        phongPipeline.init(this, &vertexDescriptor, "shaders/phong/PhongVert.spv", "shaders/phong/PhongFrag.spv", { &phongDSL });
+        phongPipeline.init(this, &vertexDescriptor, "shaders/phong/PhongVert.spv", "shaders/phong/PhongFrag.spv", { &DSL });
         phongPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
     }
     
     void initCookTorrancePipeline(){
-        // Descriptor Layouts [what will be passed to the shaders]
-        cookTorranceDSL.init(this, {
-            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
-            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
-        });
-        
         // Pipeline [Shader couples]
-        cookTorrancePipeline.init(this, &vertexDescriptor, "shaders/cook_torrance/CookTorranceVert.spv", "shaders/cook_torrance/CookTorranceFrag.spv", { &cookTorranceDSL });
+        cookTorrancePipeline.init(this, &vertexDescriptor, "shaders/cook_torrance/CookTorranceVert.spv", "shaders/cook_torrance/CookTorranceFrag.spv", { &DSL });
         cookTorrancePipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
     }
     
     void initToonPipeline(){
-        // Descriptor Layouts [what will be passed to the shaders]
-        toonDSL.init(this, {
-            {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-            {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
-            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
-        });
-        
         // Pipeline [Shader couples]
-        toonPipeline.init(this, &vertexDescriptor, "shaders/toon/ToonVert.spv", "shaders/toon/ToonFrag.spv", { &toonDSL });
+        toonPipeline.init(this, &vertexDescriptor, "shaders/toon/ToonVert.spv", "shaders/toon/ToonFrag.spv", { &DSL });
         toonPipeline.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false);
     }
@@ -219,11 +204,7 @@ protected:
         toonPipeline.create();
 
         // Here you define the data set
-        mainScene.descriptorSetsInit({
-            {PHONG, &phongDSL},
-            {COOK_TORRANCE, &cookTorranceDSL},
-            {TOON, &toonDSL}
-        });
+        mainScene.descriptorSetsInit(&DSL);
         uiManager.pipelinesAndDescriptorSetsInit();
     }
 
@@ -247,12 +228,10 @@ protected:
     // methods: .cleanup() recreates them, while .destroy() delete them completely
     void localCleanup() {
         std::cout << "Starting local cleanup.\n";
-        // Cleanup descriptor set layouts
-        phongDSL.cleanup();
-        cookTorranceDSL.cleanup();
-        toonDSL.cleanup();
+        // Cleanup descriptor set layout
+        DSL.cleanup();
         
-        std::cout << "DSLs cleanup completed.\n";
+        std::cout << "DSL cleanup completed.\n";
 
         // Destroys the pipelines
         phongPipeline.destroy();
@@ -330,7 +309,6 @@ protected:
         audioManager.update();
 
         drawManager.update();
-
     }
     
 };

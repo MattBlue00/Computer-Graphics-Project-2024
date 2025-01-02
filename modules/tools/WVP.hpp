@@ -70,4 +70,10 @@ glm::mat4 MakeWorld(glm::vec3 Pos, float Yaw, float Pitch, float Roll) {
     return M;
 }
 
+// utility for lights
+glm::mat4 getCarTextureWorldMatrix(glm::vec3 bodyPosition, float bodyPitch, float bodyYaw, float bodyRoll){
+    float adjustedRoll = std::clamp(bodyRoll, -0.005f, 0.005f);
+    return MakeWorld(bodyPosition, bodyYaw, bodyPitch, adjustedRoll);
+}
+
 #endif

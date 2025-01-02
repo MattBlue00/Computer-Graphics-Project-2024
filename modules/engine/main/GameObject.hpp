@@ -2,6 +2,7 @@
 #define GAME_OBJECT_HPP
 
 #include "graphics/PipelineTypes.hpp"
+#include "Debug.hpp"
 
 class GameObject {
     
@@ -25,12 +26,30 @@ public:
     
     virtual void init() {};
     
-    void descriptorSetInit(DescriptorSetLayout &dsl){
-        descriptorSet->init(EngineBaseProject, &dsl, {
-            {0, UNIFORM, sizeof(CookTorranceUniformBufferObject), nullptr},
-            {1, TEXTURE, 0, texture},
-            {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
-        });
+    void descriptorSetInit(DescriptorSetLayout* dsl){
+        switch(pipelineType){
+            case COOK_TORRANCE:
+                descriptorSet->init(EngineBaseProject, dsl, {
+                    {0, UNIFORM, sizeof(CookTorranceUniformBufferObject), nullptr},
+                    {1, TEXTURE, 0, texture},
+                    {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+                });
+                break;
+            case PHONG:
+                descriptorSet->init(EngineBaseProject, dsl, {
+                    {0, UNIFORM, sizeof(PhongUniformBufferObject), nullptr},
+                    {1, TEXTURE, 0, texture},
+                    {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+                });
+                break;
+            case TOON:
+                descriptorSet->init(EngineBaseProject, dsl, {
+                    {0, UNIFORM, sizeof(ToonUniformBufferObject), nullptr},
+                    {1, TEXTURE, 0, texture},
+                    {2, UNIFORM, sizeof(GlobalUniformBufferObject), nullptr}
+                });
+                break;
+        }
     }
     
     virtual void update() {};
@@ -54,8 +73,18 @@ public:
                 static_cast<uint32_t>(model->indices.size()), 1, 0, 0, 0);
     }
     
-    void mapMemory(int currentImage, GlobalUniformBufferObject* gubo, void* ubo, int uboSize){
-        descriptorSet->map(currentImage, ubo, uboSize, 0);
+    void mapMemoryCookTorrance(int currentImage, GlobalUniformBufferObject* gubo, CookTorranceUniformBufferObject* ubo){
+        descriptorSet->map(currentImage, ubo, sizeof(*ubo), 0);
+        descriptorSet->map(currentImage, gubo, sizeof(*gubo), 2);
+    }
+    
+    void mapMemoryPhong(int currentImage, GlobalUniformBufferObject* gubo, PhongUniformBufferObject* ubo){
+        descriptorSet->map(currentImage, ubo, sizeof(*ubo), 0);
+        descriptorSet->map(currentImage, gubo, sizeof(*gubo), 2);
+    }
+    
+    void mapMemoryToon(int currentImage, GlobalUniformBufferObject* gubo, ToonUniformBufferObject* ubo){
+        descriptorSet->map(currentImage, ubo, sizeof(*ubo), 0);
         descriptorSet->map(currentImage, gubo, sizeof(*gubo), 2);
     }
     

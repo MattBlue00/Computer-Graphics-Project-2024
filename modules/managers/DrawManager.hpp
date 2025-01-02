@@ -1,10 +1,11 @@
-#ifndef DRAWER_HPP
-#define DRAWER_HPP
+#ifndef DRAW_MANAGER_HPP
+#define DRAW_MANAGER_HPP
 
 #include "engine/main/Scene.hpp"
 #include "PhysicsManager.hpp"
 #include "tools/WVP.hpp"
 #include "tools/Types.hpp"
+#include "Debug.hpp"
 #include "Utils.hpp"
 
 class DrawManager : public Manager {
@@ -23,15 +24,15 @@ protected:
             switch (obj->getPipelineType()){
                 case PHONG:
                     updatePhongUBO(obj->worldMatrix, cameraWorldData.viewProjection);
-                    obj->mapMemory(EngineCurrentImage, &gubo, &phongUbo, sizeof(phongUbo));
+                    obj->mapMemoryPhong(EngineCurrentImage, &gubo, &phongUbo);
                     break;
                 case COOK_TORRANCE:
                     updateCookTorranceUBO(obj->worldMatrix, cameraWorldData.viewProjection, obj->getProperty("metalness"), obj->getProperty("roughness"));
-                    obj->mapMemory(EngineCurrentImage, &gubo, &cookTorranceUbo, sizeof(cookTorranceUbo));
+                    obj->mapMemoryCookTorrance(EngineCurrentImage, &gubo, &cookTorranceUbo);
                     break;
                 case TOON:
                     updateToonUBO(obj->worldMatrix, cameraWorldData.viewProjection);
-                    obj->mapMemory(EngineCurrentImage, &gubo, &toonUbo, sizeof(toonUbo));
+                    obj->mapMemoryToon(EngineCurrentImage, &gubo, &toonUbo);
                     break;
             }
         }
@@ -91,10 +92,5 @@ public:
     void cleanup() override {}
     
 };
-
-glm::mat4 getCarTextureWorldMatrix(glm::vec3 bodyPosition, float bodyPitch, float bodyYaw, float bodyRoll){
-    float adjustedRoll = std::clamp(bodyRoll, -0.005f, 0.005f);
-    return MakeWorld(bodyPosition, bodyYaw, bodyPitch, adjustedRoll) * ONE_MAT4;
-}
 
 #endif
