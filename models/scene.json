@@ -192,7 +192,7 @@
         {"id": "airplane",          "model": "airplane",            "texture": "airplane",
          "transform": [1, 0, 0, 0,
                        0, 1, 0, 40,
-                       0, 0, 1, 0,
+                       0, 0, 1, -80,
                        0, 0, 0, 1]},
         {"id": "sun",               "model": "sun",                 "texture": "sun",
          "transform": [1, 0, 0, 0,

@@ -37,6 +37,7 @@ const float DEG_20  = glm::radians(20.0f);
 const float DEG_30  = glm::radians(30.0f);
 const float DEG_35  = glm::radians(35.0f);
 const float DEG_45  = glm::radians(45.0f);
+const float DEG_60  = glm::radians(60.0f);
 const float DEG_90  = glm::radians(90.0f);
 const float DEG_120 = glm::radians(120.0f);
 const float DEG_135 = glm::radians(135.0f);
@@ -49,7 +50,7 @@ const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
 
-const int LIGHTS_COUNT = 10;
+const int LIGHTS_COUNT = 11;
 
 // PROJECT-SPECIFIC FUNCTIONS
 

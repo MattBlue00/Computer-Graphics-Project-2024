@@ -235,6 +235,7 @@ public:
         else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
             engineForce = -ENGINE_FORCE; // Forza negativa per andare in retro
             brakeForce = 0.0f;
+            goingOnwards = false;
         }
         else { // Nessun input
             if (isVehicleStopped(0.5f)){
@@ -331,7 +332,7 @@ public:
         
         checkVehiclePosition();
         
-        if (!goingOnwards){
+        if (!goingOnwards || (carMovementInput.z > 0 && currentSpeed == 0)){
             reverseSignal.emit({});
         }
         

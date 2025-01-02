@@ -1666,14 +1666,14 @@ std::cout << "Starting createInstance()\n"  << std::flush;
         renderPassInfo.renderPass = renderPass;
         renderPassInfo.framebuffer = swapChainFramebuffers[currentImage];
         
-        float normalizedX = 0.33f;
-        //float normalizedY = -0.8f;
-        float normalizedWidth = 0.32f;
-        float normalizedHeight = 0.27f;
-        
+        float normalizedX = -0.96f; // Striscia parte dal bordo sinistro
+        float normalizedY = 0.8f; // Striscia posizionata vicino al bordo inferiore
+        float normalizedWidth = 0.96f;  // Quasi tutta la larghezza
+        float normalizedHeight = 0.07f; // Striscia sottile
+
         // Convert normalized coordinates to pixel coordinates
         int32_t startX = static_cast<int32_t>((normalizedX * 0.5f + 0.5f) * swapChainExtent.width);
-        int32_t startY = static_cast<int32_t>(20);
+        int32_t startY = static_cast<int32_t>((normalizedY * 0.5f + 0.5f) * swapChainExtent.height);
         uint32_t renderWidth = static_cast<uint32_t>(normalizedWidth * swapChainExtent.width);
         uint32_t renderHeight = static_cast<uint32_t>(normalizedHeight * swapChainExtent.height);
         

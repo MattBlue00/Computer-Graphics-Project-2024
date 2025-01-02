@@ -19,6 +19,9 @@ protected:
     int _rightBrakeLightIndex;
     int _leftHeadlightIndex;
     int _rightHeadlightIndex;
+    int _airplaneHeadlightIndex;
+    
+    int _airplaneObjectIndex;
     
     bool didUpdateBrakeLights = false;
 
@@ -49,14 +52,13 @@ protected:
     }
     
     void updateLightWorldMatrix(const int index, glm::mat4 textureWm){
-        if (index != -1) {
-            glm::vec3 rightLocalTranslation = glm::vec3(lightsArray[index]["translation"][0],
-                                                        lightsArray[index]["translation"][1],
-                                                        lightsArray[index]["translation"][2]);
+        glm::vec3 rightLocalTranslation = glm::vec3(lightsArray[index]["translation"][0],
+                                                    lightsArray[index]["translation"][1],
+                                                    lightsArray[index]["translation"][2]);
 
-            lightsData.lightWorldMatrices[index] = glm::translate(textureWm, rightLocalTranslation);
-        } else {
-            std::cout << "Light not found!" << std::endl;
+        lightsData.lightWorldMatrices[index] = glm::translate(textureWm, rightLocalTranslation);
+        if(index == _airplaneHeadlightIndex){
+            lightsData.lightWorldMatrices[index] = glm::rotate(lightsData.lightWorldMatrices[index], DEG_60, X_AXIS);
         }
     }
     
@@ -200,6 +202,17 @@ public:
         _rightBrakeLightIndex = getLightIndexByName("brake_light_right");
         _leftHeadlightIndex = getLightIndexByName("headlight_left");
         _rightHeadlightIndex = getLightIndexByName("headlight_right");
+        _airplaneHeadlightIndex = getLightIndexByName("airplane_headlight");
+        
+        _airplaneObjectIndex = 0;
+        for(GameObject* obj : gameObjects){
+            if(obj->getId().starts_with("airplane")){
+                break;
+            }
+            else{
+                _airplaneObjectIndex++;
+            }
+        }
     }
     
     // update car light position based on car position
@@ -208,10 +221,12 @@ public:
         updateLightWorldMatrix(_rightBrakeLightIndex, vehicleTextureWorldMatrix);
         updateLightWorldMatrix(_leftHeadlightIndex, vehicleTextureWorldMatrix);
         updateLightWorldMatrix(_rightHeadlightIndex, vehicleTextureWorldMatrix);
+        updateLightWorldMatrix(_airplaneHeadlightIndex, gameObjects[_airplaneObjectIndex]->worldMatrix);
         
         if(waitHeadlights < 60){
             waitHeadlights++;
         }
+        
         if(!didUpdateBrakeLights && countdownValue <= 0){
             lightsData.lightOn[_leftBrakeLightIndex] = ZERO_VEC3;
             lightsData.lightOn[_rightBrakeLightIndex] = ZERO_VEC3;

@@ -5,7 +5,7 @@
 
 #version 450
 
-const int LIGHTS_COUNT = 10;
+const int LIGHTS_COUNT = 11;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
@@ -152,6 +152,10 @@ void main()
     LD = spot_light_dir(fragPos, 9);
     LC = spot_light_color(fragPos, 9);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[9];
+    
+    LD = spot_light_dir(fragPos, 10);
+    LC = spot_light_color(fragPos, 10);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[10];
     
     float reductionFactor = 0.9f;
     

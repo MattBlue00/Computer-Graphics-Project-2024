@@ -5,7 +5,7 @@ class Airplane: public GameObject {
     
     // utility airplane variables and constants
     const float AIRPLANE_MOV_PER_FRAME = 0.5f;
-    const float AIRPLANE_FIRST_TURN = 735.0f;
+    const float AIRPLANE_FIRST_TURN = 768.0f;
     const float AIRPLANE_SECOND_TURN = -740.0f;
     const float AIRPLANE_LANDING = 700.0f;
     const float AIRPLANE_LAND_MOV_PER_FRAME = 0.1f;

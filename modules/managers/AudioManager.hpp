@@ -126,10 +126,12 @@ protected:
         playSound("COIN_SFX", 1.0f);
     }
     
-    void onStartSemaphore() {
-        if(countdownValue > 1 && countdownValue < 5){
+    void onCountdown() {
+        if (countdownValue == 7) {
+            playSound("INTRO_SFX", 0.15f);
+        } else if(countdownValue > 1 && countdownValue < 5){
             playSound("COUNTDOWN_SFX", 0.15f);
-        }else if (countdownValue == 1){
+        } else if (countdownValue == 1){
             playSound("START_SFX", 0.15f);
             playSound("RACE_MUSIC", 0.2f, 7);
             
@@ -195,7 +197,7 @@ public:
         if (id == COINS_SIGNAL) {
             onCoinCollected();
         } else if (id == START_TIMER_SIGNAL) {
-            onStartSemaphore();
+            onCountdown();
         } else if (id == LAPS_SIGNAL) {
             onLapChanged();
         }

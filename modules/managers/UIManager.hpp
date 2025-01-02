@@ -9,10 +9,10 @@ class UIManager: public Manager, public Receiver {
     
 protected:
     // Text Positions
-    glm::vec2 outTimerPosition = glm::vec2(0.36f, -0.8f);
-    glm::vec2 outLapsPosition = glm::vec2(0.36f, -0.9f);
-    glm::vec2 outSpeedPosition = glm::vec2(0.36f, -0.7f);
-    glm::vec2 outCoinsPosition = glm::vec2(0.36f, -0.6f);
+    glm::vec2 outLapsPosition = glm::vec2(-0.94f, 0.815f);
+    glm::vec2 outTimerPosition = glm::vec2(-0.52f, 0.815f);
+    glm::vec2 outSpeedPosition = glm::vec2(-0.06f, 0.815f);
+    glm::vec2 outCoinsPosition = glm::vec2(0.56f, 0.815f);
     
     // Text Vectors
     std::vector<SingleText> outTimer = {

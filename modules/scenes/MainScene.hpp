@@ -46,17 +46,11 @@ public:
             DescriptorSet* descriptorSet = new DescriptorSet();
 
             if (id.starts_with("airplane")) {
-                object = new Airplane(id, model, texture, worldMatrix, descriptorSet, COOK_TORRANCE, {
-                    {"metalness", 0.85f},
-                    {"roughness", 0.4f}
-                });
+                object = new Airplane(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             } else if (id.starts_with("airship")) {
-                object = new Airship(id, model, texture, worldMatrix, descriptorSet, COOK_TORRANCE, {
-                    {"metalness", 0.85f},
-                    {"roughness", 0.4f}
-                });
+                object = new Airship(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             } else if (id.starts_with("barrier")) {
-                object = new Barrier(id, model, texture, worldMatrix, descriptorSet, TOON, {});
+                object = new Barrier(id, model, texture, worldMatrix, descriptorSet, PHONG, {});
             } else if (id.starts_with("car")) {
                 object = new Car(id, model, texture, worldMatrix, descriptorSet, COOK_TORRANCE, {
                     {"metalness", 0.85f},
@@ -65,35 +59,29 @@ public:
             } else if (id.starts_with("coin")) {
                 object = new Coin(id, model, texture, worldMatrix, descriptorSet, COOK_TORRANCE, {
                     {"metalness", 1.0f},
-                    {"roughness", 0.2f}
+                    {"roughness", 0.05f}
                 });
             } else if (id.starts_with("dir_barrier")) {
-                object = new DirectionBarrier(id, model, texture, worldMatrix, descriptorSet, TOON, {});
+                object = new DirectionBarrier(id, model, texture, worldMatrix, descriptorSet, PHONG, {});
             } else if (id.starts_with("earth")) {
-                object = new Earth(id, model, texture, worldMatrix, descriptorSet, PHONG, {});
+                object = new Earth(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             } else if (id.starts_with("firework")) {
                 // Generate a random number
                 int randomNumber = distrib(gen);
                 // Generate a firework
                 object = new Firework(id, model, texture, worldMatrix, descriptorSet, TOON, {}, randomNumber);
             } else if (id.starts_with("moon")) {
-                object = new Moon(id, model, texture, worldMatrix, descriptorSet, PHONG, {});
+                object = new Moon(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             } else if (id.starts_with("tires_pile")) {
                 object = new Obstacle(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             } else if (id.starts_with("ramps")) {
-                object = new Ramps(id, model, texture, worldMatrix, descriptorSet, COOK_TORRANCE, {
-                    {"metalness", 0.8f},
-                    {"roughness", 0.5f}
-                });
+                object = new Ramps(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             } else if (id.starts_with("spaceship")) {
-                object = new Spaceship(id, model, texture, worldMatrix, descriptorSet, COOK_TORRANCE, {
-                    {"metalness", 0.85f},
-                    {"roughness", 0.3f}
-                });
+                object = new Spaceship(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             } else if (id.starts_with("track")) {
-                object = new Track(id, model, texture, worldMatrix, descriptorSet, TOON, {});
+                object = new Track(id, model, texture, worldMatrix, descriptorSet, PHONG, {});
             } else {
-                object = new StaticObject(id, model, texture, worldMatrix, descriptorSet, PHONG, {});
+                object = new StaticObject(id, model, texture, worldMatrix, descriptorSet, TOON, {});
             }
 
             if (object) {
@@ -518,9 +506,9 @@ public:
                 {"id", "coin_" + std::to_string(coinCount)},
                 {"model", "coin"},
                 {"texture", "coin"},
-                {"transform",  {0.03, 0, 0, -32.5 + i * 7,
+                {"transform",  {0.03, 0, 0, -32.5 + i * 7.5,
                                 0, 0, -0.03, 0.5,
-                                0, 0.03, 0, -304.5 + i * 4.5,
+                                0, 0.03, 0, -304.5 + i * 7,
                                 0, 0, 0, 1}}
             };
             addCoin(instance, instances, sceneJson);

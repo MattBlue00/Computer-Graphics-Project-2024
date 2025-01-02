@@ -5,7 +5,7 @@
 
 #version 450
 
-const int LIGHTS_COUNT = 10;
+const int LIGHTS_COUNT = 11;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
@@ -127,7 +127,7 @@ vec3 cook_torrance_specular(vec3 N, vec3 L, vec3 V, vec3 Albedo, float roughness
     float NdotH = max(dot(N, H), 0.0);
     float VdotH = max(dot(V, H), 0.0);
 
-    vec3 F0 = mix(vec3(0.04), Albedo, metalness);
+    vec3 F0 = mix(vec3(0.02), Albedo, metalness);
     vec3 F = fresnel_schlick(VdotH, F0);
     float G = geometry_smith(NdotV, NdotL, roughness);
     float D = distribution_ggx(NdotH, roughness);
@@ -203,6 +203,10 @@ void main()
     LD = spot_light_dir(fragPos, 9);
     LC = spot_light_color(fragPos, 9);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[9];
+    
+    LD = spot_light_dir(fragPos, 10);
+    LC = spot_light_color(fragPos, 10);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, ubo.roughness, ubo.metalness) * LC * gubo.lightOn[10];
 
     float reductionFactor = 0.9f;
     

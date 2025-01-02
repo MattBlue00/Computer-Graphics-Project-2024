@@ -37,7 +37,7 @@ int currentLap = 1;
 
 std::string nextCheckpointId;
 
-int countdownValue = 6; // two seconds of nothing and then 4,3,2 at 1 start
+int countdownValue = 8;
 bool isGameStarted = false;
 bool isGameFinished = false;
 
