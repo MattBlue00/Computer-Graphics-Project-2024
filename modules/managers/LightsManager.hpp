@@ -20,8 +20,14 @@ protected:
     int _leftHeadlightIndex;
     int _rightHeadlightIndex;
     int _airplaneHeadlightIndex;
+    int _spaceship1HeadlightIndex;
+    int _spaceship2HeadlightIndex;
+    int _spaceship3HeadlightIndex;
     
     int _airplaneObjectIndex;
+    int _spaceship1ObjectIndex;
+    int _spaceship2ObjectIndex;
+    int _spaceship3ObjectIndex;
     
     bool didUpdateBrakeLights = false;
 
@@ -203,15 +209,30 @@ public:
         _leftHeadlightIndex = getLightIndexByName("headlight_left");
         _rightHeadlightIndex = getLightIndexByName("headlight_right");
         _airplaneHeadlightIndex = getLightIndexByName("airplane_headlight");
+        _spaceship1HeadlightIndex = getLightIndexByName("spaceship_1_headlight");
+        _spaceship2HeadlightIndex = getLightIndexByName("spaceship_2_headlight");
+        _spaceship3HeadlightIndex = getLightIndexByName("spaceship_3_headlight");
         
         _airplaneObjectIndex = 0;
+        _spaceship1ObjectIndex = 0;
+        _spaceship2ObjectIndex = 0;
+        _spaceship3ObjectIndex = 0;
+        
+        int index = 0;
         for(GameObject* obj : gameObjects){
-            if(obj->getId().starts_with("airplane")){
-                break;
+            if(obj->getId() == ("airplane")){
+                _airplaneObjectIndex = index;
             }
-            else{
-                _airplaneObjectIndex++;
+            else if(obj->getId() == ("spaceship_1")){
+                _spaceship1ObjectIndex = index;
             }
+            else if(obj->getId() == ("spaceship_2")){
+                _spaceship2ObjectIndex = index;
+            }
+            else if(obj->getId() == ("spaceship_3")){
+                _spaceship3ObjectIndex = index;
+            }
+            index++;
         }
     }
     
@@ -222,6 +243,9 @@ public:
         updateLightWorldMatrix(_leftHeadlightIndex, vehicleTextureWorldMatrix);
         updateLightWorldMatrix(_rightHeadlightIndex, vehicleTextureWorldMatrix);
         updateLightWorldMatrix(_airplaneHeadlightIndex, gameObjects[_airplaneObjectIndex]->worldMatrix);
+        updateLightWorldMatrix(_spaceship1HeadlightIndex, gameObjects[_spaceship1ObjectIndex]->worldMatrix);
+        updateLightWorldMatrix(_spaceship2HeadlightIndex, gameObjects[_spaceship2ObjectIndex]->worldMatrix);
+        updateLightWorldMatrix(_spaceship3HeadlightIndex, gameObjects[_spaceship3ObjectIndex]->worldMatrix);
         
         if(waitHeadlights < 60){
             waitHeadlights++;

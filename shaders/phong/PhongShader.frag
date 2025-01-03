@@ -5,7 +5,7 @@
 
 #version 450
 
-const int LIGHTS_COUNT = 11;
+const int LIGHTS_COUNT = 14;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
@@ -157,19 +157,17 @@ void main()
     LC = spot_light_color(fragPos, 10);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[10];
     
-    float reductionFactor = 0.9f;
+    LD = spot_light_dir(fragPos, 11);
+    LC = spot_light_color(fragPos, 11);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[11];
     
-    vec3 ambientDiffuse = Albedo * (max(dot(Norm, ambientLightDirection), 0.0) * 0.9 + 0.1);
-    ambientDiffuse *= reductionFactor;
-    vec3 ambientSpecular = vec3(pow(max(dot(EyeDir, -reflect(ambientLightDirection, Norm)), 0.0), 64.0));
-    ambientSpecular *= reductionFactor;
+    LD = spot_light_dir(fragPos, 12);
+    LC = spot_light_color(fragPos, 12);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[12];
     
-    vec3 ambientCorrection =
-        mix(vec3(0.18, 0.12, 0.08), vec3(0.2, 0.1, 0.1), bvec3(Norm.x > 0.0)) * (Norm.x * Norm.x) +
-        mix(vec3(0.1), vec3(0.06, 0.2, 0.2), bvec3(Norm.y > 0.0)) * (Norm.y * Norm.y) +
-        mix(vec3(0.06, 0.12, 0.14), vec3(0.16, 0.04, 0.08), bvec3(Norm.z > 0.0)) * (Norm.z * Norm.z);
-    ambientCorrection *= Albedo;
-    ambientCorrection *= reductionFactor;
+    LD = spot_light_dir(fragPos, 13);
+    LC = spot_light_color(fragPos, 13);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[13];
     
-    outColor = vec4(((ambientDiffuse + ambientSpecular * (1.0 - gubo.eyeDir.w)) * ambientLightColor.xyz) + ambientCorrection, 1.0) + vec4(RendEqSol, 1.0);
+    outColor = vec4(RendEqSol, 1.0);
 }

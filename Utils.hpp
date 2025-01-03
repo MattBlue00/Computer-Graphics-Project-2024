@@ -50,7 +50,7 @@ const int FIRST_PERSON_SCENE = 1;
 
 // total lights count
 
-const int LIGHTS_COUNT = 11;
+const int LIGHTS_COUNT = 14;
 
 // PROJECT-SPECIFIC FUNCTIONS
 

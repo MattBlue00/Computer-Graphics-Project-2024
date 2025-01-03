@@ -2,7 +2,7 @@
 
 #version 450
 
-const int LIGHTS_COUNT = 11;
+const int LIGHTS_COUNT = 14;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
@@ -201,8 +201,20 @@ void main() {
     LD = spot_light_dir(fragPos, 10);
     LC = spot_light_color(fragPos, 10);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, vec3(1.0)) * LC * gubo.lightOn[10];
+    
+    LD = spot_light_dir(fragPos, 11);
+    LC = spot_light_color(fragPos, 11);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, vec3(1.0)) * LC * gubo.lightOn[11];
+    
+    LD = spot_light_dir(fragPos, 12);
+    LC = spot_light_color(fragPos, 12);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, vec3(1.0)) * LC * gubo.lightOn[12];
+    
+    LD = spot_light_dir(fragPos, 13);
+    LC = spot_light_color(fragPos, 13);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD, vec3(1.0)) * LC * gubo.lightOn[13];
 
-    float reductionFactor = 0.9f;
+    float reductionFactor = 0.75f;
     
     vec3 ambientDiffuse = Albedo * (max(dot(Norm, ambientLightDirection), 0.0) * 0.9 + 0.1);
     ambientDiffuse *= reductionFactor;
