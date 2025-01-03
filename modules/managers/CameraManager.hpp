@@ -4,17 +4,16 @@
 #include "tools/WVP.hpp"
 #include "tools/Types.hpp"
 #include "Utils.hpp"
-#include "engine/Manager.hpp"
-#include "engine/Observer.hpp"
+#include "engine/main/Manager.hpp"
+#include "engine/pattern/Receiver.hpp"
+#include "../modules/data/EngineData.hpp"
+#include "../modules/data/WorldData.hpp"
+#include "../modules/data/SignalTypes.hpp"
+#include <any>
 
-struct CameraManager : public Observer, public Manager {
+class CameraManager : public Manager, public Receiver {
     
 protected:
-    
-    int currentView;
-    CameraData cameraData;
-    glm::vec3 cameraPosition;
-    glm::mat4 viewProjection;
     
     // CAMERA CONSTANTS
     
@@ -52,8 +51,8 @@ protected:
     const float ROLL_FIRST = 0.0f;
     
     // other constants
-    const int THIRD_PERSON_VIEW = 0;
-    const int FIRST_PERSON_VIEW = 1;
+    const int THIRD_PERSON_CAMERA = 0;
+    const int FIRST_PERSON_CAMERA = 1;
     
     // Third person camera placement
     const glm::vec3 CamTargetDelta = glm::vec3(0.0f, 1.5f, 0.0f);
@@ -61,63 +60,74 @@ protected:
     // First person camera placement
     const glm::vec3 Cam1stPos = glm::vec3(0.0f, 2.0f, 0.3f);
     
+    int currentCamera;
+    
+    int waitChangeView = 60;
+    
+    bool debounce;
+    int currentDebounce;
+    
+    int waitChangeCamera = 60;
+    
     // CAMERA FUNCTIONS
     
     // These functions switch to a particular camera
     
     void switchToThirdPersonCamera(){
-        cameraData.CamPitch = PITCH_THIRD;
-        cameraData.CamYaw   = YAW_THIRD;
-        cameraData.CamDist  = DIST_THIRD;
-        cameraData.CamRoll  = ROLL_THIRD;
+        currentCamera = THIRD_PERSON_CAMERA;
+        cameraWorldData.pitch       = PITCH_THIRD;
+        cameraWorldData.yaw         = YAW_THIRD;
+        cameraWorldData.distance    = DIST_THIRD;
+        cameraWorldData.roll        = ROLL_THIRD;
     }
     
     void switchToFirstPersonCamera(){
-        cameraData.CamPitch = PITCH_FIRST;
-        cameraData.CamYaw   = YAW_FIRST;
-        cameraData.CamRoll  = ROLL_FIRST;
+        currentCamera = FIRST_PERSON_CAMERA;
+        cameraWorldData.pitch = PITCH_FIRST;
+        cameraWorldData.yaw   = YAW_FIRST;
+        cameraWorldData.roll  = ROLL_FIRST;
     }
     
     // These functions update the camera data
     
-    void updateThirdPersonCamera(float pitch, float yaw, float roll, float aspectRatio, float deltaT, glm::vec3 cameraRotationInput, glm::vec3 carMovementInput, glm::vec3 carPosition){
+    void updateThirdPersonCamera(float pitch, float yaw, float roll, glm::vec3 cameraRotationInput, glm::vec3 carMovementInput, glm::vec3 carPosition){
         
         // moves camera
-        cameraData.CamYaw += ROT_SPEED * deltaT * cameraRotationInput.y;
-        cameraData.CamPitch -= ROT_SPEED * deltaT * cameraRotationInput.x;
-        cameraData.CamRoll -= ROT_SPEED * deltaT * cameraRotationInput.z;
-        cameraData.CamDist -= ROT_SPEED * deltaT * carMovementInput.y;
+        cameraWorldData.yaw         += ROT_SPEED * EngineDeltaTime * cameraRotationInput.y;
+        cameraWorldData.pitch       -= ROT_SPEED * EngineDeltaTime * cameraRotationInput.x;
+        cameraWorldData.roll        -= ROT_SPEED * EngineDeltaTime * cameraRotationInput.z;
+        cameraWorldData.distance    -= ROT_SPEED * EngineDeltaTime * carMovementInput.y;
         
         // limits camera movement
-        cameraData.CamYaw = (cameraData.CamYaw < MIN_YAW_THIRD ? MIN_YAW_THIRD : (cameraData.CamYaw > MAX_YAW_THIRD ? MAX_YAW_THIRD : cameraData.CamYaw));
-        cameraData.CamPitch = (cameraData.CamPitch < MIN_PITCH_THIRD ? MIN_PITCH_THIRD : (cameraData.CamPitch > MAX_PITCH_THIRD ? MAX_PITCH_THIRD : cameraData.CamPitch));
-        cameraData.CamRoll = (cameraData.CamRoll < MIN_ROLL_THIRD ? MIN_ROLL_THIRD : (cameraData.CamRoll > MAX_ROLL_THIRD ? MAX_ROLL_THIRD : cameraData.CamRoll));
-        cameraData.CamDist = (cameraData.CamDist < MIN_DIST_THIRD ? MIN_DIST_THIRD : (cameraData.CamDist > MAX_DIST_THIRD ? MAX_DIST_THIRD : cameraData.CamDist));
+        cameraWorldData.yaw = (cameraWorldData.yaw < MIN_YAW_THIRD ? MIN_YAW_THIRD : (cameraWorldData.yaw > MAX_YAW_THIRD ? MAX_YAW_THIRD : cameraWorldData.yaw));
+        cameraWorldData.pitch = (cameraWorldData.pitch < MIN_PITCH_THIRD ? MIN_PITCH_THIRD : (cameraWorldData.pitch > MAX_PITCH_THIRD ? MAX_PITCH_THIRD : cameraWorldData.pitch));
+        cameraWorldData.roll = (cameraWorldData.roll < MIN_ROLL_THIRD ? MIN_ROLL_THIRD : (cameraWorldData.roll > MAX_ROLL_THIRD ? MAX_ROLL_THIRD : cameraWorldData.roll));
+        cameraWorldData.distance = (cameraWorldData.distance < MIN_DIST_THIRD ? MIN_DIST_THIRD : (cameraWorldData.distance > MAX_DIST_THIRD ? MAX_DIST_THIRD : cameraWorldData.distance));
         
         // computes camera position
         glm::vec3 camTarget = carPosition + glm::vec3(glm::rotate(ONE_MAT4, yaw, Y_AXIS) * glm::vec4(CamTargetDelta,1));
         
-        glm::mat4 cameraTransform = glm::rotate(ONE_MAT4, yaw + cameraData.CamYaw, Y_AXIS)
-        * glm::rotate(ONE_MAT4, -cameraData.CamPitch - pitch, X_AXIS)
-        * glm::rotate(ONE_MAT4, roll + cameraData.CamRoll, Z_AXIS);
+        glm::mat4 cameraTransform = glm::rotate(ONE_MAT4, yaw + cameraWorldData.yaw, Y_AXIS)
+        * glm::rotate(ONE_MAT4, -cameraWorldData.pitch - pitch, X_AXIS)
+        * glm::rotate(ONE_MAT4, roll + cameraWorldData.roll, Z_AXIS);
         
-        cameraPosition = camTarget + glm::vec3(cameraTransform * glm::vec4(0, 0, cameraData.CamDist, 1));
+        cameraWorldData.position = camTarget + glm::vec3(cameraTransform * glm::vec4(0, 0, cameraWorldData.distance, 1));
         
         // builds third person view matrix
-        viewProjection = MakeViewProjectionLookAt(cameraPosition, camTarget, Y_AXIS, cameraData.CamRoll, DEG_90, aspectRatio, NEAR_PLANE, FAR_PLANE);
+        cameraWorldData.viewProjection = MakeViewProjectionLookAt(cameraWorldData.position, camTarget, Y_AXIS, cameraWorldData.roll, DEG_90, EngineAspectRatio, NEAR_PLANE, FAR_PLANE);
     }
     
-    void updateFirstPersonCamera(float pitch, float yaw, float roll, float aspectRatio, float deltaT, glm::vec3 cameraRotationInput, glm::vec3 carPosition){
+    void updateFirstPersonCamera(float pitch, float yaw, float roll, glm::vec3 cameraRotationInput, glm::vec3 carPosition){
         
         // moves camera
-        cameraData.CamYaw -= ROT_SPEED * deltaT * cameraRotationInput.y;
-        cameraData.CamPitch -= ROT_SPEED * deltaT * cameraRotationInput.x;
-        cameraData.CamRoll -= ROT_SPEED * deltaT * cameraRotationInput.z;
+        cameraWorldData.yaw      -= ROT_SPEED * EngineDeltaTime * cameraRotationInput.y;
+        cameraWorldData.pitch    -= ROT_SPEED * EngineDeltaTime * cameraRotationInput.x;
+        cameraWorldData.roll     -= ROT_SPEED * EngineDeltaTime * cameraRotationInput.z;
         
         // limits camera movement
-        cameraData.CamYaw = (cameraData.CamYaw < MIN_YAW_FIRST ? MIN_YAW_FIRST : (cameraData.CamYaw > MAX_YAW_FIRST ? MAX_YAW_FIRST : cameraData.CamYaw));
-        cameraData.CamPitch = (cameraData.CamPitch < MIN_PITCH_FIRST ? MIN_PITCH_FIRST : (cameraData.CamPitch > MAX_PITCH_FIRST ? MAX_PITCH_FIRST : cameraData.CamPitch));
-        cameraData.CamRoll = (cameraData.CamRoll < MIN_ROLL_FIRST ? MIN_ROLL_FIRST : (cameraData.CamRoll > MAX_ROLL_FIRST ? MAX_ROLL_FIRST : cameraData.CamRoll));
+        cameraWorldData.yaw = (cameraWorldData.yaw < MIN_YAW_FIRST ? MIN_YAW_FIRST : (cameraWorldData.yaw > MAX_YAW_FIRST ? MAX_YAW_FIRST : cameraWorldData.yaw));
+        cameraWorldData.pitch = (cameraWorldData.pitch < MIN_PITCH_FIRST ? MIN_PITCH_FIRST : (cameraWorldData.pitch > MAX_PITCH_FIRST ? MAX_PITCH_FIRST : cameraWorldData.pitch));
+        cameraWorldData.roll = (cameraWorldData.roll < MIN_ROLL_FIRST ? MIN_ROLL_FIRST : (cameraWorldData.roll > MAX_ROLL_FIRST ? MAX_ROLL_FIRST : cameraWorldData.roll));
         
         float adjustedRoll = std::clamp(roll, -0.005f, 0.005f);
         
@@ -125,74 +135,86 @@ protected:
         * glm::rotate(ONE_MAT4, -pitch, X_AXIS)
         * glm::rotate(ONE_MAT4, adjustedRoll, Z_AXIS);
         
-        cameraPosition = carPosition + glm::vec3(cameraTransform * glm::vec4(Cam1stPos,1));
+        cameraWorldData.position = carPosition + glm::vec3(cameraTransform * glm::vec4(Cam1stPos,1));
         
         // builds first person view matrix
-        viewProjection = MakeViewProjectionLookInDirection(cameraPosition, yaw + cameraData.CamYaw, cameraData.CamPitch, cameraData.CamRoll, DEG_90, aspectRatio, NEAR_PLANE, FAR_PLANE);
+        cameraWorldData.viewProjection = MakeViewProjectionLookInDirection(cameraWorldData.position, yaw + cameraWorldData.yaw, cameraWorldData.pitch, cameraWorldData.roll, DEG_90, EngineAspectRatio, NEAR_PLANE, FAR_PLANE);
+    }
+    
+    void onResetView() {
+        if(waitChangeView >= 60){
+            if(currentCamera == FIRST_PERSON_CAMERA){
+                switchToFirstPersonCamera();
+            }
+            else{
+                switchToThirdPersonCamera();
+            }
+            
+            waitChangeView = 0;
+        }
+    }
+    
+    void onChangeCamera() {
+        if(waitChangeCamera >= 60){
+            if(!debounce) {
+                debounce = true;
+                currentDebounce = GLFW_KEY_SPACE;
+                if(currentCamera == THIRD_PERSON_CAMERA) {
+                    switchToFirstPersonCamera();
+                } else if(currentCamera == FIRST_PERSON_CAMERA) {
+                    switchToThirdPersonCamera();
+                }
+                std::cout << "Camera: " << (currentCamera == 0 ? "Third Person" : "First Person") << "\n";
+            }
+            
+            waitChangeCamera = 0;
+        }
+    }
+    
+    void onUpdateDebounce() {
+        if((currentDebounce == GLFW_KEY_SPACE) && debounce) {
+            debounce = false;
+            currentDebounce = 0;
+        }
     }
     
 public:
     
-    void init(std::vector<void*> params) override {
-        currentView = THIRD_PERSON_VIEW;
+    void init() override {
+        debounce = false;
+        currentDebounce = 0;
+        currentCamera = THIRD_PERSON_CAMERA;
         switchToThirdPersonCamera();
     }
     
-    void update(std::vector<void*> params) override {
-        float pitch;
-        float yaw;
-        float roll;
-        float aspectRatio;
-        float deltaT;
-        glm::vec3 cameraRotationInput;
-        glm::vec3 carMovementInput;
-        glm::vec3 carPosition;
-        if (params.size() == 8) {
-            pitch = *static_cast<float*>(params[0]);
-            yaw = *static_cast<float*>(params[1]);
-            roll = *static_cast<float*>(params[2]);
-            aspectRatio = *static_cast<float*>(params[3]);
-            deltaT = *static_cast<float*>(params[4]);
-            cameraRotationInput = *static_cast<glm::vec3*>(params[5]);
-            carMovementInput = *static_cast<glm::vec3*>(params[6]);
-            carPosition = *static_cast<glm::vec3*>(params[7]);
-        } else {
-            std::cout << "CameraManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
-        }
-        if(currentView == THIRD_PERSON_VIEW){
-            updateThirdPersonCamera(pitch, yaw, roll, aspectRatio, deltaT, cameraRotationInput, carMovementInput, carPosition);
+    void update() override {
+        if(currentCamera == THIRD_PERSON_CAMERA){
+            updateThirdPersonCamera(carWorldData.pitch, carWorldData.yaw, carWorldData.roll, cameraRotationInput, carMovementInput, carWorldData.position);
         }
         else{
-            updateFirstPersonCamera(pitch, yaw, roll, aspectRatio, deltaT, cameraRotationInput, carPosition);
+            updateFirstPersonCamera(carWorldData.pitch, carWorldData.yaw, carWorldData.roll, cameraRotationInput, carWorldData.position);
+        }
+        
+        if(waitChangeView < 60){
+            waitChangeView++;
+        }
+        if(waitChangeCamera < 60){
+            waitChangeCamera++;
         }
     }
     
-    glm::vec3 getCameraPosition(){
-        return cameraPosition;
-    }
+    void cleanup() override {}
     
-    glm::mat4 getViewProjection(){
-        return viewProjection;
-    }
-    
-    void onChangeView() override {
-        if(currentView == THIRD_PERSON_VIEW){
-            currentView = FIRST_PERSON_VIEW;
-            switchToFirstPersonCamera();
+    void onSignal(std::string id, std::any data) override {
+        if (id == RESET_VIEW_SIGNAL) {
+            onResetView();
+        } else if (id == CHANGE_CAMERA_SIGNAL) {
+            onChangeCamera();
+        } else if (id == UPDATE_DEBOUNCE_SIGNAL) {
+            onUpdateDebounce();
         }
-        else{
-            currentView = THIRD_PERSON_VIEW;
-            switchToThirdPersonCamera();
-        }
-    }
-    
-    void onResetView() override {
-        if(currentView == FIRST_PERSON_VIEW){
-            switchToFirstPersonCamera();
-        }
-        else{
-            switchToThirdPersonCamera();
+        else {
+            std::cerr << "Unknown signal type: " << id << std::endl;
         }
     }
     

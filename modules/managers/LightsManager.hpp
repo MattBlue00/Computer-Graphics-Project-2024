@@ -2,14 +2,35 @@
 #define LIGHTS_MANAGER_HPP
 
 #include "Utils.hpp"
+#include "../modules/engine/pattern/Receiver.hpp"
 
-struct LightsManager : public Observer, public Manager {
+class LightsManager : public Manager, public Receiver {
     
 protected:
     
-    LightsData lightsData{};
+    glm::vec3 reverseLightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 redColor = glm::vec3(1.0f, 0.0f, 0.0f);
+    
     json lightsArray;
-    bool isLightInit = false;
+    
+    int waitHeadlights = 60;
+    
+    int _leftBrakeLightIndex;
+    int _rightBrakeLightIndex;
+    int _leftHeadlightIndex;
+    int _rightHeadlightIndex;
+    int _airplaneHeadlightIndex;
+    int _spaceship1HeadlightIndex;
+    int _spaceship2HeadlightIndex;
+    int _spaceship3HeadlightIndex;
+    
+    int _airplaneObjectIndex;
+    int _spaceship1ObjectIndex;
+    int _spaceship2ObjectIndex;
+    int _spaceship3ObjectIndex;
+    
+    bool semaphoreGreenLightOn = false;
+    bool didUpdateBrakeLights = false;
 
     void resetSemaphore(){
         lightsData.lightOn[getLightIndexByName("red_light_left")] = ZERO_VEC3;
@@ -38,21 +59,90 @@ protected:
     }
     
     void updateLightWorldMatrix(const int index, glm::mat4 textureWm){
-        if (index != -1) {
-            glm::vec3 rightLocalTranslation = glm::vec3(lightsArray[index]["translation"][0],
-                                                        lightsArray[index]["translation"][1],
-                                                        lightsArray[index]["translation"][2]);
+        glm::vec3 rightLocalTranslation = glm::vec3(lightsArray[index]["translation"][0],
+                                                    lightsArray[index]["translation"][1],
+                                                    lightsArray[index]["translation"][2]);
 
-            lightsData.lightWorldMatrices[index] = glm::translate(textureWm, rightLocalTranslation);
-        } else {
-            std::cout << "Light not found!" << std::endl;
+        lightsData.lightWorldMatrices[index] = glm::translate(textureWm, rightLocalTranslation);
+        if(index == _airplaneHeadlightIndex){
+            lightsData.lightWorldMatrices[index] = glm::rotate(lightsData.lightWorldMatrices[index], DEG_60, X_AXIS);
         }
+    }
+    
+    void setSemaphore(int countdownValue) {
+        
+        resetSemaphore();
+        
+        switch (countdownValue) {
+            case 10:
+            case 9:
+            case 8:
+            case 7:
+            case 6:
+            case 5:
+            case 4:
+            case 3:
+                lightsData.lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
+                break;
+            case 2:
+                lightsData.lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("yellow_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("yellow_light_right")] = ONE_VEC3;
+                break;
+            case 1:
+                lightsData.lightOn[getLightIndexByName("green_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("green_light_right")] = ONE_VEC3;
+                semaphoreGreenLightOn = true;
+                break;
+            default:
+                lightsData.lightOn[getLightIndexByName("green_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("green_light_right")] = ONE_VEC3;
+                break;
+        }
+        
+    }
+    
+    void onCountdown(int countdownValue) {
+        if(countdownValue > 0){
+            setSemaphore(countdownValue);
+        }
+        else{
+            lightsData.lightOn[_leftBrakeLightIndex] = ZERO_VEC3;
+            lightsData.lightOn[_rightBrakeLightIndex] = ZERO_VEC3;
+        }
+    }
+    
+    void onBrake() {
+        lightsData.lightOn[_leftBrakeLightIndex] = ONE_VEC3;
+        lightsData.lightOn[_rightBrakeLightIndex] = ONE_VEC3;
+        didUpdateBrakeLights = true;
+    }
+    
+    void onHeadlightsStatusChange() {
+        if(waitHeadlights >= 60){
+            glm::vec3 currentLeftLightStatus = lightsData.lightOn[_leftHeadlightIndex];
+            glm::vec3 currentRightLightStatus = lightsData.lightOn[_rightHeadlightIndex];
+            
+            lightsData.lightOn[_leftHeadlightIndex] = currentLeftLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
+            lightsData.lightOn[_rightHeadlightIndex] = currentRightLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
+            
+            waitHeadlights = 0;
+        }
+    }
+    
+    void onReverse(){
+        lightsData.lightColors[_leftBrakeLightIndex] = reverseLightColor;
+        lightsData.lightColors[_rightBrakeLightIndex] = reverseLightColor;
+        didUpdateBrakeLights = true;
     }
     
 public:
     
     // inits light system
-    void init(std::vector<void*> params) override {
+    void init() override {
+        
         // LOADS FILE
         json js;
         std::ifstream ifs("models/lights.json");
@@ -115,88 +205,84 @@ public:
                 lightsData.lightOn[i] = ONE_VEC3;
             }
             
-            isLightInit = true;
-            
         } catch (const nlohmann::json::exception &e) {
             std::cout << e.what() << '\n';
         }
         
         lightsData.cosIn = 0.985f; // cosine of 10 degrees
         lightsData.cosOut = 0.906f; // cosine of 25 degrees
+        
+        _leftBrakeLightIndex = getLightIndexByName("brake_light_left");
+        _rightBrakeLightIndex = getLightIndexByName("brake_light_right");
+        _leftHeadlightIndex = getLightIndexByName("headlight_left");
+        _rightHeadlightIndex = getLightIndexByName("headlight_right");
+        _airplaneHeadlightIndex = getLightIndexByName("airplane_headlight");
+        _spaceship1HeadlightIndex = getLightIndexByName("spaceship_1_headlight");
+        _spaceship2HeadlightIndex = getLightIndexByName("spaceship_2_headlight");
+        _spaceship3HeadlightIndex = getLightIndexByName("spaceship_3_headlight");
+        
+        _airplaneObjectIndex = 0;
+        _spaceship1ObjectIndex = 0;
+        _spaceship2ObjectIndex = 0;
+        _spaceship3ObjectIndex = 0;
+        
+        int index = 0;
+        for(GameObject* obj : gameObjects){
+            if(obj->getId() == ("airplane")){
+                _airplaneObjectIndex = index;
+            }
+            else if(obj->getId() == ("spaceship_1")){
+                _spaceship1ObjectIndex = index;
+            }
+            else if(obj->getId() == ("spaceship_2")){
+                _spaceship2ObjectIndex = index;
+            }
+            else if(obj->getId() == ("spaceship_3")){
+                _spaceship3ObjectIndex = index;
+            }
+            index++;
+        }
     }
     
     // update car light position based on car position
-    void update(std::vector<void*> params) override {
+    void update() override {
+        updateLightWorldMatrix(_leftBrakeLightIndex, vehicleTextureWorldMatrix);
+        updateLightWorldMatrix(_rightBrakeLightIndex, vehicleTextureWorldMatrix);
+        updateLightWorldMatrix(_leftHeadlightIndex, vehicleTextureWorldMatrix);
+        updateLightWorldMatrix(_rightHeadlightIndex, vehicleTextureWorldMatrix);
+        updateLightWorldMatrix(_airplaneHeadlightIndex, gameObjects[_airplaneObjectIndex]->worldMatrix);
+        updateLightWorldMatrix(_spaceship1HeadlightIndex, gameObjects[_spaceship1ObjectIndex]->worldMatrix);
+        updateLightWorldMatrix(_spaceship2HeadlightIndex, gameObjects[_spaceship2ObjectIndex]->worldMatrix);
+        updateLightWorldMatrix(_spaceship3HeadlightIndex, gameObjects[_spaceship3ObjectIndex]->worldMatrix);
         
-        if(!isLightInit) return;
-        
-        glm::mat4 textureWm;
-        if (params.size() == 1) {
-            textureWm = *static_cast<glm::mat4*>(params[0]);
-        } else {
-            std::cout << "LightsManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
-        }
-
-        updateLightWorldMatrix(getLightIndexByName("brake_light_left"), textureWm);
-        updateLightWorldMatrix(getLightIndexByName("brake_light_right"), textureWm);
-        updateLightWorldMatrix(getLightIndexByName("headlight_left"), textureWm);
-        updateLightWorldMatrix(getLightIndexByName("headlight_right"), textureWm);
-
-    }
-    
-    LightsData getLightsData(){
-        return lightsData;
-    }
-    
-    //------Observer methods--------
-    
-    void onStartSemaphore(int countDownValue) override {
-        
-        resetSemaphore();
-        
-        switch (countDownValue) {
-            case 6:
-            case 5:
-            case 4:
-            case 3:
-                lightsData.lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
-                lightsData.lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
-                break;
-            case 2:
-                lightsData.lightOn[getLightIndexByName("red_light_left")] = ONE_VEC3;
-                lightsData.lightOn[getLightIndexByName("red_light_right")] = ONE_VEC3;
-                lightsData.lightOn[getLightIndexByName("yellow_light_left")] = ONE_VEC3;
-                lightsData.lightOn[getLightIndexByName("yellow_light_right")] = ONE_VEC3;
-                break;
-            case 1:
-                lightsData.lightOn[getLightIndexByName("green_light_left")] = ONE_VEC3;
-                lightsData.lightOn[getLightIndexByName("green_light_right")] = ONE_VEC3;
-                break;
-            default:
-                break;
+        if(waitHeadlights < 60){
+            waitHeadlights++;
         }
         
+        if(!didUpdateBrakeLights && semaphoreGreenLightOn){
+            lightsData.lightOn[_leftBrakeLightIndex] = ZERO_VEC3;
+            lightsData.lightOn[_rightBrakeLightIndex] = ZERO_VEC3;
+            lightsData.lightColors[_leftBrakeLightIndex] = redColor;
+            lightsData.lightColors[_rightBrakeLightIndex] = redColor;
+        }
+        didUpdateBrakeLights = false;
     }
     
-    void onBrakeActive(bool isBrakeActive) override {
-        int leftIndex = getLightIndexByName("brake_light_left");
-        int rightIndex = getLightIndexByName("brake_light_right");
-        
-        lightsData.lightOn[leftIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
-        lightsData.lightOn[rightIndex] = isBrakeActive? ONE_VEC3 : ZERO_VEC3;
-        
-    }
+    void cleanup() override {}
     
-    void onChangeHeadlightsStatus() override {
-        int leftIndex = getLightIndexByName("headlight_left");
-        int rightIndex = getLightIndexByName("headlight_right");
-        
-        glm::vec3 currentLeftLightStatus = lightsData.lightOn[leftIndex];
-        glm::vec3 currentRightLightStatus = lightsData.lightOn[leftIndex];
-        
-        lightsData.lightOn[leftIndex] = currentLeftLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
-        lightsData.lightOn[rightIndex] = currentRightLightStatus == ZERO_VEC3 ? ONE_VEC3 : ZERO_VEC3;
+    void onSignal(std::string id, std::any data) override {
+        if (id == COUNTDOWN_SIGNAL) {
+            onCountdown(std::any_cast<int>(data));
+        } else if (id == BRAKE_SIGNAL) {
+            onBrake();
+        } else if (id == HEADLIGHTS_CHANGE_SIGNAL) {
+            onHeadlightsStatusChange();
+        } else if (id == REVERSE_SIGNAL) {
+            onReverse();
+        }
+        else {
+            std::cerr << "Unknown signal type: " << id << std::endl;
+        }
     }
 
 };

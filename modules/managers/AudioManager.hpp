@@ -1,10 +1,12 @@
-#ifndef AUDIO_HPP
-#define AUDIO_HPP
+#ifndef AUDIO_MANAGER_HPP
+#define AUDIO_MANAGER_HPP
 
 #include <fmod.hpp>
 #include <fmod_errors.h>
+#include "../modules/engine/pattern/Receiver.hpp"
+#include <any>
 
-struct AudioManager : public Observer, public Manager {
+class AudioManager : public Manager, public Receiver {
     
 protected:
     
@@ -119,26 +121,46 @@ protected:
             exit(-1);
         }
     }
+    
+    void onCoinCollected() {
+        playSound("COIN_SFX", 1.0f);
+    }
+    
+    void onCountdown(int countdownValue) {
+        if (countdownValue == 7) {
+            playSound("INTRO_SFX", 0.15f);
+        } else if(countdownValue > 1 && countdownValue < 5){
+            playSound("COUNTDOWN_SFX", 0.15f);
+        } else if (countdownValue == 1){
+            playSound("START_SFX", 0.15f);
+            playSound("RACE_MUSIC", 0.2f, 7);
+            
+        }
+    };
+    
+    void onLapChanged(int currentLap) {
+        if (currentLap == 2) {
+            stopSound("RACE_MUSIC");
+            playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
+                playSound("RACE_MUSIC", 0.2f, 7, 1.25f);
+            });
+        } else if (currentLap == 0) {
+            stopSound("RACE_MUSIC");
+            playSound("END_SFX", 0.5f);
+        }
+    }
 
 public:
     
     // Initialize the audio system
-    void init(std::vector<void*> params) override {
-        
-        json audioMap = nullptr;
-        if (params.size() == 1) {
-            audioMap = *static_cast<json*>(params[0]);
-        } else {
-            std::cout << "AudioManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
-        }
+    void init() override {
         
         result = FMOD::System_Create(&audio_system);
         checkFmodError(result);
         result = audio_system->init(1024, FMOD_INIT_NORMAL, 0);  // Increased number of channels
         checkFmodError(result);
 
-        for (const auto& music : audioMap) {
+        for (const auto& music : audioData) {
             std::string name = music["name"];
             std::string path = music["path"];
 
@@ -151,7 +173,7 @@ public:
     }
 
     // Update the audio system
-    void update(std::vector<void*>) override {
+    void update() override {
         result = audio_system->update();
         checkFmodError(result);
     }
@@ -171,36 +193,19 @@ public:
         }
     }
     
-    // -------Observer methods--------
-    void onCoinCollected(int collectedCoins) override {
-        playSound("COIN_SFX", 1.0f);
-    }
-    
-    void onStartSemaphore(int countDownValue) override {
-        if(countDownValue > 1 && countDownValue < 5){
-            playSound("COUNTDOWN_SFX", 0.15f);
-        }else if (countDownValue == 1){
-            playSound("START_SFX", 0.15f);
-            playSound("RACE_MUSIC", 0.2f, 7);
-            
+    void onSignal(std::string id, std::any data) override {
+        if (id == COINS_SIGNAL) {
+            onCoinCollected();
+        } else if (id == COUNTDOWN_SIGNAL) {
+            onCountdown(std::any_cast<int>(data));
+        } else if (id == LAPS_SIGNAL) {
+            onLapChanged(std::any_cast<int>(data));
         }
-    };
-    
-    int lapsLabel = 1;
-    void onCheckLaps(int lapsDone) override {
-        if (lapsLabel > 3) return;
-
-        lapsLabel += lapsDone;
-        if (lapsLabel == 2) {
-            stopSound("RACE_MUSIC");
-            playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
-                playSound("RACE_MUSIC", 0.2f, 7, 1.25f);
-            });
-        } else if (lapsLabel == 3) {
-            stopSound("RACE_MUSIC");
-            playSound("END_SFX", 0.5f);
+        else {
+            std::cerr << "Unknown signal type: " << id << std::endl;
         }
     }
+    
 };
 
 #endif

@@ -1,10 +1,15 @@
+// PhongShader.frag
+
+// DIFFUSION MODEL: LAMBERT
+// REFLECTION MODEL: PHONG
+
 #version 450
 
-const int LIGHTS_COUNT = 10;
+const int LIGHTS_COUNT = 14;
 
 // LAYOUT BINDINGS AND LOCATIONS
 
-layout(binding = 0) uniform UniformBufferObject
+layout(binding = 0) uniform PhongUniformBufferObject
 {
     mat4 mvpMat;
     mat4 mMat;
@@ -29,6 +34,7 @@ layout(binding = 2) uniform GlobalUniformBufferObject {
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec3 fragNorm;
 layout(location = 2) in vec2 fragTexCoord;
+
 layout(location = 0) out vec4 outColor;
 
 // POINT LIGHT DIRECTION
@@ -147,14 +153,21 @@ void main()
     LC = spot_light_color(fragPos, 9);
     RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[9];
     
-    vec3 ambientDiffuse = Albedo * (max(dot(Norm, ambientLightDirection), 0.0) * 0.9 + 0.1); // lampert diffuse model
-    vec3 ambientSpecular = vec3(pow(max(dot(EyeDir, -reflect(ambientLightDirection, Norm)), 0.0), 64.0)); // phong specular model
+    LD = spot_light_dir(fragPos, 10);
+    LC = spot_light_color(fragPos, 10);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[10];
     
-    vec3 ambientCorrection =
-        mix(vec3(0.18, 0.12, 0.08), vec3(0.2, 0.1, 0.1), bvec3(Norm.x > 0.0)) * (Norm.x * Norm.x) +
-        mix(vec3(0.1), vec3(0.06, 0.2, 0.2), bvec3(Norm.y > 0.0)) * (Norm.y * Norm.y) +
-        mix(vec3(0.06, 0.12, 0.14), vec3(0.16, 0.04, 0.08), bvec3(Norm.z > 0.0)) * (Norm.z * Norm.z);
-    ambientCorrection *= Albedo;
+    LD = spot_light_dir(fragPos, 11);
+    LC = spot_light_color(fragPos, 11);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[11];
     
-    outColor = vec4(((ambientDiffuse + ambientSpecular * (1.0 - gubo.eyeDir.w)) * ambientLightColor.xyz) + ambientCorrection, 1.0) + vec4(RendEqSol, 1.0);
+    LD = spot_light_dir(fragPos, 12);
+    LC = spot_light_color(fragPos, 12);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[12];
+    
+    LD = spot_light_dir(fragPos, 13);
+    LC = spot_light_color(fragPos, 13);
+    RendEqSol += BRDF(Albedo, Norm, EyeDir, LD) * LC * gubo.lightOn[13];
+    
+    outColor = vec4(RendEqSol, 1.0);
 }

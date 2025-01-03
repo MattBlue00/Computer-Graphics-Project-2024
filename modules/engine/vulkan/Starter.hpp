@@ -45,6 +45,9 @@
 #define SINFL_IMPLEMENTATION
 #include <sinfl.h>
 
+// WARNING: addedy by us
+#include "../modules/data/Signals.hpp"
+
 // For compile compatibility issues
 #ifndef M_E
 #define M_E			2.7182818284590452354	/* e */
@@ -263,10 +266,21 @@ class Model {
             VkFence fence;
         };
     std::vector<PendingResource> pendingResources;
+    
+    std::unordered_map<std::string, float> parameters;
+    
+    bool clean = false;
 
 	public:
+    
 	std::vector<unsigned char> vertices{};
 	std::vector<uint32_t> indices{};
+    
+    // WARNING: added by me
+    std::string name;
+    std::string fileName;
+    ModelType type;
+    
 	void loadModelOBJ(std::string file);
 	void loadModelGLTF(std::string file, bool encoded);
 	void createIndexBuffer();
@@ -275,7 +289,7 @@ class Model {
     void updateVertexBuffer();
     void destroyPendingResources();
 
-	void init(BaseProject *bp, VertexDescriptor *VD, std::string file, ModelType MT);
+	void init(BaseProject *bp, VertexDescriptor *VD, std::string modelName, std::string file, ModelType MT);
 	void initMesh(BaseProject *bp, VertexDescriptor *VD);
     void updateMesh(BaseProject *bp, VertexDescriptor *VD);
 	void cleanup();
@@ -293,6 +307,8 @@ struct Texture {
 	VkSampler textureSampler;
 	int imgs;
 	static const int maxImgs = 6;
+    
+    bool clean = false;
 	
 	void createTextureImage(std::string files[], VkFormat Fmt);
 	void createTextureImageView(VkFormat Fmt);
@@ -312,9 +328,9 @@ struct Texture {
 };
 
 struct DescriptorSetLayoutBinding {
-	uint32_t binding;
-	VkDescriptorType type;
-	VkShaderStageFlags flags;
+    uint32_t binding;
+    VkDescriptorType type;
+    VkShaderStageFlags flags;
 };
 
 
@@ -1650,14 +1666,14 @@ std::cout << "Starting createInstance()\n"  << std::flush;
         renderPassInfo.renderPass = renderPass;
         renderPassInfo.framebuffer = swapChainFramebuffers[currentImage];
         
-        float normalizedX = 0.33f;
-        //float normalizedY = -0.8f;
-        float normalizedWidth = 0.32f;
-        float normalizedHeight = 0.27f;
-        
+        float normalizedX = -0.96f; // Striscia parte dal bordo sinistro
+        float normalizedY = 0.8f; // Striscia posizionata vicino al bordo inferiore
+        float normalizedWidth = 0.96f;  // Quasi tutta la larghezza
+        float normalizedHeight = 0.07f; // Striscia sottile
+
         // Convert normalized coordinates to pixel coordinates
         int32_t startX = static_cast<int32_t>((normalizedX * 0.5f + 0.5f) * swapChainExtent.width);
-        int32_t startY = static_cast<int32_t>(20);
+        int32_t startY = static_cast<int32_t>((normalizedY * 0.5f + 0.5f) * swapChainExtent.height);
         uint32_t renderWidth = static_cast<uint32_t>(normalizedWidth * swapChainExtent.width);
         uint32_t renderHeight = static_cast<uint32_t>(normalizedHeight * swapChainExtent.height);
         
@@ -1892,7 +1908,7 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 	
 	
 	// Control Wrapper
-    void handleGamePad(int id, glm::vec3& m, glm::vec3& r, bool* headlightsChanged, bool* sceneChanged, bool* viewReset) {
+    void handleGamePad(int id, glm::vec3& m, glm::vec3& r) {
         const float deadZone = 0.1f;
 
         if (glfwJoystickIsGamepad(id)) {
@@ -1941,35 +1957,26 @@ std::cout << "Starting createInstance()\n"  << std::flush;
                 
                 // Cambio luci con il tasto Y
                 if (state.buttons[GLFW_GAMEPAD_BUTTON_Y]) {
-                    *headlightsChanged = true;
-                }
-                else{
-                    *headlightsChanged = false;
+                    headlightsChangeSignal.emit({});
                 }
                 
                 if (state.buttons[GLFW_GAMEPAD_BUTTON_START]) {
-                    *viewReset = true;
-                }
-                else{
-                    *viewReset = false;
+                    resetViewSignal.emit({});
                 }
                 
                 // Cambio scena con il tasto L1 o R1 (ma non entrambi contemporaneamente)
                 if (state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER]) {
-                    *sceneChanged = true;
+                    changeCameraSignal.emit({});
                 }
                 else if (state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]) {
-                    *sceneChanged = true;
-                }
-                else {
-                    *sceneChanged = false;
+                    changeCameraSignal.emit({});
                 }
                 
             }
         }
     }
 		
-	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r, bool* headlightsChanged, bool* sceneChanged, bool* viewReset) {
+	void getSixAxis(float &deltaT, glm::vec3 &m, glm::vec3 &r) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
 		
@@ -2018,16 +2025,13 @@ std::cout << "Starting createInstance()\n"  << std::flush;
 		}
         
         if(glfwGetKey(window, GLFW_KEY_V)) {
-            *viewReset = true;
-        }
-        else{
-            *viewReset = false;
+            resetViewSignal.emit({});
         }
 		
-		handleGamePad(GLFW_JOYSTICK_1,m,r,headlightsChanged,sceneChanged,viewReset);
-		handleGamePad(GLFW_JOYSTICK_2,m,r,headlightsChanged,sceneChanged,viewReset);
-		handleGamePad(GLFW_JOYSTICK_3,m,r,headlightsChanged,sceneChanged,viewReset);
-		handleGamePad(GLFW_JOYSTICK_4,m,r,headlightsChanged,sceneChanged,viewReset);
+		handleGamePad(GLFW_JOYSTICK_1,m,r);
+		handleGamePad(GLFW_JOYSTICK_2,m,r);
+		handleGamePad(GLFW_JOYSTICK_3,m,r);
+		handleGamePad(GLFW_JOYSTICK_4,m,r);
 	}
 	
 	// Public part of the base class
@@ -2648,10 +2652,13 @@ void Model::loadModelOBJ(std::string file) {
 				*o = color;
 			}
 			
-			glm::vec2 texCoord = {
-				attrib.texcoords[2 * index.texcoord_index + 0],
-				1 - attrib.texcoords[2 * index.texcoord_index + 1] 
-			};
+            glm::vec2 texCoord = {0.0f, 0.0f};  // Valore di default in caso non ci siano UVs
+            if (index.texcoord_index >= 0) {  // Verifica se l'indice UV è valido
+                texCoord = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    1 - attrib.texcoords[2 * index.texcoord_index + 1]
+                };
+            }
 			if(VD->UV.hasIt) {
 				glm::vec2 *o = (glm::vec2 *)((char*)(&vertex[0]) + VD->UV.offset);
 				*o = texCoord;
@@ -3075,7 +3082,7 @@ void Model::destroyPendingResources() {
     }
 }
 
-void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelType MT) {
+void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string modelName, std::string file, ModelType MT) {
 	BP = bp;
 	VD = vd;
 	if(MT == OBJ) {
@@ -3088,26 +3095,36 @@ void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelT
 	
 	createVertexBuffer();
 	createIndexBuffer();
+    
+    // WARNING: added by me
+    type = MT;
+    name = modelName;
+    fileName = file;
 }
 
 void Model::cleanup() {
-    destroyPendingResources();
-
-    if (vertexBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
-        vertexBuffer = VK_NULL_HANDLE;
-    }
-    if (vertexBufferMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
-        vertexBufferMemory = VK_NULL_HANDLE;
-    }
-    if (indexBuffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(BP->device, indexBuffer, nullptr);
-        indexBuffer = VK_NULL_HANDLE;
-    }
-    if (indexBufferMemory != VK_NULL_HANDLE) {
-        vkFreeMemory(BP->device, indexBufferMemory, nullptr);
-        indexBufferMemory = VK_NULL_HANDLE;
+    if(!clean){
+        
+        destroyPendingResources();
+        
+        if (vertexBuffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(BP->device, vertexBuffer, nullptr);
+            vertexBuffer = VK_NULL_HANDLE;
+        }
+        if (vertexBufferMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(BP->device, vertexBufferMemory, nullptr);
+            vertexBufferMemory = VK_NULL_HANDLE;
+        }
+        if (indexBuffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(BP->device, indexBuffer, nullptr);
+            indexBuffer = VK_NULL_HANDLE;
+        }
+        if (indexBufferMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(BP->device, indexBufferMemory, nullptr);
+            indexBufferMemory = VK_NULL_HANDLE;
+        }
+        
+        clean = true;
     }
 }
 
@@ -3258,10 +3275,13 @@ void Texture::initCubic(BaseProject *bp, std::string files[6]) {
 
 
 void Texture::cleanup() {
-   	vkDestroySampler(BP->device, textureSampler, nullptr);
-   	vkDestroyImageView(BP->device, textureImageView, nullptr);
-	vkDestroyImage(BP->device, textureImage, nullptr);
-	vkFreeMemory(BP->device, textureImageMemory, nullptr);
+    if(!clean){
+        vkDestroySampler(BP->device, textureSampler, nullptr);
+        vkDestroyImageView(BP->device, textureImageView, nullptr);
+        vkDestroyImage(BP->device, textureImage, nullptr);
+        vkFreeMemory(BP->device, textureImageMemory, nullptr);
+        clean = true;
+    }
 }
 
 void Pipeline::init(BaseProject *bp, VertexDescriptor *vd,

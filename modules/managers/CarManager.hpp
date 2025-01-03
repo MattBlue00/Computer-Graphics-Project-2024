@@ -2,17 +2,11 @@
 #define CAR_MANAGER_HPP
 
 #include <btBulletDynamicsCommon.h>
-#include "managers/PhysicsManager.hpp"
-#include "engine/Subject.hpp"
 
-// subjects observed by UI
-Subject speedSubject;
-Subject brakeSubject;
+#include "../modules/data/Signals.hpp"
+#include "../modules/objects/Track.hpp"
 
-// subject observed by Interaction
-Subject headlightsSubject;
-
-struct CarManager: public Manager, public Observer {
+class CarManager: public Manager, public Receiver {
     
 protected:
     
@@ -33,8 +27,7 @@ protected:
     int mayBeBlocked = 0;
     int lastSpeedKmh = 0;
     
-    btRaycastVehicle* vehicle;
-    btDynamicsWorld* dynamicsWorld;
+    int currentSpeedKmh = 0;
     
     void setSuspensions() {
         for (int i = 0; i < vehicle->getNumWheels(); i++) {
@@ -134,17 +127,55 @@ protected:
         vehicle->getRigidBody()->clearForces();
     }
     
+    btTransform getVehicleTransform(){
+        btTransform transform;
+        vehicle->getRigidBody()->getMotionState()->getWorldTransform(transform);
+        return transform;
+    }
+    
+    glm::vec3 getVehiclePosition(){
+        btTransform transform = getVehicleTransform();
+        return glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+    }
+    
+    glm::quat getVehicleRotation(){
+        btTransform transform = getVehicleTransform();
+        glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+        btQuaternion rotationBt = transform.getRotation();
+        return glm::quat(rotationBt.getW(), rotationBt.getX(), rotationBt.getY(), rotationBt.getZ());
+    }
+    
+    float getVehicleYaw() {
+        glm::quat rotation = getVehicleRotation();
+        return atan2(2.0f * (rotation.y * rotation.w + rotation.x * rotation.z),
+                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.x * rotation.x));
+    }
+    
+    float getVehiclePitch() {
+        glm::quat rotation = getVehicleRotation();
+        float sinPitch = 2.0f * (rotation.w * rotation.x - rotation.z * rotation.y);
+        if (std::abs(sinPitch) >= 1.0f) {
+            return std::copysign(glm::half_pi<float>(), sinPitch); // Usa 90 gradi se fuori range
+        } else {
+            return std::asin(sinPitch);
+        }
+    }
+    
+    float getVehicleRoll() {
+        glm::quat rotation = getVehicleRotation();
+        return atan2(2.0f * (rotation.w * rotation.z + rotation.x * rotation.y),
+                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
+    }
+    
+    void onCountdown(int countdownValue) {
+        if (countdownValue <= 1){
+            canStart = true;
+        }
+    }
+    
 public:
     
-    void init(std::vector<void*> params) override {
-        
-        if (params.size() == 1) {
-            dynamicsWorld = static_cast<btDynamicsWorld*>(params[0]);
-        } else {
-            std::cout << "CarManager.init(): Wrong Parameters" << std::endl;
-            exit(-1);
-        }
-        
+    void init() override {
         // Car initialization with btBoxShape and btCompoundShape
         btBoxShape* chassisShape = new btBoxShape(btVector3(1.6, 0.5, 1.95));
         
@@ -215,22 +246,15 @@ public:
         vehicle->setCoordinateSystem(0, 1, 2);
     }
     
-    void update(std::vector<void*> params) override {
+    void update() override {
+        
+        glm::vec3 carPosition = getVehiclePosition();
+        float yaw = getVehicleYaw();
+        float pitch = getVehiclePitch();
+        float roll = getVehicleRoll();
+        carWorldData = CarWorldData(pitch, yaw, roll, carPosition);
         
         if(!canStart) return;
-        
-        glm::vec3 carMovementInput;
-        float deltaTime;
-        
-        if (params.size() == 2) {
-            carMovementInput = *static_cast<glm::vec3*>(params[0]);
-            deltaTime = *static_cast<float*>(params[1]);
-        } else {
-            std::cout << "CarManager.update(): Wrong Parameters" << std::endl;
-            exit(-1);
-        }
-        
-        brakeSubject.notifyBrake(false);
         
         // Controlli del veicolo
         float engineForce = 0.0f;
@@ -254,14 +278,12 @@ public:
             if(isVehicleStopped(0.5f)){
                 goingOnwards = false;
             }
-            // notify the brake lights
-            brakeSubject.notifyBrake(true);
+            
         }
         else if (carMovementInput.z > 0 && !goingOnwards) { // S premuto
             engineForce = -ENGINE_FORCE; // Forza negativa per andare in retro
             brakeForce = 0.0f;
-            // notify the brake lights
-            brakeSubject.notifyBrake(true);
+            goingOnwards = false;
         }
         else { // Nessun input
             if (isVehicleStopped(0.5f)){
@@ -356,65 +378,36 @@ public:
             currentSpeed = 0;
         }
         
+        checkVehiclePosition();
+        
+        if (!goingOnwards || (carMovementInput.z > 0 && currentSpeed == 0)){
+            reverseSignal.emit({});
+        }
+        
+        if ((carMovementInput.z > 0 && goingOnwards) || (carMovementInput.z < 0 && !goingOnwards)){
+            brakeSignal.emit({});
+        }
+        
         // update Kmh Speed and notify UI only when necessary
-        int currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
+        currentSpeedKmh = static_cast<int>(std::abs(std::floor(currentSpeed * 3.6)));
         if(lastSpeedKmh != currentSpeedKmh){
             // fix the flickering speed number at maxspeed
             if(currentSpeedKmh == std::abs(std::floor(MAX_SPEED * 3.6))) return;
-            speedSubject.notifySpeedChanged(currentSpeedKmh);
+            speedSignal.emit(currentSpeedKmh);
             lastSpeedKmh = currentSpeedKmh;
         }
         
-        checkVehiclePosition();
-        
     }
     
-    btTransform getVehicleTransform(){
-        btTransform transform;
-        vehicle->getRigidBody()->getMotionState()->getWorldTransform(transform);
-        return transform;
-    }
+    void cleanup() override {}
     
-    glm::vec3 getVehiclePosition(){
-        btTransform transform = getVehicleTransform();
-        return glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-    }
-    
-    glm::quat getVehicleRotation(){
-        btTransform transform = getVehicleTransform();
-        glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-        btQuaternion rotationBt = transform.getRotation();
-        return glm::quat(rotationBt.getW(), rotationBt.getX(), rotationBt.getY(), rotationBt.getZ());
-    }
-    
-    float getVehicleYaw() {
-        glm::quat rotation = getVehicleRotation();
-        return atan2(2.0f * (rotation.y * rotation.w + rotation.x * rotation.z),
-                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.x * rotation.x));
-    }
-    
-    float getVehiclePitch() {
-        glm::quat rotation = getVehicleRotation();
-        float sinPitch = 2.0f * (rotation.w * rotation.x - rotation.z * rotation.y);
-        if (std::abs(sinPitch) >= 1.0f) {
-            return std::copysign(glm::half_pi<float>(), sinPitch); // Usa 90 gradi se fuori range
-        } else {
-            return std::asin(sinPitch);
+    void onSignal(std::string id, std::any data) override {
+        if (id == COUNTDOWN_SIGNAL) {
+            onCountdown(std::any_cast<int>(data));
         }
-    }
-    
-    float getVehicleRoll() {
-        glm::quat rotation = getVehicleRotation();
-        return atan2(2.0f * (rotation.w * rotation.z + rotation.x * rotation.y),
-                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
-    }
-    
-    btRaycastVehicle* getVehicle(){
-        return vehicle;
-    }
-    
-    void onStartTimer() override {
-        canStart = true;
+        else {
+            std::cerr << "Unknown signal type: " << id << std::endl;
+        }
     }
     
 };

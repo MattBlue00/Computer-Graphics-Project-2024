@@ -1,6 +1,7 @@
 #ifndef WVP_HPP
 #define WVP_HPP
 
+#include "Types.hpp"
 #include "Utils.hpp"
 
 glm::mat4 MakeViewProjectionLookInDirection(glm::vec3 Pos, float Yaw, float Pitch, float Roll, float FOVy, float Ar, float nearPlane, float farPlane) {
@@ -68,6 +69,12 @@ glm::mat4 MakeWorld(glm::vec3 Pos, float Yaw, float Pitch, float Roll) {
     glm::rotate(glm::mat4(1.0f), Roll, Z_AXIS);
 
     return M;
+}
+
+// utility for lights
+glm::mat4 getCarTextureWorldMatrix(CarWorldData carWorldData){
+    float adjustedRoll = std::clamp(carWorldData.roll, -0.005f, 0.005f);
+    return MakeWorld(carWorldData.position, carWorldData.yaw, carWorldData.pitch, adjustedRoll);
 }
 
 #endif

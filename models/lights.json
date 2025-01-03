@@ -71,6 +71,38 @@
             "intensity": 30.0,
             "type": "spot",
             "name": "headlight_right"
+        },
+        {
+            "color": [ 1.0, 1.0, 1.0 ],
+            "translation": [ 0, 0, 3 ],
+            "rotation": [ 0, 0, 0, 0 ],
+            "intensity": 50.0,
+            "type": "spot",
+            "name": "airplane_headlight"
+        },
+        {
+            "color": [ 1.0, 1.0, 1.0 ],
+            "translation": [ 0, 0, 3 ],
+            "rotation": [ 0, 0, 0, 0 ],
+            "intensity": 100.0,
+            "type": "spot",
+            "name": "spaceship_1_headlight"
+        },
+        {
+            "color": [ 1.0, 1.0, 1.0 ],
+            "translation": [ 0, 0, 3 ],
+            "rotation": [ 0, 0, 0, 0 ],
+            "intensity": 100.0,
+            "type": "spot",
+            "name": "spaceship_2_headlight"
+        },
+        {
+            "color": [ 1.0, 1.0, 1.0 ],
+            "translation": [ 0, 0, 3 ],
+            "rotation": [ 0, 0, 0, 0 ],
+            "intensity": 100.0,
+            "type": "spot",
+            "name": "spaceship_3_headlight"
         }
     ]
 }

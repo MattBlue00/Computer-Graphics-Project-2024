@@ -13,20 +13,37 @@ struct LightsData{
     float cosOut;
 };
 
-struct CameraData {
-    float CamPitch;
-    float CamYaw;
-    float CamDist;
-    float CamRoll;
+struct CameraWorldData {
+    float pitch;
+    float yaw;
+    float roll;
+    float distance;
+    glm::vec3 position;
+    glm::mat4 viewProjection;
 };
 
-struct Checkpoint {
-    std::string id;
-    btVector3 position;
-    btVector3 halfExtents; // Dimensioni del checkpoint (mezze estensioni)
+struct CarWorldData {
+    float pitch;
+    float yaw;
+    float roll;
+    glm::vec3 position;
 };
 
-struct UniformBufferObject {
+struct PhongUniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
+};
+
+struct CookTorranceUniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
+    alignas(4) float metalness;
+    alignas(4) float roughness;
+};
+
+struct ToonUniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
     alignas(16) glm::mat4 mMat;
     alignas(16) glm::mat4 nMat;
@@ -53,8 +70,8 @@ struct GlobalUniformBufferObject {
 
 struct Vertex {
     glm::vec3 pos;
-    glm::vec2 UV;
     glm::vec3 norm;
+    glm::vec2 UV;
 };
 
 #endif
