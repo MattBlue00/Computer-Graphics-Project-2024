@@ -29,6 +29,7 @@ protected:
     int _spaceship2ObjectIndex;
     int _spaceship3ObjectIndex;
     
+    bool semaphoreGreenLightOn = false;
     bool didUpdateBrakeLights = false;
 
     void resetSemaphore(){
@@ -68,11 +69,15 @@ protected:
         }
     }
     
-    void onStartSemaphore() {
+    void setSemaphore(int countdownValue) {
         
         resetSemaphore();
         
         switch (countdownValue) {
+            case 10:
+            case 9:
+            case 8:
+            case 7:
             case 6:
             case 5:
             case 4:
@@ -89,16 +94,19 @@ protected:
             case 1:
                 lightsData.lightOn[getLightIndexByName("green_light_left")] = ONE_VEC3;
                 lightsData.lightOn[getLightIndexByName("green_light_right")] = ONE_VEC3;
+                semaphoreGreenLightOn = true;
                 break;
             default:
+                lightsData.lightOn[getLightIndexByName("green_light_left")] = ONE_VEC3;
+                lightsData.lightOn[getLightIndexByName("green_light_right")] = ONE_VEC3;
                 break;
         }
         
     }
     
-    void onStartTimer() {
+    void onCountdown(int countdownValue) {
         if(countdownValue > 0){
-            onStartSemaphore();
+            setSemaphore(countdownValue);
         }
         else{
             lightsData.lightOn[_leftBrakeLightIndex] = ZERO_VEC3;
@@ -251,7 +259,7 @@ public:
             waitHeadlights++;
         }
         
-        if(!didUpdateBrakeLights && countdownValue <= 0){
+        if(!didUpdateBrakeLights && semaphoreGreenLightOn){
             lightsData.lightOn[_leftBrakeLightIndex] = ZERO_VEC3;
             lightsData.lightOn[_rightBrakeLightIndex] = ZERO_VEC3;
             lightsData.lightColors[_leftBrakeLightIndex] = redColor;
@@ -263,8 +271,8 @@ public:
     void cleanup() override {}
     
     void onSignal(std::string id, std::any data) override {
-        if (id == START_TIMER_SIGNAL) {
-            onStartTimer();
+        if (id == COUNTDOWN_SIGNAL) {
+            onCountdown(std::any_cast<int>(data));
         } else if (id == BRAKE_SIGNAL) {
             onBrake();
         } else if (id == HEADLIGHTS_CHANGE_SIGNAL) {

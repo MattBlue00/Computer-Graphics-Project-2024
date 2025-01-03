@@ -15,6 +15,7 @@ class Track: public GameObject, public StaticRigidBody, public Receiver {
 protected:
 
     std::vector<Checkpoint*> checkpoints;
+    int currentLap = 1;
     
     void setCheckpointsBasedOnLap(int lapNumber){
         checkpointsLap.clear();
@@ -78,12 +79,13 @@ protected:
             }
         }
         if(hitCount == checkpointsLap.size()){
-            lapsSignal.emit({});
+            changeLap();
+            lapsSignal.emit(currentLap);
         }
         std::cout << "Next checkpoint is: " << nextCheckpointId << std::endl;
     }
     
-    void onLapChanged(){
+    void changeLap(){
         currentLap = (currentLap + 1) % 3;
         for (Checkpoint* checkpoint : checkpointsLap){
             checkpoint->reset();
@@ -121,10 +123,10 @@ public:
     
     void init() override {
         setBarrierStatus("dir_barrier_inner", false);
-        std::vector<Signal*> trackSignals = { &updateNextCheckpointSignal, &lapsSignal };
+        std::vector<Signal*> trackSignals = { &updateNextCheckpointSignal };
         for (Signal* signal : trackSignals) {
             signal->addListener([this, signal](std::string id, std::any data) {
-                this->onSignal(signal->getId(), {});
+                this->onSignal(signal->getId(), data);
             });
         }
     }
@@ -132,8 +134,6 @@ public:
     void onSignal(std::string id, std::any data) override {
         if (id == UPDATE_NEXT_CHECKPOINT_SIGNAL) {
             onUpdateNextCheckpoint();
-        } else if (id == LAPS_SIGNAL) {
-            onLapChanged();
         }
         else {
             std::cerr << "Unknown signal type: " << id << std::endl;

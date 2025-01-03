@@ -27,6 +27,8 @@ protected:
     int mayBeBlocked = 0;
     int lastSpeedKmh = 0;
     
+    int currentSpeedKmh = 0;
+    
     void setSuspensions() {
         for (int i = 0; i < vehicle->getNumWheels(); i++) {
             btWheelInfo& wheel = vehicle->getWheelInfo(i);
@@ -165,7 +167,7 @@ protected:
                      1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
     }
     
-    void onStartTimer() {
+    void onCountdown(int countdownValue) {
         if (countdownValue <= 1){
             canStart = true;
         }
@@ -391,7 +393,7 @@ public:
         if(lastSpeedKmh != currentSpeedKmh){
             // fix the flickering speed number at maxspeed
             if(currentSpeedKmh == std::abs(std::floor(MAX_SPEED * 3.6))) return;
-            speedSignal.emit({});
+            speedSignal.emit(currentSpeedKmh);
             lastSpeedKmh = currentSpeedKmh;
         }
         
@@ -400,8 +402,8 @@ public:
     void cleanup() override {}
     
     void onSignal(std::string id, std::any data) override {
-        if (id == START_TIMER_SIGNAL) {
-            onStartTimer();
+        if (id == COUNTDOWN_SIGNAL) {
+            onCountdown(std::any_cast<int>(data));
         }
         else {
             std::cerr << "Unknown signal type: " << id << std::endl;

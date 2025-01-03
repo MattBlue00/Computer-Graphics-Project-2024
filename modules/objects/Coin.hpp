@@ -29,8 +29,7 @@ public:
     void onCollision(Collider* other) override {
         if(enabled){
             std::cout << "Collecting " << GameObject::id << std::endl;
-            collectedCoins++;
-            coinsSignal.emit({});
+            coinCollectedSignal.emit({});
             dynamicsWorld->removeRigidBody(rigidBody);
             dynamicsWorld->removeCollisionObject(this);
             disable();

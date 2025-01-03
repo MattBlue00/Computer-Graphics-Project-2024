@@ -14,6 +14,7 @@
 #include "modules/engine/main/Scene.hpp"                    // scene header (from professor)
 #include "modules/scenes/MainScene.hpp"                     // main scene
 #include "modules/managers/UIManager.hpp"                   // manages UI
+#include "modules/managers/GameManager.hpp"                 // manages game logic
 #include "modules/data/EngineData.hpp"                      // global data that my custom engine uses
 #include "modules/data/WorldData.hpp"                       // global data that my game modules use
 #include "modules/engine/pattern/Receiver.hpp"              // class that receives signals and processes data
@@ -42,6 +43,7 @@ protected:
 
     // Managers
     UIManager uiManager;
+    GameManager gameManager;
     LightsManager lightsManager;
     AudioManager audioManager;
     InputManager inputManager;
@@ -118,6 +120,7 @@ protected:
         inputManager.init();
         sceneManager.init();
         cameraManager.init();
+        gameManager.init();
         uiManager.init();
         lightsManager.init();
         audioManager.init();
@@ -126,13 +129,13 @@ protected:
         // add listeners
         
         quitSignal.addListener([this](std::string id, std::any data) {
-            this->sceneManager.onSignal(quitSignal.getId(), {});
+            this->sceneManager.onSignal(quitSignal.getId(), data);
         });
         
         std::vector<Signal*> cameraManagerSignals = { &resetViewSignal, &changeCameraSignal, &updateDebounceSignal };
         for (Signal* signal : cameraManagerSignals) {
             signal->addListener([this, signal](std::string id, std::any data) {
-                this->cameraManager.onSignal(signal->getId(), {});
+                this->cameraManager.onSignal(signal->getId(), data);
             });
         }
 
@@ -140,29 +143,36 @@ protected:
         physicsManager.init();
         carManager.init();
         
-        std::vector<Signal*> uiManagerSignals = { &speedSignal, &coinsSignal, &lapsSignal };
+        std::vector<Signal*> gameManagerSignals = { &lapsSignal, &coinCollectedSignal };
+        for (Signal* signal : gameManagerSignals) {
+            signal->addListener([this, signal](std::string id, std::any data) {
+                this->gameManager.onSignal(signal->getId(), data);
+            });
+        }
+        
+        std::vector<Signal*> uiManagerSignals = { &speedSignal, &timeSignal, &coinsSignal, &lapsSignal, &scoreSignal };
         for (Signal* signal : uiManagerSignals) {
             signal->addListener([this, signal](std::string id, std::any data) {
-                this->uiManager.onSignal(signal->getId(), {});
+                this->uiManager.onSignal(signal->getId(), data);
             });
         }
         
-        std::vector<Signal*> lightsManagerSignals = { &startTimerSignal, &brakeSignal, &headlightsChangeSignal, &reverseSignal };
+        std::vector<Signal*> lightsManagerSignals = { &countdownSignal, &brakeSignal, &headlightsChangeSignal, &reverseSignal };
         for (Signal* signal : lightsManagerSignals) {
             signal->addListener([this, signal](std::string id, std::any data) {
-                this->lightsManager.onSignal(signal->getId(), {});
+                this->lightsManager.onSignal(signal->getId(), data);
             });
         }
         
-        std::vector<Signal*> audioManagerSignals = { &startTimerSignal, &coinsSignal, &lapsSignal };
+        std::vector<Signal*> audioManagerSignals = { &countdownSignal, &coinsSignal, &lapsSignal };
         for (Signal* signal : audioManagerSignals) {
             signal->addListener([this, signal](std::string id, std::any data) {
-                this->audioManager.onSignal(signal->getId(), {});
+                this->audioManager.onSignal(signal->getId(), data);
             });
         }
         
-        startTimerSignal.addListener([this](std::string id, std::any data) {
-            this->carManager.onSignal(startTimerSignal.getId(), {});
+        countdownSignal.addListener([this](std::string id, std::any data) {
+            this->carManager.onSignal(countdownSignal.getId(), data);
         });
         
         rebuildPipelineSignal.addListener([this](std::string id, std::any data) {
@@ -241,6 +251,7 @@ protected:
         
         std::cout << "Main scene cleanup completed.\n";
         
+        gameManager.cleanup();
         uiManager.cleanup();
         physicsManager.cleanup();
         audioManager.cleanup();
@@ -280,10 +291,7 @@ protected:
         // gets WASD and arrows input from user and sets deltaT
         getSixAxis(EngineDeltaTime, carMovementInput, cameraRotationInput);
 
-        // updates vehicle movement
         carManager.update();
-    
-        // applies a step in the physics simulation
         physicsManager.update();
         
         vehicleTextureWorldMatrix = getCarTextureWorldMatrix(carWorldData);
@@ -291,13 +299,10 @@ protected:
         sceneManager.update();
         lightsManager.update();
         inputManager.update();
-        
         cameraManager.update();
-        
+        gameManager.update();
         uiManager.update();
-        
         audioManager.update();
-
         drawManager.update();
     }
     

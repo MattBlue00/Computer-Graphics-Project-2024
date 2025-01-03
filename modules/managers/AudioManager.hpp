@@ -1,5 +1,5 @@
-#ifndef AUDIO_HPP
-#define AUDIO_HPP
+#ifndef AUDIO_MANAGER_HPP
+#define AUDIO_MANAGER_HPP
 
 #include <fmod.hpp>
 #include <fmod_errors.h>
@@ -126,7 +126,7 @@ protected:
         playSound("COIN_SFX", 1.0f);
     }
     
-    void onCountdown() {
+    void onCountdown(int countdownValue) {
         if (countdownValue == 7) {
             playSound("INTRO_SFX", 0.15f);
         } else if(countdownValue > 1 && countdownValue < 5){
@@ -138,7 +138,7 @@ protected:
         }
     };
     
-    void onLapChanged() {
+    void onLapChanged(int currentLap) {
         if (currentLap == 2) {
             stopSound("RACE_MUSIC");
             playSound("FINAL_SFX", 0.5f, -1, 1.0f, [this]() {
@@ -196,10 +196,10 @@ public:
     void onSignal(std::string id, std::any data) override {
         if (id == COINS_SIGNAL) {
             onCoinCollected();
-        } else if (id == START_TIMER_SIGNAL) {
-            onCountdown();
+        } else if (id == COUNTDOWN_SIGNAL) {
+            onCountdown(std::any_cast<int>(data));
         } else if (id == LAPS_SIGNAL) {
-            onLapChanged();
+            onLapChanged(std::any_cast<int>(data));
         }
         else {
             std::cerr << "Unknown signal type: " << id << std::endl;

@@ -30,15 +30,6 @@ CameraWorldData cameraWorldData;
 CarWorldData carWorldData;
 glm::mat4 vehicleTextureWorldMatrix;
 
-// RACE DATA
-int currentSpeedKmh = 0;
-int collectedCoins = 0;
-int currentLap = 1;
-
 std::string nextCheckpointId;
-
-int countdownValue = 8;
-bool isGameStarted = false;
-bool isGameFinished = false;
 
 #endif
