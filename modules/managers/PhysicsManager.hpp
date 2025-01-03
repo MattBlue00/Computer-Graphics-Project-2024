@@ -102,10 +102,6 @@ public:
         delete collisionConfiguration;
         delete broadphase;
     }
-
-    btDynamicsWorld* getDynamicsWorld(){
-        return dynamicsWorld;
-    }
     
 };
 

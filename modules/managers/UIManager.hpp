@@ -16,22 +16,18 @@ protected:
     
     // Text Vectors
     std::vector<SingleText> outTimer = {
-        {1, {"Time: 00:00"}, 0, 0, outTimerPosition},
         {1, {"Time: 00:00"}, 0, 0, outTimerPosition}
     };
     
     std::vector<SingleText> outLaps = {
-        {1, {"Lap: 1/2"}, 0, 0, outLapsPosition},
         {1, {"Lap: 1/2"}, 0, 0, outLapsPosition}
     };
     
     std::vector<SingleText> outSpeed = {
-        {1, {"Speed: 0 km/h"}, 0, 0, outSpeedPosition},
         {1, {"Speed: 0 km/h"}, 0, 0, outSpeedPosition}
     };
     
     std::vector<SingleText> outCoins = {
-        {1, {"Coins: 0"}, 0, 0, outCoinsPosition},
         {1, {"Coins: 0"}, 0, 0, outCoinsPosition}
     };
     
@@ -83,7 +79,6 @@ protected:
             int seconds = totalSeconds % 60;
             std::string timeString = (minutes < 10 ? "0" : "") + std::to_string(minutes) + ":" + (seconds < 10 ? "0" : "") + std::to_string(seconds);
             outTimer[0] = {1, {"Time: " + timeString}, 0, 0, outTimerPosition};
-            outTimer[1] = {1, {"Time: " + timeString}, 0, 0, outTimerPosition};
             timer.changeText(&outTimer);
             lastUpdateTimeAfterBegin = now; // Update the last update time
         }
@@ -91,13 +86,11 @@ protected:
     
     void onSpeedChanged() {
         outSpeed[0] = {1, {"Speed: " + std::to_string(currentSpeedKmh) + " km/h"}, 0, 0, outSpeedPosition};
-        outSpeed[1] = {1, {"Speed: " + std::to_string(currentSpeedKmh) + " km/h"}, 0, 0, outSpeedPosition};
         speed.changeText(&outSpeed);
     }
     
     void onCoinCollected() {
         outCoins[0] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
-        outCoins[1] = {1, {"Coins: " + std::to_string(collectedCoins)}, 0, 0, outCoinsPosition};
         coins.changeText(&outCoins);
     }
     
@@ -115,7 +108,6 @@ protected:
             // std::cout << "coins" <<  collectedCoins << "\n";
 
             outLaps[0] = {1, {"Score: " + std::to_string(finalScore)}, 0, 0, outLapsPosition};
-            outLaps[1] = {1, {"Score: " + std::to_string(finalScore)}, 0, 0, outLapsPosition};
             laps.changeText(&outLaps);
             return;
         }
@@ -123,7 +115,6 @@ protected:
         else if(currentLap == 0) return;
         
         outLaps[0] = {1, {"Lap: " + std::to_string(currentLap) + "/2"}, 0, 0, outLapsPosition};
-        outLaps[1] = {1, {"Lap: " + std::to_string(currentLap) + "/2"}, 0, 0, outLapsPosition};
         laps.changeText(&outLaps);
     }
     
@@ -164,12 +155,11 @@ public:
 
     }
     
-    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, int currScene) {
-        //startTimer.populateCommandBuffer(commandBuffer, currentImage, currScene);
-        laps.populateCommandBuffer(commandBuffer, currentImage, currScene);
-        timer.populateCommandBuffer(commandBuffer, currentImage, currScene);
-        speed.populateCommandBuffer(commandBuffer, currentImage, currScene);
-        coins.populateCommandBuffer(commandBuffer, currentImage, currScene);
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+        laps.populateCommandBuffer(commandBuffer, currentImage);
+        timer.populateCommandBuffer(commandBuffer, currentImage);
+        speed.populateCommandBuffer(commandBuffer, currentImage);
+        coins.populateCommandBuffer(commandBuffer, currentImage);
     }
     
     // update function
@@ -185,7 +175,7 @@ public:
         coins.localCleanup();
     }
     
-    void handleData(std::string id, std::any data) override {
+    void onSignal(std::string id, std::any data) override {
         if (id == SPEED_SIGNAL) {
             onSpeedChanged();
         } else if (id == COINS_SIGNAL) {

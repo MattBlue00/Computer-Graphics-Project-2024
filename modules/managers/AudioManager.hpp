@@ -193,7 +193,7 @@ public:
         }
     }
     
-    void handleData(std::string id, std::any data) override {
+    void onSignal(std::string id, std::any data) override {
         if (id == COINS_SIGNAL) {
             onCoinCollected();
         } else if (id == START_TIMER_SIGNAL) {

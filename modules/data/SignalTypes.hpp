@@ -2,8 +2,7 @@
 #define SIGNAL_TYPES
 
 const std::string BRAKE_SIGNAL = "BRAKE";
-const std::string CHANGE_SCENE_SIGNAL = "CHANGE_SCENE";
-const std::string CHANGE_VIEW_SIGNAL = "CHANGE_VIEW";
+const std::string CHANGE_CAMERA_SIGNAL = "CHANGE_CAMERA";
 const std::string COINS_SIGNAL = "COINS";
 const std::string HEADLIGHTS_CHANGE_SIGNAL = "HEADLIGHTS_CHANGE";
 const std::string LAPS_SIGNAL = "LAPS";

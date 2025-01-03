@@ -125,14 +125,11 @@ protected:
         
         // add listeners
         
-        std::vector<Signal*> sceneManagerSignals = { &quitSignal, &changeSceneSignal, &updateDebounceSignal };
-        for (Signal* signal : sceneManagerSignals) {
-            signal->addListener([this, signal](std::string id, std::any data) {
-                this->sceneManager.onSignal(signal->getId(), {});
-            });
-        }
+        quitSignal.addListener([this](std::string id, std::any data) {
+            this->sceneManager.onSignal(quitSignal.getId(), {});
+        });
         
-        std::vector<Signal*> cameraManagerSignals = { &changeViewSignal, &resetViewSignal };
+        std::vector<Signal*> cameraManagerSignals = { &resetViewSignal, &changeCameraSignal, &updateDebounceSignal };
         for (Signal* signal : cameraManagerSignals) {
             signal->addListener([this, signal](std::string id, std::any data) {
                 this->cameraManager.onSignal(signal->getId(), {});
@@ -268,7 +265,7 @@ protected:
     }
     
     void populateDynamicCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-        uiManager.populateCommandBuffer(commandBuffer, currentImage, EngineCurrentScene);
+        uiManager.populateCommandBuffer(commandBuffer, currentImage);
     }
 
     // Here is where you update the uniforms.
@@ -289,19 +286,12 @@ protected:
         // applies a step in the physics simulation
         physicsManager.update();
         
-        // get position, yaw and pitch of car rigid body
-        glm::vec3 carPosition = carManager.getVehiclePosition();
-        float yaw = carManager.getVehicleYaw();
-        float pitch = carManager.getVehiclePitch();
-        float roll = carManager.getVehicleRoll();
-        
-        vehicleTextureWorldMatrix = getCarTextureWorldMatrix(carPosition, pitch, yaw, roll);
+        vehicleTextureWorldMatrix = getCarTextureWorldMatrix(carWorldData);
         
         sceneManager.update();
         lightsManager.update();
         inputManager.update();
         
-        carWorldData = CarWorldData(pitch, yaw, roll, carPosition);
         cameraManager.update();
         
         uiManager.update();

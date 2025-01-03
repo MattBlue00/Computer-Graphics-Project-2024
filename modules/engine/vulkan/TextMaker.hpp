@@ -216,14 +216,14 @@ struct TextMaker
         P.destroy();
     }
 
-    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, int curText = 0)
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage)
     {
         P.bind(commandBuffer);
         M.bind(commandBuffer);
         DS.bind(commandBuffer, P, 0, currentImage);
 
         vkCmdDrawIndexed(commandBuffer,
-                         static_cast<uint32_t>((*Texts)[curText].len), 1, static_cast<uint32_t>((*Texts)[curText].start), 0, 0);
+                         static_cast<uint32_t>((*Texts)[0].len), 1, static_cast<uint32_t>((*Texts)[0].start), 0, 0);
     }
 };
 

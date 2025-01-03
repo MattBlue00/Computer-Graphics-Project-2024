@@ -51,8 +51,8 @@ protected:
     const float ROLL_FIRST = 0.0f;
     
     // other constants
-    const int THIRD_PERSON_VIEW = 0;
-    const int FIRST_PERSON_VIEW = 1;
+    const int THIRD_PERSON_CAMERA = 0;
+    const int FIRST_PERSON_CAMERA = 1;
     
     // Third person camera placement
     const glm::vec3 CamTargetDelta = glm::vec3(0.0f, 1.5f, 0.0f);
@@ -60,13 +60,21 @@ protected:
     // First person camera placement
     const glm::vec3 Cam1stPos = glm::vec3(0.0f, 2.0f, 0.3f);
     
-    int waitChange = 60;
+    int currentCamera;
+    
+    int waitChangeView = 60;
+    
+    bool debounce;
+    int currentDebounce;
+    
+    int waitChangeCamera = 60;
     
     // CAMERA FUNCTIONS
     
     // These functions switch to a particular camera
     
     void switchToThirdPersonCamera(){
+        currentCamera = THIRD_PERSON_CAMERA;
         cameraWorldData.pitch       = PITCH_THIRD;
         cameraWorldData.yaw         = YAW_THIRD;
         cameraWorldData.distance    = DIST_THIRD;
@@ -74,6 +82,7 @@ protected:
     }
     
     void switchToFirstPersonCamera(){
+        currentCamera = FIRST_PERSON_CAMERA;
         cameraWorldData.pitch = PITCH_FIRST;
         cameraWorldData.yaw   = YAW_FIRST;
         cameraWorldData.roll  = ROLL_FIRST;
@@ -132,57 +141,77 @@ protected:
         cameraWorldData.viewProjection = MakeViewProjectionLookInDirection(cameraWorldData.position, yaw + cameraWorldData.yaw, cameraWorldData.pitch, cameraWorldData.roll, DEG_90, EngineAspectRatio, NEAR_PLANE, FAR_PLANE);
     }
     
-    void onChangeView() {
-        if(EngineCurrentView == THIRD_PERSON_VIEW){
-            EngineCurrentView = FIRST_PERSON_VIEW;
-            switchToFirstPersonCamera();
-        }
-        else{
-            EngineCurrentView = THIRD_PERSON_VIEW;
-            switchToThirdPersonCamera();
-        }
-    }
-    
     void onResetView() {
-        if(waitChange >= 60){
-            if(EngineCurrentView == FIRST_PERSON_VIEW){
+        if(waitChangeView >= 60){
+            if(currentCamera == FIRST_PERSON_CAMERA){
                 switchToFirstPersonCamera();
             }
             else{
                 switchToThirdPersonCamera();
             }
             
-            waitChange = 0;
+            waitChangeView = 0;
+        }
+    }
+    
+    void onChangeCamera() {
+        if(waitChangeCamera >= 60){
+            if(!debounce) {
+                debounce = true;
+                currentDebounce = GLFW_KEY_SPACE;
+                if(currentCamera == THIRD_PERSON_CAMERA) {
+                    switchToFirstPersonCamera();
+                } else if(currentCamera == FIRST_PERSON_CAMERA) {
+                    switchToThirdPersonCamera();
+                }
+                std::cout << "Camera: " << (currentCamera == 0 ? "Third Person" : "First Person") << "\n";
+            }
+            
+            waitChangeCamera = 0;
+        }
+    }
+    
+    void onUpdateDebounce() {
+        if((currentDebounce == GLFW_KEY_SPACE) && debounce) {
+            debounce = false;
+            currentDebounce = 0;
         }
     }
     
 public:
     
     void init() override {
-        EngineCurrentView = THIRD_PERSON_VIEW;
+        debounce = false;
+        currentDebounce = 0;
+        currentCamera = THIRD_PERSON_CAMERA;
         switchToThirdPersonCamera();
     }
     
     void update() override {
-        if(EngineCurrentView == THIRD_PERSON_VIEW){
+        if(currentCamera == THIRD_PERSON_CAMERA){
             updateThirdPersonCamera(carWorldData.pitch, carWorldData.yaw, carWorldData.roll, cameraRotationInput, carMovementInput, carWorldData.position);
         }
         else{
             updateFirstPersonCamera(carWorldData.pitch, carWorldData.yaw, carWorldData.roll, cameraRotationInput, carWorldData.position);
         }
         
-        if(waitChange < 60){
-            waitChange++;
+        if(waitChangeView < 60){
+            waitChangeView++;
+        }
+        if(waitChangeCamera < 60){
+            waitChangeCamera++;
         }
     }
     
     void cleanup() override {}
     
-    void handleData(std::string id, std::any data) override {
-        if (id == CHANGE_VIEW_SIGNAL) {
-            onChangeView();
-        } else if (id == RESET_VIEW_SIGNAL) {
+    void onSignal(std::string id, std::any data) override {
+        if (id == RESET_VIEW_SIGNAL) {
             onResetView();
+        } else if (id == CHANGE_CAMERA_SIGNAL) {
+            onChangeCamera();
+        } else if (id == UPDATE_DEBOUNCE_SIGNAL) {
+            onUpdateDebounce();
         }
         else {
             std::cerr << "Unknown signal type: " << id << std::endl;

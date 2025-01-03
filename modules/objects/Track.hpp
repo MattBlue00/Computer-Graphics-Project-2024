@@ -129,7 +129,7 @@ public:
         }
     }
     
-    void handleData(std::string id, std::any data) override {
+    void onSignal(std::string id, std::any data) override {
         if (id == UPDATE_NEXT_CHECKPOINT_SIGNAL) {
             onUpdateNextCheckpoint();
         } else if (id == LAPS_SIGNAL) {

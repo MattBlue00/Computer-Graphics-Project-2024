@@ -1966,10 +1966,10 @@ std::cout << "Starting createInstance()\n"  << std::flush;
                 
                 // Cambio scena con il tasto L1 o R1 (ma non entrambi contemporaneamente)
                 if (state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER]) {
-                    changeSceneSignal.emit({});
+                    changeCameraSignal.emit({});
                 }
                 else if (state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] && !state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER]) {
-                    changeSceneSignal.emit({});
+                    changeCameraSignal.emit({});
                 }
                 
             }

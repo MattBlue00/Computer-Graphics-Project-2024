@@ -5,8 +5,7 @@
 #include "SignalTypes.hpp"
 
 Signal brakeSignal = Signal(BRAKE_SIGNAL);
-Signal changeSceneSignal = Signal(CHANGE_SCENE_SIGNAL);
-Signal changeViewSignal = Signal(CHANGE_VIEW_SIGNAL);
+Signal changeCameraSignal = Signal(CHANGE_CAMERA_SIGNAL);
 Signal coinsSignal = Signal(COINS_SIGNAL);
 Signal headlightsChangeSignal = Signal(HEADLIGHTS_CHANGE_SIGNAL);
 Signal lapsSignal = Signal(LAPS_SIGNAL);

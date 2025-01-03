@@ -17,9 +17,9 @@ protected:
         }
     }
     
-    void checkShouldChangeScene() {
+    void checkShouldChangeCamera() {
         if (glfwGetKey(EngineWindow, GLFW_KEY_SPACE)) {
-            changeSceneSignal.emit({});
+            changeCameraSignal.emit({});
             rebuildPipelineSignal.emit({});
         }
         else{
@@ -45,7 +45,7 @@ public:
     
     void update() override {
         checkShouldQuit();
-        checkShouldChangeScene();
+        checkShouldChangeCamera();
         checkShouldChangeHeadlightsStatus();
         checkResetView();
     }

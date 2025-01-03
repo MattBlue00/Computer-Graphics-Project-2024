@@ -125,6 +125,46 @@ protected:
         vehicle->getRigidBody()->clearForces();
     }
     
+    btTransform getVehicleTransform(){
+        btTransform transform;
+        vehicle->getRigidBody()->getMotionState()->getWorldTransform(transform);
+        return transform;
+    }
+    
+    glm::vec3 getVehiclePosition(){
+        btTransform transform = getVehicleTransform();
+        return glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+    }
+    
+    glm::quat getVehicleRotation(){
+        btTransform transform = getVehicleTransform();
+        glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+        btQuaternion rotationBt = transform.getRotation();
+        return glm::quat(rotationBt.getW(), rotationBt.getX(), rotationBt.getY(), rotationBt.getZ());
+    }
+    
+    float getVehicleYaw() {
+        glm::quat rotation = getVehicleRotation();
+        return atan2(2.0f * (rotation.y * rotation.w + rotation.x * rotation.z),
+                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.x * rotation.x));
+    }
+    
+    float getVehiclePitch() {
+        glm::quat rotation = getVehicleRotation();
+        float sinPitch = 2.0f * (rotation.w * rotation.x - rotation.z * rotation.y);
+        if (std::abs(sinPitch) >= 1.0f) {
+            return std::copysign(glm::half_pi<float>(), sinPitch); // Usa 90 gradi se fuori range
+        } else {
+            return std::asin(sinPitch);
+        }
+    }
+    
+    float getVehicleRoll() {
+        glm::quat rotation = getVehicleRotation();
+        return atan2(2.0f * (rotation.w * rotation.z + rotation.x * rotation.y),
+                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
+    }
+    
     void onStartTimer() {
         if (countdownValue <= 1){
             canStart = true;
@@ -205,6 +245,12 @@ public:
     }
     
     void update() override {
+        
+        glm::vec3 carPosition = getVehiclePosition();
+        float yaw = getVehicleYaw();
+        float pitch = getVehiclePitch();
+        float roll = getVehicleRoll();
+        carWorldData = CarWorldData(pitch, yaw, roll, carPosition);
         
         if(!canStart) return;
         
@@ -353,53 +399,13 @@ public:
     
     void cleanup() override {}
     
-    void handleData(std::string id, std::any data) override {
+    void onSignal(std::string id, std::any data) override {
         if (id == START_TIMER_SIGNAL) {
             onStartTimer();
         }
         else {
             std::cerr << "Unknown signal type: " << id << std::endl;
         }
-    }
-    
-    btTransform getVehicleTransform(){
-        btTransform transform;
-        vehicle->getRigidBody()->getMotionState()->getWorldTransform(transform);
-        return transform;
-    }
-    
-    glm::vec3 getVehiclePosition(){
-        btTransform transform = getVehicleTransform();
-        return glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-    }
-    
-    glm::quat getVehicleRotation(){
-        btTransform transform = getVehicleTransform();
-        glm::vec3 bodyPosition = glm::vec3(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-        btQuaternion rotationBt = transform.getRotation();
-        return glm::quat(rotationBt.getW(), rotationBt.getX(), rotationBt.getY(), rotationBt.getZ());
-    }
-    
-    float getVehicleYaw() {
-        glm::quat rotation = getVehicleRotation();
-        return atan2(2.0f * (rotation.y * rotation.w + rotation.x * rotation.z),
-                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.x * rotation.x));
-    }
-    
-    float getVehiclePitch() {
-        glm::quat rotation = getVehicleRotation();
-        float sinPitch = 2.0f * (rotation.w * rotation.x - rotation.z * rotation.y);
-        if (std::abs(sinPitch) >= 1.0f) {
-            return std::copysign(glm::half_pi<float>(), sinPitch); // Usa 90 gradi se fuori range
-        } else {
-            return std::asin(sinPitch);
-        }
-    }
-    
-    float getVehicleRoll() {
-        glm::quat rotation = getVehicleRotation();
-        return atan2(2.0f * (rotation.w * rotation.z + rotation.x * rotation.y),
-                     1.0f - 2.0f * (rotation.y * rotation.y + rotation.z * rotation.z));
     }
     
 };

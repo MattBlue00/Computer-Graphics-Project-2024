@@ -13,8 +13,6 @@ BaseProject* EngineBaseProject = nullptr;
 // SCREEN DATA
 GLFWwindow* EngineWindow = nullptr;
 uint32_t EngineCurrentImage;
-int EngineCurrentView;
-int EngineCurrentScene;
 float EngineAspectRatio = 4.0f/3.0f;
 
 // SIMULATION DATA
