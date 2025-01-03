@@ -42,7 +42,7 @@ Our project for the Computer Graphics course at Politecnico di Milano is a simpl
 
 ---
 
-## 👥 ** Group Members **
+## 👥 **Group Members**
 
 - [__Luca Negri__](https://github.com/luca9negri)
 - [__Samuele Scherini__](https://github.com/ScheriniSamuele)
