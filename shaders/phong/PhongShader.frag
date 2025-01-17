@@ -92,8 +92,8 @@ vec3 spot_light_color(vec3 pos, int i) {
 // BRDF
 
 vec3 BRDF(vec3 Albedo, vec3 Norm, vec3 EyeDir, vec3 LD) {
-    vec3 Diffuse = Albedo * max(dot(Norm, LD), 0.0f);   // lambert diffuse model
-    vec3 Specular = vec3(pow(max(dot(EyeDir, -reflect(LD, Norm)), 0.0f), 160.0f));  // phong specular model
+    vec3 Diffuse = Albedo * clamp(dot(Norm, LD), 0.0f, 1.0f);   // lambert diffuse model
+    vec3 Specular = vec3(pow(clamp(dot(EyeDir, (2 * Norm * dot(Norm, LD) - LD)), 0.0f, 1.0f), 160.0f));  // phong specular model
     return Diffuse + Specular;
 }
 
@@ -104,9 +104,6 @@ void main()
     vec3 Norm = normalize(fragNorm);
     vec3 EyeDir = normalize(gubo.eyePos - fragPos);
     vec3 Albedo = texture(texSampler, fragTexCoord).xyz;
-    
-    vec3 ambientLightDirection = gubo.ambientLightDir;
-    vec4 ambientLightColor = gubo.ambientLightColor;
     
     vec3 LD;    // light direction
     vec3 LC;    // light color

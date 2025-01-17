@@ -64,9 +64,9 @@ protected:
         initialBackgroundColor = {0.01f, 0.01f, 0.08f, 1.0f}; // dark blue
         
         // Descriptor pool sizes
-        uniformBlocksInPool = 3000;
-        texturesInPool = 3000;
-        setsInPool = 3000;
+        uniformBlocksInPool = 766;
+        texturesInPool = 387;
+        setsInPool = 387;
 
         EngineAspectRatio = 4.0f / 3.0f;
     }

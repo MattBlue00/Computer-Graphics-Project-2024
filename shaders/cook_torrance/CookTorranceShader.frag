@@ -90,30 +90,27 @@ vec3 spot_light_color(vec3 pos, int i) {
     return lightColor * pow(lightIntensity / dist, attenuationFactor) * falloff;
 }
 
-// FRESNEL TERM (SCHLICK APPROXIMATION)
+// FRESNEL TERM
 
-vec3 fresnel_schlick(float cosTheta, vec3 F0) {
+vec3 fresnel(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-// GEOMETRIC ATTENUATION (COOK-TORRANCE)
+// GEOMETRIC ATTENUATION (MICROFACET)
 
-float geometry_smith(float NdotV, float NdotL, float roughness) {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
+float geometry_microfacet(float NdotH, float NdotV, float NdotL, float VdotH) {
+    float G1 = (2 * NdotH * NdotV) / VdotH;
+    float G2 = (2 * NdotH * NdotL) / VdotH;
 
-    float G1_V = NdotV / (NdotV * (1.0 - k) + k);
-    float G1_L = NdotL / (NdotL * (1.0 - k) + k);
-
-    return G1_V * G1_L;
+    return min(1, min(G1, G2));
 }
 
-// DISTRIBUTION OF MICROFACETS (GGX)
+// DISTRIBUTION (GGX)
 
 float distribution_ggx(float NdotH, float roughness) {
     float alpha = roughness * roughness;
     float alpha2 = alpha * alpha;
-    float denom = (NdotH * NdotH) * (alpha2 - 1.0) + 1.0;
+    float denom = clamp((NdotH * NdotH) * (alpha2 - 1.0) + 1.0, 0.0f, 1.0f); // GGX version
     return alpha2 / (3.141592 * denom * denom);
 }
 
@@ -122,28 +119,28 @@ float distribution_ggx(float NdotH, float roughness) {
 vec3 cook_torrance_specular(vec3 N, vec3 L, vec3 V, vec3 Albedo, float roughness, float metalness) {
     vec3 H = normalize(L + V);
 
-    float NdotL = max(dot(N, L), 0.0);
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotH = max(dot(N, H), 0.0);
-    float VdotH = max(dot(V, H), 0.0);
+    float NdotL = clamp(dot(N, L), 0.0f, 1.0f);
+    float NdotV = clamp(dot(N, V), 0.0f, 1.0f);
+    float NdotH = clamp(dot(N, H), 0.0f, 1.0f);
+    float VdotH = clamp(dot(V, H), 0.0f, 1.0f);
 
     vec3 F0 = mix(vec3(0.02), Albedo, metalness);
-    vec3 F = fresnel_schlick(VdotH, F0);
-    float G = geometry_smith(NdotV, NdotL, roughness);
+    vec3 F = fresnel(VdotH, F0);
+    float G = geometry_microfacet(NdotH, NdotV, NdotL, VdotH);
     float D = distribution_ggx(NdotH, roughness);
 
     vec3 specular = (F * G * D) / (4.0 * NdotL * NdotV + 0.001); // Avoid division by zero
-    return specular * NdotL;
+    return specular;
 }
 
 // BRDF METALLIC WITH COOK-TORRANCE AND LAMBERT
 
 vec3 BRDF(vec3 Albedo, vec3 Norm, vec3 EyeDir, vec3 LD, float roughness, float metalness) {
     // Lambert Diffuse
-    vec3 Diffuse = Albedo * (1.0 - metalness) * max(dot(Norm, LD), 0.0); // Non-metals only
+    vec3 Diffuse = Albedo * (1.0 - metalness) * max(dot(Norm, LD), 0.0);
 
     // Cook-Torrance Specular
-    vec3 Specular = cook_torrance_specular(Norm, LD, EyeDir, Albedo, roughness, metalness);
+    vec3 Specular = Albedo * metalness * cook_torrance_specular(Norm, LD, EyeDir, Albedo, roughness, metalness);
 
     return Diffuse + Specular;
 }
@@ -155,9 +152,6 @@ void main()
     vec3 Norm = normalize(fragNorm); // Normal vector
     vec3 EyeDir = normalize(gubo.eyePos - fragPos); // View vector
     vec3 Albedo = texture(texSampler, fragTexCoord).rgb; // Albedo color from texture
-    
-    vec3 ambientLightDirection = gubo.ambientLightDir;
-    vec4 ambientLightColor = gubo.ambientLightColor;
 
     vec3 LD;    // light direction
     vec3 LC;    // light color
